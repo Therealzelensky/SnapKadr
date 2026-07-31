@@ -20,7 +20,10 @@ need "$ROOT/appcast-beta.xml"
 grep -q 'page-suite' "$ROOT/index.html" || { echo "root not page-suite"; fail=1; }
 grep -q 'page-snap' "$ROOT/snap/index.html" || { echo "snap page missing class"; fail=1; }
 grep -q 'page-kadr' "$ROOT/kadr/index.html" || { echo "kadr page missing class"; fail=1; }
-grep -q 'v0.1.0-beta.2' "$ROOT/index.html" || { echo "suite beta CTA missing"; fail=1; }
+grep -Eq 'releases/tag/v0\.1\.0-beta\.[0-9]+' "$ROOT/index.html" || {
+  echo "suite beta CTA missing (expected .../releases/tag/v0.1.0-beta.N)"
+  fail=1
+}
 grep -q 'class="grid"' "$ROOT/index.html" && { echo "old hub grid still present"; fail=1; }
 [[ -s "$ROOT/appcast-beta.xml" ]] || { echo "appcast-beta empty"; fail=1; }
 grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../styles.css"; fail=1; }
