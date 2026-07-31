@@ -16,7 +16,6 @@ let package = Package(
             name: "SnapKadr",
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle"),
-                // Local worktree folder name becomes the package identity for path deps.
                 .product(name: "SnapKit", package: "Snap"),
                 .product(name: "NotchHUDKit", package: "NotchHUDKit")
             ],
