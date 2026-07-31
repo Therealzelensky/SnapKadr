@@ -17,4 +17,17 @@ grep -q -- '#38BDF8' "$ROOT/styles.css" || { echo "missing cyan accent"; fail=1;
 # appcasts must still exist untouched as files
 need "$ROOT/appcast.xml"
 need "$ROOT/appcast-beta.xml"
+
+grep -q 'page-suite' "$ROOT/index.html" || { echo "root not page-suite"; fail=1; }
+grep -q 'page-snap' "$ROOT/snap/index.html" || { echo "snap page missing class"; fail=1; }
+grep -q 'page-kadr' "$ROOT/kadr/index.html" || { echo "kadr page missing class"; fail=1; }
+grep -q 'v0.1.0-beta.2' "$ROOT/index.html" || { echo "suite beta CTA missing"; fail=1; }
+grep -q 'class="grid"' "$ROOT/index.html" && { echo "old hub grid still present"; fail=1; }
+# appcast bytes must not be empty
+[[ -s "$ROOT/appcast-beta.xml" ]] || { echo "appcast-beta empty"; fail=1; }
+# relative assets from product pages
+grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../styles.css"; fail=1; }
+grep -q '../styles.css' "$ROOT/kadr/index.html" || { echo "kadr missing ../styles.css"; fail=1; }
+grep -q 'motion.js' "$ROOT/index.html" || { echo "root missing motion.js"; fail=1; }
+
 exit "$fail"
