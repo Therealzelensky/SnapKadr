@@ -15,3 +15,17 @@
 Кадр Beta must never be renamed into suite beta.
 
 See also: [unification spec](https://github.com/Therealzelensky/Zelensky) (monorepo docs) / local `Zelensky/docs/superpowers/specs/2026-07-31-snapkadr-unification-design.md`.
+
+## Ship suite beta
+
+From a feature branch (or `main`):
+
+```bash
+make ship-beta
+# prompts: Merge '<branch>' → main? [y/N]
+```
+
+- Non-interactive merge: `SHIP_BETA_MERGE=1 make ship-beta`
+- Override tag: `SHIP_BETA_TAG=v0.1.0-beta.99 make ship-beta`
+
+Requires a clean tracked working tree, GitHub auth (`gh` / `GH_TOKEN` / git credentials), and a Sparkle private key (`keys/ed25519` or keychain account from `generate_keys`).
