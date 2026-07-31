@@ -27,8 +27,7 @@ grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../style
 grep -q '../styles.css' "$ROOT/kadr/index.html" || { echo "kadr missing ../styles.css"; fail=1; }
 grep -q 'motion.js' "$ROOT/index.html" || { echo "root missing motion.js"; fail=1; }
 
-grep -q 'Один значок' "$ROOT/index.html" || { echo "missing one-icon copy"; fail=1; }
-if grep -E 'Dual status|два значка|Sparkle|\bOCR\b|scrolling|suite:' "$ROOT/index.html" >/dev/null; then
+if grep -E 'Dual status|два значка|Один значок|Sparkle|\bOCR\b|scrolling|suite:' "$ROOT/index.html" >/dev/null; then
   echo "forbidden jargon in index.html"; fail=1
 fi
 grep -q 'href="snap/"' "$ROOT/index.html" && { echo "root should not link to /snap/"; fail=1; }
