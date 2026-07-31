@@ -10,6 +10,7 @@ final class SuiteHotkeyMonitor: ObservableObject {
     @Published private(set) var isPausedForCompanionSnap = false
 
     private var monitor: HotkeyMonitor?
+    private let kadrMonitor = SuiteKadrHotkeyMonitor()
     private var workspaceObs: [NSObjectProtocol] = []
 
     private static let snapBundleIDs = ["com.snap.app", "com.snap.app.beta"]
@@ -19,6 +20,7 @@ final class SuiteHotkeyMonitor: ObservableObject {
     func start() {
         observeWorkspace()
         refreshCoexistence()
+        reloadKadrHotkeys()
     }
 
     func stop() {
@@ -28,6 +30,11 @@ final class SuiteHotkeyMonitor: ObservableObject {
         workspaceObs.removeAll()
         monitor?.stop()
         monitor = nil
+        kadrMonitor.stop()
+    }
+
+    func reloadKadrHotkeys() {
+        kadrMonitor.reload()
     }
 
     func refreshCoexistence() {
@@ -52,6 +59,8 @@ final class SuiteHotkeyMonitor: ObservableObject {
                 monitor?.reload()
             }
         }
+        // Kadr hotkeys stay active even when Snap companion pauses suite Snap keys.
+        reloadKadrHotkeys()
     }
 
     private func observeWorkspace() {
