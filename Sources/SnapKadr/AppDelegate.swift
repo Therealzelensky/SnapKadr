@@ -1,14 +1,18 @@
 import AppKit
+import SnapKit
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var status: DualStatusController?
+    private var status: SuiteStatusController?
     private var prefs: PreferencesWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppBranding.applyApplicationIcon()
         UpdateService.shared.start()
+        SnapEngine.shared.prepare()
+        SuiteHotkeyMonitor.shared.start()
 
-        status = DualStatusController(
+        status = SuiteStatusController(
             onPreferences: { [weak self] in self?.showPreferences() },
             onQuit: {
                 NSApp.terminate(nil)
