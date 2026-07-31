@@ -50,9 +50,43 @@ enum AppBranding {
 
     static var channelLabel: String { isBeta ? "beta" : "release" }
 
+    /// Suite menu bar template (Snap frame + iris silhouette).
+    static var menuBarIcon: NSImage {
+        if let url = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png"),
+           let base = NSImage(contentsOf: url) {
+            let image = NSImage(size: NSSize(width: 18, height: 18))
+            image.isTemplate = true
+            if let tiff = base.tiffRepresentation,
+               let rep = NSBitmapImageRep(data: tiff) {
+                rep.size = NSSize(width: 18, height: 18)
+                image.addRepresentation(rep)
+            }
+            if let url2x = Bundle.main.url(forResource: "MenuBarIcon@2x", withExtension: "png"),
+               let img2x = NSImage(contentsOf: url2x),
+               let tiff2 = img2x.tiffRepresentation,
+               let rep2 = NSBitmapImageRep(data: tiff2) {
+                rep2.size = NSSize(width: 18, height: 18)
+                image.addRepresentation(rep2)
+            }
+            return image
+        }
+        let fallback = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: displayName)
+            ?? NSImage(size: NSSize(width: 18, height: 18))
+        fallback.isTemplate = true
+        return fallback
+    }
+
     static func applyApplicationIcon() {
-        let img = NSImage(systemSymbolName: "square.split.2x1", accessibilityDescription: displayName)
-            ?? NSImage(size: NSSize(width: 128, height: 128))
-        NSApp.applicationIconImage = img
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+           let img = NSImage(contentsOf: url) {
+            NSApp.applicationIconImage = img
+            return
+        }
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            NSApp.applicationIconImage = img
+            return
+        }
+        NSApp.applicationIconImage = menuBarIcon
     }
 }

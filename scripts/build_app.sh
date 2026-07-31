@@ -65,6 +65,13 @@ if ! otool -l "$MACOS_DIR/$APP_NAME" | grep -q '@executable_path/../Frameworks';
   install_name_tool -add_rpath '@executable_path/../Frameworks' "$MACOS_DIR/$APP_NAME"
 fi
 
+# Suite brand: menu bar template + Dock/Finder icon
+for f in MenuBarIcon.png "MenuBarIcon@2x.png" AppIcon.icns; do
+  if [[ -f "$ROOT/Resources/$f" ]]; then
+    cp "$ROOT/Resources/$f" "$RESOURCES_DIR/$f"
+  fi
+done
+
 # Bundle Sparkle.framework from SPM build
 SPARKLE_FW="$(swift build -c release --show-bin-path)/Sparkle.framework"
 if [[ -d "$SPARKLE_FW" ]]; then
@@ -98,6 +105,8 @@ cat > "$CONTENTS/Info.plist" <<EOF
 	<string>${APP_BUNDLE_NAME}</string>
 	<key>CFBundleDisplayName</key>
 	<string>${DISPLAY_NAME}</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

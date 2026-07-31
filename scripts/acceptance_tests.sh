@@ -114,13 +114,17 @@ fi
 # Source presence
 for f in \
   Sources/SnapKadr/SuitePreferencesView.swift \
-  Sources/SnapKadr/DualStatusController.swift \
+  Sources/SnapKadr/SuiteStatusController.swift \
   Sources/SnapKadr/UpdateService.swift \
   Sources/SnapKadr/FeedbackService.swift \
   docs/index.html \
   docs/appcast-beta.xml \
   docs/appcast-snap-beta.xml \
-  docs/appcast-kadr-beta.xml
+  docs/appcast-kadr-beta.xml \
+  Resources/MenuBarIcon.png \
+  Resources/AppIcon.icns \
+  Resources/Brand/NeonIris.png \
+  scripts/render_suite_brand.swift
 do
   if [[ -f "$ROOT/$f" ]]; then
     ok "source $f"
@@ -142,11 +146,71 @@ else
   ko "Check for Updates UI missing"
 fi
 
+# Single status item (not dual)
+if grep -q 'SuiteStatusController' "$ROOT/Sources/SnapKadr/AppDelegate.swift" \
+  && ! grep -q 'DualStatusController' "$ROOT/Sources/SnapKadr/AppDelegate.swift"; then
+  ok "single SuiteStatusController wired"
+else
+  ko "SuiteStatusController not wired / dual still present"
+fi
+if grep -q 'menuBarIcon' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift"; then
+  ok "SuiteStatusController uses Kadr menuBarIcon"
+else
+  ko "menuBarIcon missing on suite status"
+fi
+if grep -q 'SuiteControlPanelView' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && grep -q 'togglePanel' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift"; then
+  ok "LMB opens Kadr-style suite panel"
+else
+  ko "suite panel not wired on LMB"
+fi
+if grep -q 'openKadr(path: "capture")' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && grep -q 'rightMouseUp' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift"; then
+  ok "RMB/⌥ opens capture bar"
+else
+  ko "RMB capture shortcut missing"
+fi
+
+# E1: Snap in-process (no snap:// companion)
+if grep -q 'SnapEngine.shared.captureArea' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && grep -q 'SnapEngine.shared.captureFull' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && grep -q 'SnapEngine.shared.captureActiveWindow' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && ! grep -qE 'openSnap\(' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && ! grep -qE 'openSnap\(' "$ROOT/Sources/SnapKadr/CompanionLaunch.swift"; then
+  ok "Snap panel actions use SnapEngine (no openSnap)"
+else
+  ko "Snap still companion / SnapEngine not wired"
+fi
+if grep -q 'SnapEngine.shared.prepare' "$ROOT/Sources/SnapKadr/AppDelegate.swift"; then
+  ok "SnapEngine.prepare on suite launch"
+else
+  ko "SnapEngine.prepare missing on launch"
+fi
+
 # rpath for Sparkle
 if otool -l "$ROOT/dist/SnapKadrBeta.app/Contents/MacOS/SnapKadrBeta" 2>/dev/null | grep -q '@executable_path/../Frameworks'; then
   ok "SnapKadrBeta has Frameworks rpath"
 else
   ko "SnapKadrBeta missing Frameworks rpath"
+fi
+
+if [[ -f "$ROOT/dist/SnapKadrBeta.app/Contents/Resources/MenuBarIcon.png" ]]; then
+  ok "MenuBarIcon bundled in SnapKadrBeta"
+else
+  ko "MenuBarIcon not in SnapKadrBeta Resources"
+fi
+
+if [[ -f "$ROOT/dist/SnapKadrBeta.app/Contents/Resources/AppIcon.icns" ]]; then
+  ok "AppIcon.icns bundled in SnapKadrBeta"
+else
+  ko "AppIcon.icns not in SnapKadrBeta Resources"
+fi
+
+icon_file="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$ROOT/dist/SnapKadrBeta.app/Contents/Info.plist" 2>/dev/null || true)"
+if [[ "$icon_file" == "AppIcon" ]]; then
+  ok "CFBundleIconFile=AppIcon"
+else
+  ko "CFBundleIconFile missing or wrong ($icon_file)"
 fi
 
 echo
