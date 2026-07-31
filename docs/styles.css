@@ -236,54 +236,62 @@ img { max-width: 100%; height: auto; display: block; }
 
 :root {
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-duration: 0.9s;
+  --motion-duration: 1s;
+  --reveal-delay: 0ms;
 }
 
-.is-ready { opacity: 1; transform: none; }
-[data-fade],
-[data-reveal] {
-  opacity: 1;
-}
-[data-reveal-child] {
-  opacity: 0;
-  transform: translate3d(0, 28px, 0);
-  transition:
-    opacity var(--motion-duration) var(--motion-ease),
-    transform var(--motion-duration) var(--motion-ease);
-  will-change: opacity, transform;
-}
-[data-reveal-child].is-ready {
+/* Without JS, content stays visible */
+[data-reveal-child],
+.feature-media.media-pending,
+.hero-shot.media-pending,
+[data-fade] {
   opacity: 1;
   transform: none;
+  filter: none;
 }
-[data-fade] {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity var(--motion-duration) var(--motion-ease),
-    transform var(--motion-duration) var(--motion-ease);
-}
-[data-fade].is-ready { opacity: 1; transform: none; }
 
-.feature-media.media-pending,
-.hero-shot.media-pending {
+html.js-motion [data-reveal-child] {
   opacity: 0;
-  transform: translate3d(0, 36px, 0) scale(0.985);
-  filter: blur(8px);
-  transition:
-    opacity 1.05s var(--motion-ease),
-    transform 1.05s var(--motion-ease),
-    filter 1.05s var(--motion-ease);
-  will-change: opacity, transform, filter;
+  transform: translate3d(0, 40px, 0);
 }
-.feature-media.is-media-ready,
-.hero-shot.is-media-ready {
+html.js-motion [data-reveal-child].is-ready {
+  animation: reveal-up var(--motion-duration) var(--motion-ease) var(--reveal-delay) both;
+}
+
+html.js-motion [data-fade] {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+html.js-motion [data-fade].is-ready {
+  animation: reveal-up var(--motion-duration) var(--motion-ease) both;
+}
+
+html.js-motion .feature-media.media-pending,
+html.js-motion .hero-shot.media-pending {
+  opacity: 0;
+  transform: translate3d(0, 48px, 0) scale(0.97);
+  filter: blur(12px);
+  transition:
+    opacity 1.15s var(--motion-ease) var(--reveal-delay),
+    transform 1.15s var(--motion-ease) var(--reveal-delay),
+    filter 1.15s var(--motion-ease) var(--reveal-delay);
+}
+html.js-motion .feature-media.is-media-ready,
+html.js-motion .hero-shot.is-media-ready {
   opacity: 1;
   filter: none;
-  transform: translate3d(0, var(--parallax-y, 0px), 0);
+  transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1);
 }
-.feature-band--flip .feature-media.media-pending {
-  transform: translate3d(0, 36px, 0) scale(0.985);
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 [data-parallax] {
@@ -308,14 +316,16 @@ img { max-width: 100%; height: auto; display: block; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  [data-fade],
-  [data-reveal-child],
-  .feature-media.media-pending,
-  .hero-shot.media-pending {
+  html.js-motion [data-reveal-child],
+  html.js-motion [data-fade],
+  html.js-motion .feature-media.media-pending,
+  html.js-motion .hero-shot.media-pending,
+  html.js-motion .feature-media.is-media-ready,
+  html.js-motion .hero-shot.is-media-ready {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
-    transition: none !important;
+    animation: none !important;
   }
   .hero-glow.is-animated { animation: none; }
   [data-parallax] { transform: none !important; }
@@ -488,29 +498,36 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .wave-label {
-  max-width: 1100px;
-  margin: 48px auto 0;
-  padding: 40px 24px 8px;
+  width: 100%;
+  max-width: none;
+  margin: 56px 0 0;
+  padding: 56px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 .wave-label p {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
 }
 .wave-label h2 {
   margin: 0;
-  font-size: clamp(1.75rem, 3.5vw, 2.6rem);
+  max-width: 16ch;
+  font-size: clamp(1.85rem, 4vw, 2.75rem);
   letter-spacing: -0.04em;
   line-height: 1.1;
+  text-align: center;
 }
 
 .mid-cta {
   max-width: 720px;
-  margin: 24px auto;
+  margin: 40px auto;
   padding: 56px 28px;
   text-align: center;
   border: 1px solid var(--line);
@@ -530,4 +547,11 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .mid-cta .hero-cta {
   justify-content: center;
+}
+
+.section#how {
+  text-align: center;
+}
+.section#how .how-item {
+  text-align: left;
 }

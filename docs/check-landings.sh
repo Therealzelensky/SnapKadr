@@ -48,7 +48,10 @@ grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band
 grep -q 'shot-slot' "$ROOT/styles.css" || { echo "missing shot-slot CSS"; fail=1; }
 grep -q 'wave-label' "$ROOT/styles.css" || { echo "missing wave-label CSS"; fail=1; }
 grep -q 'data-reveal-child' "$ROOT/styles.css" || { echo "missing reveal CSS"; fail=1; }
+grep -q 'js-motion' "$ROOT/styles.css" || { echo "missing js-motion CSS gate"; fail=1; }
+grep -q 'reveal-up' "$ROOT/styles.css" || { echo "missing reveal-up keyframes"; fail=1; }
 grep -q 'initParallax' "$ROOT/motion.js" || { echo "missing parallax in motion.js"; fail=1; }
+grep -q 'js-motion' "$ROOT/motion.js" || { echo "missing js-motion class toggle"; fail=1; }
 
 # Catalog density: enough feature bands for the approved long landing
 band_count="$(grep -c 'class="feature-band' "$ROOT/index.html" || true)"
