@@ -90,8 +90,8 @@ for url in \
   "https://therealzelensky.github.io/SnapKadr/appcast-kadr-beta.xml" \
   "https://github.com/Therealzelensky/app-feedback" \
   "https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.3" \
-  "https://github.com/Therealzelensky/Snap/releases/tag/v1.0.0-beta.1" \
-  "https://github.com/Therealzelensky/Kadr/releases/tag/v0.1.0-beta.1"
+  "https://github.com/Therealzelensky/SnapKadr/releases/tag/snap-v1.0.0-beta.1" \
+  "https://github.com/Therealzelensky/SnapKadr/releases/tag/kadr-v0.1.0-beta.1"
 do
   code="$(curl -sS -o /dev/null -w '%{http_code}' -L "$url" || echo 000)"
   if [[ "$code" == "200" ]]; then
