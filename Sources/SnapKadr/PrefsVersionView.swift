@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Classic centered Apple About for the Version prefs tab.
 struct PrefsVersionView: View {
+    @ObservedObject private var updates = UpdateService.shared
     @State private var autoCheck = SuiteSharedSettings.autoCheckUpdates
     @State private var showBuild = false
 
@@ -24,6 +25,9 @@ struct PrefsVersionView: View {
         .onAppear {
             autoCheck = SuiteSharedSettings.autoCheckUpdates
             UpdateService.shared.automaticallyChecksForUpdates = autoCheck
+            if autoCheck {
+                UpdateService.shared.checkForUpdatesInBackground()
+            }
         }
     }
 
@@ -55,6 +59,13 @@ struct PrefsVersionView: View {
                 "Версия \(AppBranding.shortVersion), сборка \(AppBranding.build)",
                 "Version \(AppBranding.shortVersion), build \(AppBranding.build)"
             ))
+
+            if updates.updateAvailable, let pending = updates.pendingShortVersion {
+                Text(L10n.tr("Доступна \(pending)", "Update available: \(pending)"))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(SuiteTheme.accent)
+                    .padding(.top, 6)
+            }
 
             HStack(spacing: 8) {
                 neonIrisView
