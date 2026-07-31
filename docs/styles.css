@@ -361,3 +361,36 @@ img { max-width: 100%; height: auto; display: block; }
   .feature-band--flip .feature-media { order: unset; }
   .how-grid { grid-template-columns: 1fr; }
 }
+
+/* Neutral media slots until clean beta shots */
+.shot-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%),
+    var(--bg-elevated);
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 24px;
+}
+.hero-shot .shot-slot {
+  min-height: 280px;
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+}
+.feature-band--killer .feature-copy h2 {
+  font-size: clamp(1.85rem, 3.5vw, 2.55rem);
+}
+.feature-band--killer .feature-eyebrow {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+}

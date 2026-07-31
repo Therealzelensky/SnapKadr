@@ -4,17 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Щёлк.Кадр — скриншоты и запись экрана для Mac</title>
-  <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана в одном приложении для Mac. Скачайте бету." />
+  <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана в одном приложении для Mac. Несколько окон в одном кадре. Скачайте бету." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="page-suite">
   <header class="site-header">
     <a class="brand" href="./">Щёлк.Кадр</a>
-    <nav aria-label="Разделы">
+    <nav aria-label="На странице" class="nav-links">
       <ul class="nav-links">
-        <li><a href="snap/">Щёлк</a></li>
-        <li><a href="kadr/">Кадр</a></li>
-        <li><a href="./" aria-current="page">Щёлк.Кадр</a></li>
+        <li><a href="#features">Возможности</a></li>
+        <li><a href="#how">Как устроено</a></li>
+        <li><a href="#download">Скачать</a></li>
       </ul>
     </nav>
     <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
@@ -24,14 +24,14 @@
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-inner" data-fade>
       <h1>Щёлк.Кадр</h1>
-      <p class="lead">Скриншоты и запись экрана — в одном приложении для Mac. Один значок в строке меню, общие настройки, отдельная бета.</p>
+      <p class="lead">Скриншоты и запись экрана — в одном приложении для Mac. Один значок в строке меню. Несколько окон — в одном кадре.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
         <a class="btn btn-secondary" href="#features">К возможностям</a>
       </div>
     </div>
     <div class="hero-shot" data-fade>
-      <img class="shot" src="assets/shots/hero.png" alt="Окно настроек Щёлк.Кадр" width="1100" height="700" />
+      <div class="shot-slot" role="img" aria-label="Место для кадра приложения">Кадр появится после беты</div>
     </div>
   </section>
 
@@ -41,41 +41,63 @@
   </section>
 
   <div id="features">
-    <section class="feature-band" data-fade>
+    <section class="feature-band feature-band--killer" data-fade>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Щёлк</span>
-        <h2>Снимок под ваш ритм</h2>
-        <p>Куда сохранять, в каком формате и что делать после снимка — настраивается один раз и не мешает работе.</p>
+        <span class="feature-eyebrow">Главное</span>
+        <h2>Несколько окон в одном кадре</h2>
+        <p>Запишите приложение рядом с браузером, терминалом или телефоном — и сразу соберите раскладку. Сравнение, туториал, демо продукта: всё в одной картинке, без склейки в стороннем монтажёре.</p>
       </div>
       <div class="feature-media">
-        <img class="shot" src="assets/shots/snap-capture.png" alt="Настройки снимков в Щёлке" width="900" height="600" />
+        <div class="shot-slot" role="img" aria-label="Место для кадра мультиокон">Кадр появится после беты</div>
       </div>
     </section>
 
     <section class="feature-band feature-band--flip" data-fade>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Щёлк</span>
-        <h2>Длинная страница целиком</h2>
-        <p>Сайт или переписка не влезают на экран — снимите длинный кадр одним проходом.</p>
+        <span class="feature-eyebrow">Редактор</span>
+        <h2>Сборка на шкале времени</h2>
+        <p>Подрежьте лишнее и расставьте акценты — спокойно, без тяжёлого монтажа.</p>
       </div>
       <div class="feature-media">
-        <img class="shot" src="assets/shots/snap-long.png" alt="Настройки длинного снимка" width="900" height="600" />
+        <div class="shot-slot" role="img" aria-label="Место для кадра редактора">Кадр появится после беты</div>
       </div>
     </section>
 
     <section class="feature-band" data-fade>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Кадр</span>
-        <h2>Запись экрана рядом</h2>
-        <p>Экран, область, окно или телефон — старт записи из той же панели, что и снимки.</p>
+        <span class="feature-eyebrow">Редактор</span>
+        <h2>Зумы и правки после записи</h2>
+        <p>Подсветите важное движение, уберите лишнее с кадра — зритель сразу видит, куда смотреть.</p>
       </div>
       <div class="feature-media">
-        <img class="shot" src="assets/shots/kadr-record.png" alt="Панель записи Кадра" width="900" height="600" />
+        <div class="shot-slot" role="img" aria-label="Место для кадра зумов">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-fade>
+      <div class="feature-copy">
+        <span class="feature-eyebrow">Редактор</span>
+        <h2>Готовый ролик</h2>
+        <p>Выгрузите файл и отправьте коллегам или выложите в соцсети — без долгой возни с настройками.</p>
+      </div>
+      <div class="feature-media">
+        <div class="shot-slot" role="img" aria-label="Место для кадра экспорта">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-fade>
+      <div class="feature-copy">
+        <span class="feature-eyebrow">Щёлк</span>
+        <h2>Снимок за секунду</h2>
+        <p>Область, окно или экран — сразу к делу. Пометки и длинная страница — когда нужно больше, чем один кадр.</p>
+      </div>
+      <div class="feature-media">
+        <div class="shot-slot" role="img" aria-label="Место для кадра Щёлка">Кадр появится после беты</div>
       </div>
     </section>
   </div>
 
-  <section class="section" data-fade>
+  <section class="section" id="how" data-fade>
     <h2>Как устроено</h2>
     <div class="how-grid">
       <div class="how-item">
@@ -91,9 +113,6 @@
         <p>Проверка новых версий прямо из приложения. Можно скачать и с сайта.</p>
       </div>
     </div>
-    <p class="how-shot">
-      <img class="shot" src="assets/shots/suite-prefs.png" alt="Настройки Щёлк.Кадр" width="960" height="640" />
-    </p>
   </section>
 
   <section class="section-download" id="download" data-fade>
@@ -108,7 +127,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <p>macOS 14+ · <a href="https://github.com/Therealzelensky/app-feedback">обратная связь</a> · <a href="https://github.com/Therealzelensky/SnapKadr/blob/main/CHANNELS.md">каналы</a></p>
-      <p><a href="snap/">Щёлк</a> · <a href="kadr/">Кадр</a> · <a href="./">Щёлк.Кадр</a></p>
+      <p>Щёлк.Кадр</p>
     </div>
   </footer>
   <script src="motion.js" defer></script>
