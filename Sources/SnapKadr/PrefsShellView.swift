@@ -3,6 +3,7 @@ import SnapKit
 
 struct PrefsShellView: View {
     @ObservedObject var model: PrefsRootModel
+    @ObservedObject private var updates = UpdateService.shared
 
     var body: some View {
         HStack(spacing: 0) {
@@ -50,6 +51,12 @@ struct PrefsShellView: View {
                             .frame(width: 18)
                         Text(tab.title)
                             .font(.system(size: 13, weight: model.selectedTab == tab ? .semibold : .regular))
+                        if tab == .version && updates.updateAvailable {
+                            Circle()
+                                .fill(SuiteTheme.accent)
+                                .frame(width: 7, height: 7)
+                                .accessibilityLabel(L10n.tr("Есть обновление", "Update available"))
+                        }
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 12)
