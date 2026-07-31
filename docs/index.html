@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Щёлк.Кадр — скриншоты и запись экрана для Mac</title>
-  <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана в одном приложении для Mac. Несколько окон в одном кадре. Скачайте бету." />
+  <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана для Mac в одном приложении. Несколько окон в одном кадре, монтаж, пометки, длинная страница. Скачайте бету." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="page-suite">
@@ -22,118 +22,372 @@
 
   <section class="hero" aria-label="Главный экран">
     <div class="hero-glow" aria-hidden="true"></div>
-    <div class="hero-inner" data-fade>
-      <h1>Щёлк.Кадр</h1>
-      <p class="lead">Скриншоты и запись экрана — в одном приложении для Mac. Несколько окон — в одном кадре.</p>
-      <div class="hero-cta">
+    <div class="hero-inner" data-reveal>
+      <h1 data-reveal-child>Щёлк.Кадр</h1>
+      <p class="lead" data-reveal-child>Скриншоты и запись экрана для Mac в одном приложении. Несколько окон — в одном кадре.</p>
+      <div class="hero-cta" data-reveal-child>
         <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
         <a class="btn btn-secondary" href="#features">К возможностям</a>
       </div>
     </div>
-    <div class="hero-shot" data-fade>
+    <div class="hero-shot" data-reveal data-parallax>
       <div class="shot-slot" role="img" aria-label="Место для кадра приложения">Кадр появится после беты</div>
     </div>
   </section>
 
-  <section class="value-strip" data-fade>
-    <h2>Одно приложение. Два инструмента.</h2>
-    <p>Щёлк — для снимков и пометок. Кадр — для записи и сборки ролика. Без прыжков между программами.</p>
+  <section class="value-strip" data-reveal>
+    <h2 data-reveal-child>Одно приложение. Два инструмента.</h2>
+    <p data-reveal-child>Щёлк — снимки и пометки. Кадр — запись и сборка ролика. Без прыжков между программами.</p>
   </section>
 
   <div id="features">
-    <section class="feature-band feature-band--killer" data-fade>
+    <div class="wave-label" data-reveal>
+      <p data-reveal-child>Запись экрана</p>
+      <h2 data-reveal-child>Захват, которого нет у других</h2>
+    </div>
+
+    <section class="feature-band feature-band--killer" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Главное</span>
-        <h2>Несколько окон в одном кадре</h2>
-        <p>Запишите приложение рядом с браузером, терминалом или телефоном — и сразу соберите раскладку. Сравнение, туториал, демо продукта: всё в одной картинке, без склейки в стороннем монтажёре.</p>
+        <span class="feature-eyebrow" data-reveal-child>Главное</span>
+        <h2 data-reveal-child>Несколько окон в одном кадре</h2>
+        <p data-reveal-child>Запишите приложение рядом с браузером, терминалом или телефоном. Сравнение и демо — без склейки в другом монтажёре.</p>
       </div>
-      <div class="feature-media">
+      <div class="feature-media" data-parallax>
         <div class="shot-slot" role="img" aria-label="Место для кадра мультиокон">Кадр появится после беты</div>
       </div>
     </section>
 
-    <section class="feature-band feature-band--flip" data-fade>
+    <section class="feature-band feature-band--flip" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Редактор</span>
-        <h2>Каждое окно и звук — по отдельности</h2>
-        <p>После записи правите каждое окно само по себе: положение, размер, что оставить в кадре. Микрофон и звук системы тоже настраиваются отдельно — громкость, паузы, что слышно зрителю.</p>
+        <span class="feature-eyebrow" data-reveal-child>Запись</span>
+        <h2 data-reveal-child>Сначала раскладка — потом запись</h2>
+        <p data-reveal-child>Добавьте окна, посмотрите черновик кадра и только тогда жмите старт.</p>
       </div>
-      <div class="feature-media">
-        <div class="shot-slot" role="img" aria-label="Место для кадра правок окон и звука">Кадр появится после беты</div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для кадра раскладки">Кадр появится после беты</div>
       </div>
     </section>
 
-    <section class="feature-band" data-fade>
+    <section class="feature-band" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Редактор</span>
-        <h2>Сборка на шкале времени</h2>
-        <p>Подрежьте лишнее и расставьте акценты — спокойно, без тяжёлого монтажа.</p>
+        <span class="feature-eyebrow" data-reveal-child>Запись</span>
+        <h2 data-reveal-child>Телефон в том же ролике</h2>
+        <p data-reveal-child>Экран iPhone рядом с Mac — один туториал, одна запись.</p>
       </div>
-      <div class="feature-media">
-        <div class="shot-slot" role="img" aria-label="Место для кадра редактора">Кадр появится после беты</div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для кадра телефона">Кадр появится после беты</div>
       </div>
     </section>
 
-    <section class="feature-band feature-band--flip" data-fade>
+    <section class="feature-band feature-band--flip" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Редактор</span>
-        <h2>Зумы и правки после записи</h2>
-        <p>Подсветите важное движение, уберите лишнее с кадра — зритель сразу видит, куда смотреть.</p>
+        <span class="feature-eyebrow" data-reveal-child>Запись</span>
+        <h2 data-reveal-child>Камера в кадре</h2>
+        <p data-reveal-child>Лицо поверх экрана: веб-камера или Continuity Camera, без отдельной склейки.</p>
       </div>
-      <div class="feature-media">
-        <div class="shot-slot" role="img" aria-label="Место для кадра зумов">Кадр появится после беты</div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для кадра камеры">Кадр появится после беты</div>
       </div>
     </section>
 
-    <section class="feature-band" data-fade>
+    <div class="wave-label" data-reveal>
+      <p data-reveal-child>Монтаж</p>
+      <h2 data-reveal-child>Правки без тяжёлого редактора</h2>
+    </div>
+
+    <section class="feature-band" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Редактор</span>
-        <h2>Готовый ролик</h2>
-        <p>Выгрузите файл и отправьте коллегам или выложите в соцсети — без долгой возни с настройками.</p>
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Каждое окно — отдельно</h2>
+        <p data-reveal-child>После записи двигайте, режьте и масштабируйте источники по одному. Полный контроль над раскладкой.</p>
       </div>
-      <div class="feature-media">
-        <div class="shot-slot" role="img" aria-label="Место для кадра экспорта">Кадр появится после беты</div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для правок окон">Кадр появится после беты</div>
       </div>
     </section>
 
-    <section class="feature-band" data-fade>
+    <section class="feature-band feature-band--flip" data-reveal>
       <div class="feature-copy">
-        <span class="feature-eyebrow">Щёлк</span>
-        <h2>Снимок за секунду</h2>
-        <p>Область, окно или экран — сразу к делу. Пометки и длинная страница — когда нужно больше, чем один кадр.</p>
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Звук по дорожкам</h2>
+        <p data-reveal-child>Микрофон, звук системы и музыка — громкость и mute по отдельности. Зритель слышит то, что нужно.</p>
       </div>
-      <div class="feature-media">
-        <div class="shot-slot" role="img" aria-label="Место для кадра Щёлка">Кадр появится после беты</div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для звуковых дорожек">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Сборка на шкале времени</h2>
+        <p data-reveal-child>Подрежьте паузы, ускорьте скучное. Монтаж записи экрана без тяжёлого редактора.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для шкалы времени">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Автозумы по кликам</h2>
+        <p data-reveal-child>Кликнули — зум уже на шкале. Зритель сразу видит, куда смотреть.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для автозумов">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Курсор как в кино</h2>
+        <p data-reveal-child>Плавный путь и акцент на клик. Демо выглядит дороже сырой записи.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для курсора">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Зумы вручную</h2>
+        <p data-reveal-child>Подсветите жест или кнопку после съёмки — без перезаписи.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для ручных зумов">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Редактор</span>
+        <h2 data-reveal-child>Маски и размытие</h2>
+        <p data-reveal-child>Спрячьте пароли и личные данные прямо в ролике перед отправкой.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для масок">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <div class="wave-label" data-reveal>
+      <p data-reveal-child>Вид и исход</p>
+      <h2 data-reveal-child>Ролик как презентация</h2>
+    </div>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Вид</span>
+        <h2 data-reveal-child>Фон и «карточка» продукта</h2>
+        <p data-reveal-child>Поля, скругления, тень — запись экрана выглядит как презентация, не как сырой захват.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для фона">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Вид</span>
+        <h2 data-reveal-child>Рамки устройств</h2>
+        <p data-reveal-child>MacBook, iPhone, iPad вокруг кадра — ролик сразу «для ленты».</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для рамок">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Вид</span>
+        <h2 data-reveal-child>Клавиши на экране</h2>
+        <p data-reveal-child>Зритель видит шорткаты во время туториала — меньше текста в голосе.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для оверлея клавиш">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Вид</span>
+        <h2 data-reveal-child>Субтитры с голоса</h2>
+        <p data-reveal-child>Текст речи на Mac, без облака. Удобно смотреть без звука.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для субтитров">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Экспорт</span>
+        <h2 data-reveal-child>Формат под соцсети</h2>
+        <p data-reveal-child>16:9, 1:1 или 9:16 — один проект, разные площадки.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для форматов">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Экспорт</span>
+        <h2 data-reveal-child>Готовый файл за минуты</h2>
+        <p data-reveal-child>MP4 или GIF — отправьте коллегам или выложите. Без долгой возни с настройками.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для экспорта">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="mid-cta" data-reveal id="try">
+      <h2 data-reveal-child>Скачайте бету и соберите первый ролик</h2>
+      <p data-reveal-child>Щёлк.Кадр для Mac — скриншоты и запись экрана в одном приложении.</p>
+      <div class="hero-cta" data-reveal-child>
+        <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
+        <a class="btn btn-secondary" href="#download">Как установить</a>
+      </div>
+    </section>
+
+    <div class="wave-label" data-reveal>
+      <p data-reveal-child>Скриншоты</p>
+      <h2 data-reveal-child>Щёлк — снимок и пометки</h2>
+    </div>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Скриншот за секунду</h2>
+        <p data-reveal-child>Область, окно или весь экран — быстрые скриншоты Mac без лишних шагов.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для снимка">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Пометки сразу после снимка</h2>
+        <p data-reveal-child>Стрелки, текст, спотлайт, пиксели — туториал на кадре без Photoshop.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для пометок">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Длинная страница целиком</h2>
+        <p data-reveal-child>Прокрутите сайт или настройки один раз — получите полный скриншот.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для длинной страницы">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Текст и QR со скрина</h2>
+        <p data-reveal-child>Скопируйте текст или код с картинки. Всё локально на Mac.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для текста со скрина">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Снимок поверх всех окон</h2>
+        <p data-reveal-child>Закрепите кадр как референс — виден на любом рабочем столе.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для закреплённого снимка">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Щёлк</span>
+        <h2 data-reveal-child>Красивый фон у окна</h2>
+        <p data-reveal-child>Обои, цвет или свой фон — снимок окна как карточка для презентации.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для фона окна">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <div class="wave-label" data-reveal>
+      <p data-reveal-child>Приложение</p>
+      <h2 data-reveal-child>Как жить с Щёлк.Кадр</h2>
+    </div>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Приложение</span>
+        <h2 data-reveal-child>Снимки и запись вместе</h2>
+        <p data-reveal-child>Одно приложение для скриншотов и записи экрана на Mac.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для suite">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Приложение</span>
+        <h2 data-reveal-child>Настройки в одном месте</h2>
+        <p data-reveal-child>Щёлк, Кадр, клавиши и версия — без прыжков по окнам.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для настроек">Кадр появится после беты</div>
+      </div>
+    </section>
+
+    <section class="feature-band feature-band--flip" data-reveal>
+      <div class="feature-copy">
+        <span class="feature-eyebrow" data-reveal-child>Приложение</span>
+        <h2 data-reveal-child>Обновления сами</h2>
+        <p data-reveal-child>Новая версия из приложения; можно скачать и с сайта.</p>
+      </div>
+      <div class="feature-media" data-parallax>
+        <div class="shot-slot" role="img" aria-label="Место для обновлений">Кадр появится после беты</div>
       </div>
     </section>
   </div>
 
-  <section class="section" id="how" data-fade>
-    <h2>Как устроено</h2>
+  <section class="section" id="how" data-reveal>
+    <h2 data-reveal-child>Как устроено</h2>
     <div class="how-grid">
-      <div class="how-item">
+      <div class="how-item" data-reveal-child>
         <h3>Снимки и запись вместе</h3>
         <p>Щёлк и Кадр в одном приложении — без прыжков между программами.</p>
       </div>
-      <div class="how-item">
+      <div class="how-item" data-reveal-child>
         <h3>Общие настройки</h3>
         <p>Одно окно: общие параметры, Щёлк, Кадр, клавиши и версия.</p>
       </div>
-      <div class="how-item">
+      <div class="how-item" data-reveal-child>
         <h3>Обновления сами</h3>
         <p>Проверка новых версий прямо из приложения. Можно скачать и с сайта.</p>
       </div>
     </div>
   </section>
 
-  <section class="section-download" id="download" data-fade>
-    <h2>Скачать</h2>
-    <p>Сейчас доступна бета. Стабильная версия появится позже.</p>
-    <div class="hero-cta" style="justify-content:center;margin-top:20px;">
+  <section class="section-download" id="download" data-reveal>
+    <h2 data-reveal-child>Скачать</h2>
+    <p data-reveal-child>Сейчас доступна бета. Стабильная версия появится позже.</p>
+    <div class="hero-cta" style="justify-content:center;margin-top:20px;" data-reveal-child>
       <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
       <a class="btn btn-secondary" href="https://github.com/Therealzelensky/app-feedback/issues/new?template=beta_feedback.yml">Сообщить о проблеме</a>
     </div>
-    <div class="install-guide">
+    <div class="install-guide" data-reveal-child>
       <h3>Установка</h3>
       <ol class="install-steps">
         <li>Скачайте архив и распакуйте его.</li>
