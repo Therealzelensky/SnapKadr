@@ -113,7 +113,12 @@ fi
 
 # Source presence
 for f in \
-  Sources/SnapKadr/SuitePreferencesView.swift \
+  Sources/SnapKadr/PrefsShellView.swift \
+  Sources/SnapKadr/PrefsTypes.swift \
+  Sources/SnapKadr/PrefsGeneralView.swift \
+  Sources/SnapKadr/PrefsVersionView.swift \
+  Sources/SnapKadr/PrefsKadrView.swift \
+  Sources/SnapKadr/PrefsHotkeysView.swift \
   Sources/SnapKadr/SuiteStatusController.swift \
   Sources/SnapKadr/UpdateService.swift \
   Sources/SnapKadr/FeedbackService.swift \
@@ -134,16 +139,43 @@ do
 done
 
 # Prefs tabs mentioned in source
-if grep -q 'case general, kadr, snap, hotkeys, version' "$ROOT/Sources/SnapKadr/SuitePreferencesView.swift"; then
+if grep -q 'case general, kadr, snap, hotkeys, version' "$ROOT/Sources/SnapKadr/PrefsTypes.swift"; then
   ok "prefs tabs enum present"
 else
   ko "prefs tabs enum missing"
 fi
 
-if grep -q 'Проверить обновления' "$ROOT/Sources/SnapKadr/SuitePreferencesView.swift"; then
+if grep -q 'Проверить обновления' "$ROOT/Sources/SnapKadr/PrefsVersionView.swift"; then
   ok "Check for Updates UI in Версия"
 else
   ko "Check for Updates UI missing"
+fi
+
+# Prefs shell (sidebar, no segmented, no Save)
+if grep -q 'PrefsShellView' "$ROOT/Sources/SnapKadr/PreferencesWindowController.swift" \
+  && ! grep -rq 'pickerStyle(.segmented)' "$ROOT/Sources/SnapKadr" --include='*.swift'; then
+  ok "prefs sidebar shell (no segmented)"
+else
+  ko "prefs shell missing / segmented still present"
+fi
+
+if ! grep -rqE 'Button\(L10n\.tr\("Сохранить"' "$ROOT/Sources/SnapKadr" --include='*.swift'; then
+  ok "no Save button in suite prefs"
+else
+  ko "Save button still present"
+fi
+
+if grep -q 'SnapPrefsContent' "$ROOT/Sources/SnapKadr/PrefsShellView.swift" \
+  && grep -q 'SuiteHotkeyMonitor' "$ROOT/Sources/SnapKadr/AppDelegate.swift"; then
+  ok "Snap prefs + hotkey monitor wired"
+else
+  ko "Snap prefs / hotkeys not wired"
+fi
+
+if grep -q 'SuiteKadrSettings' "$ROOT/Sources/SnapKadr/PrefsKadrView.swift"; then
+  ok "Kadr prefs bound to SuiteKadrSettings"
+else
+  ko "Kadr prefs missing"
 fi
 
 # Single status item (not dual)
