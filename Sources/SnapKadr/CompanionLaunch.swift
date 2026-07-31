@@ -1,17 +1,11 @@
 import AppKit
 
-/// Opens companion apps via URL schemes when installed; suite keeps its own chrome.
+/// Opens Kadr companion via URL scheme until KadrKit embed (E2).
+/// Prefer **release** Kadr so beta channels don't steal Carbon hotkeys from dogfood installs.
+/// Snap capture is in-process via SnapKit — do not reintroduce snap URL launches here.
 enum CompanionLaunch {
-    static func openSnap(path: String = "area") {
-        open(schemeCandidates: ["snap-beta", "snap"], path: path)
-    }
-
     static func openKadr(path: String = "capture") {
-        open(schemeCandidates: ["kadr-beta", "kadr"], path: path)
-    }
-
-    private static func open(schemeCandidates: [String], path: String) {
-        for scheme in schemeCandidates {
+        for scheme in ["kadr", "kadr-beta"] {
             if let url = URL(string: "\(scheme)://\(path)"),
                NSWorkspace.shared.open(url) {
                 return
@@ -20,8 +14,8 @@ enum CompanionLaunch {
         let alert = NSAlert()
         alert.messageText = AppBranding.isRussianLocale ? "Приложение не найдено" : "App not found"
         alert.informativeText = AppBranding.isRussianLocale
-            ? "Установите Щёлк / Кадр (или их беты) рядом с Щёлк.Кадр."
-            : "Install Snap / Kadr (or betas) beside Snap.Kadr."
+            ? "Установите Кадр (или бету) рядом с Щёлк.Кадр."
+            : "Install Kadr (or beta) beside Snap.Kadr."
         alert.runModal()
     }
 }
