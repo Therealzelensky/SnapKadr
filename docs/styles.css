@@ -255,3 +255,109 @@ img { max-width: 100%; height: auto; display: block; }
   [data-fade] { opacity: 1; transform: none; transition: none; }
   .hero-glow.is-animated { animation: none; }
 }
+
+/* --- Screen Studio root landing --- */
+.feature-band {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 40px;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 72px 24px;
+}
+.feature-band--flip .feature-copy { order: 2; }
+.feature-band--flip .feature-media { order: 1; }
+.feature-copy h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.feature-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 36rem;
+}
+.feature-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.shot {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  background: var(--bg-elevated);
+}
+.hero-shot {
+  position: relative;
+  z-index: 1;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+.hero-shot .shot {
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+}
+.value-strip {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 16px;
+  text-align: center;
+}
+.value-strip h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.03em;
+}
+.value-strip p { color: var(--muted); margin: 0; }
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 960px;
+  margin: 28px auto 0;
+  padding: 0 24px;
+}
+.how-item {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-elevated);
+}
+.how-item h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+.how-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.section-download {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 24px;
+  text-align: center;
+}
+.how-shot {
+  max-width: 960px;
+  margin: 28px auto 0;
+  padding: 0 24px;
+}
+@media (max-width: 820px) {
+  .feature-band,
+  .feature-band--flip {
+    grid-template-columns: 1fr;
+  }
+  .feature-band--flip .feature-copy,
+  .feature-band--flip .feature-media { order: unset; }
+  .how-grid { grid-template-columns: 1fr; }
+}
