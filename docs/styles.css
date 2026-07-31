@@ -366,6 +366,10 @@ html.js-motion .hero-shot.is-media-ready {
 }
 .shot {
   width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: top center;
   border-radius: 14px;
   border: 1px solid var(--line);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
@@ -378,8 +382,11 @@ html.js-motion .hero-shot.is-media-ready {
   margin: 0 auto;
 }
 .hero-shot .shot {
+  max-height: 480px;
   border-radius: 16px 16px 0 0;
   border-bottom: none;
+  object-fit: contain;
+  background: #0c0c0e;
 }
 .value-strip {
   max-width: 720px;

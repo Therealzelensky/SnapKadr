@@ -11,6 +11,7 @@ need "$ROOT/index.html"
 need "$ROOT/snap/index.html"
 need "$ROOT/kadr/index.html"
 need "$ROOT/motion.js"
+need "$ROOT/download.js"
 grep -q -- '--bg:' "$ROOT/styles.css" || { echo "styles.css missing --bg"; fail=1; }
 grep -q -- '#C026D3' "$ROOT/styles.css" || { echo "missing magenta accent"; fail=1; }
 grep -q -- '#38BDF8' "$ROOT/styles.css" || { echo "missing cyan accent"; fail=1; }
@@ -20,15 +21,16 @@ need "$ROOT/appcast-beta.xml"
 grep -q 'page-suite' "$ROOT/index.html" || { echo "root not page-suite"; fail=1; }
 grep -q 'page-snap' "$ROOT/snap/index.html" || { echo "snap page missing class"; fail=1; }
 grep -q 'page-kadr' "$ROOT/kadr/index.html" || { echo "kadr page missing class"; fail=1; }
-grep -Eq 'releases/tag/v0\.1\.0-beta\.[0-9]+' "$ROOT/index.html" || {
-  echo "suite beta CTA missing (expected .../releases/tag/v0.1.0-beta.N)"
-  fail=1
-}
+grep -q 'releases/download/' "$ROOT/index.html" || { echo "missing direct zip download CTA"; fail=1; }
+grep -q 'releases/tag/' "$ROOT/index.html" && { echo "CTA still points to release HTML page"; fail=1; }
+grep -q 'SnapKadrBeta.zip' "$ROOT/index.html" || { echo "missing SnapKadrBeta.zip in CTA"; fail=1; }
+grep -q 'data-download="beta"' "$ROOT/index.html" || { echo "missing data-download hooks"; fail=1; }
 grep -q 'class="grid"' "$ROOT/index.html" && { echo "old hub grid still present"; fail=1; }
 [[ -s "$ROOT/appcast-beta.xml" ]] || { echo "appcast-beta empty"; fail=1; }
 grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../styles.css"; fail=1; }
 grep -q '../styles.css' "$ROOT/kadr/index.html" || { echo "kadr missing ../styles.css"; fail=1; }
 grep -q 'motion.js' "$ROOT/index.html" || { echo "root missing motion.js"; fail=1; }
+grep -q 'download.js' "$ROOT/index.html" || { echo "root missing download.js"; fail=1; }
 
 if grep -E 'Dual status|два значка|Один значок|Sparkle|\bOCR\b|scrolling|suite:' "$ROOT/index.html" >/dev/null; then
   echo "forbidden jargon in index.html"; fail=1
@@ -45,21 +47,31 @@ grep -q 'data-reveal' "$ROOT/index.html" || { echo "missing data-reveal"; fail=1
 grep -q 'data-parallax' "$ROOT/index.html" || { echo "missing data-parallax"; fail=1; }
 grep -q 'install-steps' "$ROOT/index.html" || { echo "missing install steps"; fail=1; }
 grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in install guide"; fail=1; }
-grep -q 'shot-slot' "$ROOT/index.html" || { echo "missing shot-slot placeholders"; fail=1; }
-grep -q 'assets/shots/' "$ROOT/index.html" && { echo "root still references assets/shots images"; fail=1; }
+grep -q 'assets/shots/' "$ROOT/index.html" || { echo "missing real feature shots"; fail=1; }
+grep -q 'shot-slot' "$ROOT/index.html" && { echo "shot-slot placeholders still present"; fail=1; }
+need "$ROOT/assets/shots/capture-modes.png"
+need "$ROOT/assets/shots/capture-panel.png"
+need "$ROOT/assets/shots/snap-prefs.png"
+need "$ROOT/assets/shots/snap-annotate.png"
+need "$ROOT/assets/shots/hotkeys.png"
+need "$ROOT/assets/shots/version.png"
 grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band CSS"; fail=1; }
-grep -q 'shot-slot' "$ROOT/styles.css" || { echo "missing shot-slot CSS"; fail=1; }
 grep -q 'wave-label' "$ROOT/styles.css" || { echo "missing wave-label CSS"; fail=1; }
 grep -q 'data-reveal-child' "$ROOT/styles.css" || { echo "missing reveal CSS"; fail=1; }
 grep -q 'js-motion' "$ROOT/styles.css" || { echo "missing js-motion CSS gate"; fail=1; }
 grep -q 'reveal-up' "$ROOT/styles.css" || { echo "missing reveal-up keyframes"; fail=1; }
 grep -q 'initParallax' "$ROOT/motion.js" || { echo "missing parallax in motion.js"; fail=1; }
 grep -q 'js-motion' "$ROOT/motion.js" || { echo "missing js-motion class toggle"; fail=1; }
+grep -q 'appcast-beta.xml' "$ROOT/download.js" || { echo "download.js must read appcast"; fail=1; }
 
-# Catalog density: enough feature bands for the approved long landing
 band_count="$(grep -c 'class="feature-band' "$ROOT/index.html" || true)"
 if [[ "$band_count" -lt 20 ]]; then
   echo "expected 20+ feature bands, got $band_count"; fail=1
+fi
+
+shot_count="$(grep -c 'assets/shots/' "$ROOT/index.html" || true)"
+if [[ "$shot_count" -lt 20 ]]; then
+  echo "expected 20+ shot references, got $shot_count"; fail=1
 fi
 
 exit "$fail"

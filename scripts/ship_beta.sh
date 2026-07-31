@@ -105,21 +105,21 @@ echo "==> Asset: $DOWNLOAD_URL"
 ENCLOSURE_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${TAG}/SnapKadrBeta.zip"
 TAG_URL="https://github.com/Therealzelensky/SnapKadr/releases/tag/${TAG}"
 
-# --- update landing CTAs
+# --- update landing CTAs (direct zip, not release HTML page)
 python3 - <<PY
 from pathlib import Path
 import re
 p = Path("docs/index.html")
 text = p.read_text()
 text2, n = re.subn(
-    r"https://github.com/Therealzelensky/SnapKadr/releases/tag/v0\.1\.0-beta\.\d+",
-    "${TAG_URL}",
+    r"https://github.com/Therealzelensky/SnapKadr/releases/(?:tag|download)/v0\.1\.0-beta\.\d+(?:/SnapKadrBeta\.zip)?",
+    "${ENCLOSURE_URL}",
     text,
 )
 if n == 0:
     raise SystemExit("no beta CTA URLs replaced in docs/index.html")
 p.write_text(text2)
-print(f"updated {n} CTA link(s) → ${TAG}")
+print(f"updated {n} CTA link(s) → ${ENCLOSURE_URL}")
 PY
 
 # --- appcast
