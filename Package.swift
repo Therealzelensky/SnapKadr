@@ -8,8 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
-        // Worktree: Snap feature/prefs-polish (sibling path stays ../Zelensky/Snap for main checkout)
-        .package(path: "../Zelensky/Snap/.worktrees/prefs-polish"),
+        .package(path: "../Zelensky/Snap"),
         .package(path: "../NotchHUDKit")
     ],
     targets: [
@@ -18,7 +17,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle"),
                 // Local worktree folder name becomes the package identity for path deps.
-                .product(name: "SnapKit", package: "prefs-polish"),
+                .product(name: "SnapKit", package: "Snap"),
                 .product(name: "NotchHUDKit", package: "NotchHUDKit")
             ],
             path: "Sources/SnapKadr",
