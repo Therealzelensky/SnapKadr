@@ -50,11 +50,16 @@ grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in ins
 grep -q 'assets/shots/' "$ROOT/index.html" || { echo "missing real feature shots"; fail=1; }
 grep -q 'shot-slot' "$ROOT/index.html" && { echo "shot-slot placeholders still present"; fail=1; }
 need "$ROOT/assets/shots/capture-modes.png"
-need "$ROOT/assets/shots/capture-panel.png"
+need "$ROOT/assets/shots/editor-main.png"
+need "$ROOT/assets/shots/editor-timeline.png"
 need "$ROOT/assets/shots/snap-prefs.png"
 need "$ROOT/assets/shots/snap-annotate.png"
 need "$ROOT/assets/shots/hotkeys.png"
 need "$ROOT/assets/shots/version.png"
+grep -q 'editor-main.png' "$ROOT/index.html" || { echo "landing missing editor-main shot"; fail=1; }
+grep -q 'suite-prefs.png\|version.png\|hotkeys.png' "$ROOT/index.html" || true
+# Prefer editor/product shots over menubar-only placeholders for killer features
+grep -q 'Несколько окон' "$ROOT/index.html" && grep -q 'editor-main.png' "$ROOT/index.html" || { echo "multi-window should use editor shot"; fail=1; }
 grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band CSS"; fail=1; }
 grep -q 'wave-label' "$ROOT/styles.css" || { echo "missing wave-label CSS"; fail=1; }
 grep -q 'data-reveal-child' "$ROOT/styles.css" || { echo "missing reveal CSS"; fail=1; }
