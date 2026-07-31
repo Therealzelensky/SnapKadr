@@ -1,4 +1,5 @@
 import SwiftUI
+import SnapKit
 
 struct PrefsShellView: View {
     @ObservedObject var model: PrefsRootModel
@@ -14,7 +15,7 @@ struct PrefsShellView: View {
                     switch model.selectedTab {
                     case .general: PrefsGeneralView()
                     case .kadr: PrefsKadrView()
-                    case .snap: PrefsSnapPlaceholderView()
+                    case .snap: SnapPrefsContent()
                     case .hotkeys: PrefsHotkeysView()
                     case .version: PrefsVersionView()
                     }
@@ -64,22 +65,5 @@ struct PrefsShellView: View {
         .padding(12)
         .frame(width: 180)
         .background(SuiteTheme.background)
-    }
-}
-
-/// Temporary until Task 4 wires `SnapPrefsContent`.
-struct PrefsSnapPlaceholderView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
-            SuiteSectionHeader(title: L10n.tr("Щёлк", "Snap"))
-            SuiteCard {
-                Text(L10n.tr(
-                    "Полные настройки Щёлка подключатся через SnapPrefsContent.",
-                    "Full Snap settings connect via SnapPrefsContent."
-                ))
-                .foregroundStyle(SuiteTheme.textSecondary)
-                .font(.system(size: 13))
-            }
-        }
     }
 }
