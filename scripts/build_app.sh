@@ -71,6 +71,10 @@ for f in MenuBarIcon.png "MenuBarIcon@2x.png"; do
     cp "$ROOT/Resources/$f" "$RESOURCES_DIR/$f"
   fi
 done
+if [[ -d "$ROOT/Resources/Brand" ]]; then
+  mkdir -p "$RESOURCES_DIR/Brand"
+  cp -R "$ROOT/Resources/Brand/." "$RESOURCES_DIR/Brand/"
+fi
 if [[ "$VARIANT" == "beta" && -f "$ROOT/Resources/AppIcon-Beta.icns" ]]; then
   cp "$ROOT/Resources/AppIcon-Beta.icns" "$RESOURCES_DIR/AppIcon.icns"
 elif [[ -f "$ROOT/Resources/AppIcon.icns" ]]; then
