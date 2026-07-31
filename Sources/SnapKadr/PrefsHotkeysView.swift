@@ -8,6 +8,9 @@ struct PrefsHotkeysView: View {
     @State private var recording: AppSettings.Hotkey?
     @State private var mon: Any?
     @State private var rowLabels: [AppSettings.Hotkey: String] = [:]
+    @State private var recordingKadr: SuiteKadrHotkey?
+    @State private var kadrMon: Any?
+    @State private var kadrLabels: [SuiteKadrHotkey: String] = [:]
 
     var body: some View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
@@ -32,18 +35,30 @@ struct PrefsHotkeysView: View {
             VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
                 SuiteSectionHeader(title: L10n.tr("Кадр", "Kadr"))
                 SuiteCard {
-                    Text(L10n.tr(
-                        "Биндинги Кадра появятся с KadrKit.",
-                        "Kadr bindings arrive with KadrKit."
-                    ))
-                    .font(.system(size: 13))
-                    .foregroundStyle(SuiteTheme.textSecondary)
+                    VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
+                        ForEach(SuiteKadrHotkey.prefsOrder, id: \.self) { hotkey in
+                            kadrHotkeyRow(hotkey)
+                        }
+
+                        Button(L10n.tr("Сбросить по умолчанию", "Reset to Defaults")) {
+                            SuiteKadrHotkey.resetAll()
+                            refreshKadrLabels()
+                            SuiteHotkeyMonitor.shared.reloadKadrHotkeys()
+                        }
+                        .controlSize(.small)
+                    }
                 }
             }
         }
         .suiteAppear()
-        .onAppear { refreshLabels() }
-        .onDisappear { stopRecording() }
+        .onAppear {
+            refreshLabels()
+            refreshKadrLabels()
+        }
+        .onDisappear {
+            stopRecording()
+            stopKadrRecording()
+        }
     }
 
     private var statusBanner: some View {
@@ -86,6 +101,26 @@ struct PrefsHotkeysView: View {
         }
     }
 
+    private func kadrHotkeyRow(_ hotkey: SuiteKadrHotkey) -> some View {
+        HStack {
+            Text(hotkey.title)
+                .foregroundStyle(SuiteTheme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(kadrLabels[hotkey] ?? hotkey.display) {
+                beginKadrRecording(hotkey)
+            }
+            .frame(minWidth: 100)
+            .controlSize(.small)
+            Button("×") {
+                hotkey.clear()
+                refreshKadrLabels()
+                SuiteHotkeyMonitor.shared.reloadKadrHotkeys()
+            }
+            .controlSize(.small)
+            .disabled(!hotkey.isAssigned && recordingKadr != hotkey)
+        }
+    }
+
     private func refreshLabels() {
         var map: [AppSettings.Hotkey: String] = [:]
         for h in AppSettings.Hotkey.prefsOrder {
@@ -94,8 +129,17 @@ struct PrefsHotkeysView: View {
         rowLabels = map
     }
 
+    private func refreshKadrLabels() {
+        var map: [SuiteKadrHotkey: String] = [:]
+        for h in SuiteKadrHotkey.prefsOrder {
+            map[h] = h.display
+        }
+        kadrLabels = map
+    }
+
     private func beginRecording(_ hotkey: AppSettings.Hotkey) {
         stopRecording()
+        stopKadrRecording()
         recording = hotkey
         rowLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
         mon = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -116,12 +160,43 @@ struct PrefsHotkeysView: View {
         }
     }
 
+    private func beginKadrRecording(_ hotkey: SuiteKadrHotkey) {
+        stopRecording()
+        stopKadrRecording()
+        recordingKadr = hotkey
+        kadrLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
+        kadrMon = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let mods = carbonMods(from: event.modifierFlags)
+            let key = UInt32(event.keyCode)
+            if key == UInt32(kVK_Escape) {
+                Task { @MainActor in self.stopKadrRecording(); self.refreshKadrLabels() }
+                return nil
+            }
+            guard mods != 0 else { return event }
+            hotkey.set(keyCode: key, modifiers: mods)
+            Task { @MainActor in
+                self.stopKadrRecording()
+                self.refreshKadrLabels()
+                SuiteHotkeyMonitor.shared.reloadKadrHotkeys()
+            }
+            return nil
+        }
+    }
+
     private func stopRecording() {
         if let mon {
             NSEvent.removeMonitor(mon)
             self.mon = nil
         }
         recording = nil
+    }
+
+    private func stopKadrRecording() {
+        if let kadrMon {
+            NSEvent.removeMonitor(kadrMon)
+            self.kadrMon = nil
+        }
+        recordingKadr = nil
     }
 
     private func resetDefaults() {
