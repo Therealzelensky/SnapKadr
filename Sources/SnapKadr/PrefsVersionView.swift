@@ -1,62 +1,25 @@
 import AppKit
 import SwiftUI
 
+/// Classic centered Apple About for the Version prefs tab.
 struct PrefsVersionView: View {
     @State private var autoCheck = SuiteSharedSettings.autoCheckUpdates
+    @State private var showBuild = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
-            HStack(alignment: .top, spacing: SuiteTheme.spaceM) {
-                productCard
-                developerCard
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                identityColumn
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-                SuiteSectionHeader(title: L10n.tr("Обновления", "Updates"))
-                SuiteCard {
-                    VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
-                        Toggle(isOn: Binding(
-                            get: { autoCheck },
-                            set: {
-                                autoCheck = $0
-                                SuiteSharedSettings.autoCheckUpdates = $0
-                            }
-                        )) {
-                            Text(L10n.tr("Автопроверка обновлений", "Automatically check for updates"))
-                                .foregroundStyle(SuiteTheme.textPrimary)
-                        }
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-
-                        Button(L10n.tr("Проверить обновления…", "Check for Updates…")) {
-                            UpdateService.shared.checkForUpdates()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(SuiteTheme.accent)
-                        .controlSize(.small)
-                    }
-                }
-            }
-
-            VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-                SuiteSectionHeader(title: L10n.tr("Связь", "Support"))
-                SuiteCard {
-                    HStack(spacing: 10) {
-                        Button(L10n.tr("Сообщить о проблеме", "Report a Problem")) {
-                            FeedbackService.openBugReport()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-
-                        Button(L10n.tr("Сайт", "Website")) {
-                            FeedbackService.openSite()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
-                }
-            }
+            footer
+                .padding(.horizontal, SuiteTheme.spaceXL)
+                .padding(.bottom, SuiteTheme.spaceL)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .suiteAppear()
         .onAppear {
             autoCheck = SuiteSharedSettings.autoCheckUpdates
@@ -64,61 +27,76 @@ struct PrefsVersionView: View {
         }
     }
 
-    private var productCard: some View {
-        SuiteCard {
-            VStack(alignment: .center, spacing: 10) {
-                appIconView
-                    .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                Text(AppBranding.displayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(SuiteTheme.textPrimary)
-                    .multilineTextAlignment(.center)
-                Text("\(AppBranding.shortVersion) (\(AppBranding.build))")
-                    .font(.system(size: 12))
-                    .foregroundStyle(SuiteTheme.textSecondary)
-                Text(AppBranding.channelLabel)
+    private var identityColumn: some View {
+        VStack(spacing: 0) {
+            appIconView
+                .frame(width: 112, height: 112)
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                .shadow(color: .black.opacity(0.45), radius: 20, y: 10)
+
+            Text(AppBranding.displayName)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(SuiteTheme.textPrimary)
+                .multilineTextAlignment(.center)
+                .padding(.top, 16)
+
+            Button {
+                showBuild.toggle()
+            } label: {
+                Text(showBuild
+                     ? AppBranding.build
+                     : L10n.tr("Версия \(AppBranding.shortVersion)", "Version \(AppBranding.shortVersion)"))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(SuiteTheme.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+            .accessibilityLabel(L10n.tr(
+                "Версия \(AppBranding.shortVersion), сборка \(AppBranding.build)",
+                "Version \(AppBranding.shortVersion), build \(AppBranding.build)"
+            ))
+
+            HStack(spacing: 8) {
+                neonIrisView
+                    .frame(width: 18, height: 18)
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(SuiteTheme.border, lineWidth: 1))
+                Text(L10n.tr("Therealzelensky · Щёлк.Кадр", "Therealzelensky · Snap.Kadr"))
                     .font(.system(size: 11))
                     .foregroundStyle(SuiteTheme.textTertiary)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.top, 18)
+
+            Button(L10n.tr("Проверить обновления…", "Check for Updates…")) {
+                UpdateService.shared.checkForUpdates()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(SuiteTheme.accent)
+            .controlSize(.regular)
+            .padding(.top, 22)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: 360)
+        .padding(.horizontal, SuiteTheme.spaceXL)
+        .padding(.bottom, 48)
     }
 
-    private var developerCard: some View {
-        SuiteCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
-                    neonIrisView
-                        .frame(width: 40, height: 40)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Therealzelensky")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(SuiteTheme.textPrimary)
-                        Text(L10n.tr(
-                            "macOS tools · Щёлк · Кадр · Щёлк.Кадр",
-                            "macOS tools · Snap · Kadr · Snap.Kadr"
-                        ))
-                        .font(.system(size: 11))
-                        .foregroundStyle(SuiteTheme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    }
+    private var footer: some View {
+        HStack(spacing: 10) {
+            Text(L10n.tr("Автопроверка", "Automatic checks"))
+                .font(.system(size: 11))
+                .foregroundStyle(SuiteTheme.textTertiary)
+            Spacer(minLength: 0)
+            Toggle("", isOn: Binding(
+                get: { autoCheck },
+                set: {
+                    autoCheck = $0
+                    SuiteSharedSettings.autoCheckUpdates = $0
                 }
-
-                FlowLinkChips(links: [
-                    (L10n.tr("GitHub", "GitHub"), AppBranding.developerGitHubURL),
-                    (L10n.tr("Сайт", "Site"), AppBranding.siteURL),
-                    (L10n.tr("Щёлк", "Snap"), AppBranding.snapReleasesURL),
-                    (L10n.tr("Кадр", "Kadr"), AppBranding.kadrReleasesURL),
-                    (L10n.tr("Suite", "Suite"), AppBranding.suiteReleasesURL),
-                    (L10n.tr("Проблема", "Issue"), AppBranding.feedbackNewIssueURL)
-                ])
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.small)
         }
-        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -130,7 +108,7 @@ struct PrefsVersionView: View {
                 .aspectRatio(contentMode: .fit)
         } else {
             Image(systemName: "camera.aperture")
-                .font(.system(size: 28))
+                .font(.system(size: 42, weight: .medium))
                 .foregroundStyle(SuiteTheme.accent)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(SuiteTheme.surfaceElevated)
@@ -148,30 +126,8 @@ struct PrefsVersionView: View {
                 .aspectRatio(contentMode: .fill)
         } else {
             Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 32))
+                .font(.system(size: 16))
                 .foregroundStyle(SuiteTheme.accent)
-        }
-    }
-}
-
-/// Simple wrapping chip row for developer links.
-private struct FlowLinkChips: View {
-    let links: [(String, URL)]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(Array(stride(from: 0, to: links.count, by: 3)), id: \.self) { start in
-                HStack(spacing: 6) {
-                    ForEach(start..<min(start + 3, links.count), id: \.self) { i in
-                        let item = links[i]
-                        Button(item.0) {
-                            NSWorkspace.shared.open(item.1)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.mini)
-                    }
-                }
-            }
         }
     }
 }

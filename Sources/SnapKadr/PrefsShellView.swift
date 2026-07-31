@@ -10,21 +10,30 @@ struct PrefsShellView: View {
             Rectangle()
                 .fill(SuiteTheme.border)
                 .frame(width: 1)
-            ScrollView {
-                Group {
-                    switch model.selectedTab {
-                    case .general: PrefsGeneralView()
-                    case .kadr: PrefsKadrView()
-                    case .snap: SnapPrefsContent()
-                    case .hotkeys: PrefsHotkeysView()
-                    case .notifications: PrefsNotificationsView()
-                    case .version: PrefsVersionView()
+            Group {
+                switch model.selectedTab {
+                case .version:
+                    PrefsVersionView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(SuiteTheme.background)
+                default:
+                    ScrollView {
+                        Group {
+                            switch model.selectedTab {
+                            case .general: PrefsGeneralView()
+                            case .kadr: PrefsKadrView()
+                            case .snap: SnapPrefsContent()
+                            case .hotkeys: PrefsHotkeysView()
+                            case .notifications: PrefsNotificationsView()
+                            case .version: EmptyView()
+                            }
+                        }
+                        .padding(SuiteTheme.spaceL)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .background(SuiteTheme.background)
                 }
-                .padding(SuiteTheme.spaceL)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(SuiteTheme.background)
         }
         .frame(minWidth: 640, minHeight: 480)
         .background(SuiteTheme.background)
