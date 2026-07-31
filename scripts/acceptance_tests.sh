@@ -139,10 +139,43 @@ do
 done
 
 # Prefs tabs mentioned in source
-if grep -q 'case general, kadr, snap, hotkeys, version' "$ROOT/Sources/SnapKadr/PrefsTypes.swift"; then
+if grep -q 'case general, kadr, snap, hotkeys, notifications, version' "$ROOT/Sources/SnapKadr/PrefsTypes.swift"; then
   ok "prefs tabs enum present"
 else
   ko "prefs tabs enum missing"
+fi
+
+SNAP_SRC="${SNAP_SRC:-/Users/admin/Projects/Zelensky/Snap/.worktrees/prefs-polish}"
+if [[ ! -d "$SNAP_SRC" ]]; then
+  SNAP_SRC="/Users/admin/Projects/Zelensky/Snap"
+fi
+
+if grep -q 'PrefsNotificationsView' "$ROOT/Sources/SnapKadr/PrefsShellView.swift" \
+  && grep -q 'NotchHUDKit' "$ROOT/Package.swift"; then
+  ok "Notifications tab + NotchHUDKit wired"
+else
+  ko "Notifications tab / NotchHUDKit missing"
+fi
+
+if grep -q 'SuiteKadrHotkey' "$ROOT/Sources/SnapKadr/PrefsHotkeysView.swift" \
+  && grep -q 'reloadKadrHotkeys' "$ROOT/Sources/SnapKadr/SuiteHotkeyMonitor.swift"; then
+  ok "Kadr hotkeys UI + monitor wired"
+else
+  ko "Kadr hotkeys missing"
+fi
+
+if grep -q 'WindowBGTile' "$SNAP_SRC/Snap/UI/SnapPrefsContent.swift" \
+  && grep -q 'backdropImagePath' "$SNAP_SRC/Snap/UI/SnapPrefsContent.swift"; then
+  ok "SnapPrefs window tiles + backdrop path state"
+else
+  ko "SnapPrefs window tiles / backdrop state missing"
+fi
+
+if grep -q 'Therealzelensky' "$ROOT/Sources/SnapKadr/PrefsVersionView.swift" \
+  && grep -q 'developerGitHubURL' "$ROOT/Sources/SnapKadr/AppBranding.swift"; then
+  ok "Version tab developer card"
+else
+  ko "Version developer card missing"
 fi
 
 if grep -q 'Проверить обновления' "$ROOT/Sources/SnapKadr/PrefsVersionView.swift"; then
