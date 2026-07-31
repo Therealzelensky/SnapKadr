@@ -1,8 +1,0 @@
-Generating a new signing key. This may take a moment, depending on your machine.
-A key has been generated and saved in your keychain. Add the `SUPublicEDKey` key to
-the Info.plist of each app for which you intend to use Sparkle for distributing
-updates. It should appear like this:
-
-    <key>SUPublicEDKey</key>
-    <string>hnYjsGr5iuSWjEn/N7xdoyzliru0YfKgkSdsXc4e0rw=</string>
-
