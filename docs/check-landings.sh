@@ -33,6 +33,8 @@ fi
 grep -q 'href="snap/"' "$ROOT/index.html" && { echo "root should not link to /snap/"; fail=1; }
 grep -q 'href="kadr/"' "$ROOT/index.html" && { echo "root should not link to /kadr/"; fail=1; }
 grep -q 'Несколько окон' "$ROOT/index.html" || { echo "missing multi-window killer copy"; fail=1; }
+grep -q 'install-steps' "$ROOT/index.html" || { echo "missing install steps"; fail=1; }
+grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in install guide"; fail=1; }
 grep -q 'shot-slot' "$ROOT/index.html" || { echo "missing shot-slot placeholders"; fail=1; }
 grep -q 'assets/shots/' "$ROOT/index.html" && { echo "root still references assets/shots images"; fail=1; }
 grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band CSS"; fail=1; }
