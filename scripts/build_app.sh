@@ -60,6 +60,10 @@ echo "==> Assembling ${APP_BUNDLE_NAME}.app..."
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$FRAMEWORKS_DIR"
 cp "$BIN" "$MACOS_DIR/$APP_NAME"
+# SPM links Sparkle via @rpath; point rpath at bundled Frameworks.
+if ! otool -l "$MACOS_DIR/$APP_NAME" | grep -q '@executable_path/../Frameworks'; then
+  install_name_tool -add_rpath '@executable_path/../Frameworks' "$MACOS_DIR/$APP_NAME"
+fi
 
 # Bundle Sparkle.framework from SPM build
 SPARKLE_FW="$(swift build -c release --show-bin-path)/Sparkle.framework"

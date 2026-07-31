@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Kadr Beta</title>
+    <link>https://therealzelensky.github.io/SnapKadr/</link>
+    <description>Кадр Beta updates</description>
+    <language>ru</language>
+    <item>
+      <title>0.1.0</title>
+      <pubDate>Thu, 31 Jul 2026 14:36:00 +0000</pubDate>
+      <sparkle:version>202607311730</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <description><![CDATA[<p>Кадр Beta: Sparkle updates, feedback, shared Pages.</p>]]></description>
+      <enclosure
+        url="https://github.com/Therealzelensky/Kadr/releases/download/v0.1.0-beta.1/KadrBeta.zip"
+        sparkle:edSignature="08rZ5ZAZWqDM7W3sGz2xlGIjOFbeRQ+7y8gB+h4nqckH5w8+ZsDEMFJP8IhnIZI23L9e0v1yJmBedSiML28AAw=="
+        length="6005909"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>

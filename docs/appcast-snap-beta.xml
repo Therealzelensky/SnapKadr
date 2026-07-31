@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Snap Beta</title>
+    <link>https://therealzelensky.github.io/SnapKadr/</link>
+    <description>Щёлк Beta updates</description>
+    <language>ru</language>
+    <item>
+      <title>1.0.0</title>
+      <pubDate>Thu, 31 Jul 2026 14:36:00 +0000</pubDate>
+      <sparkle:version>202607311730</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <description><![CDATA[<p>Щёлк Beta: Sparkle updates, feedback, shared Pages.</p>]]></description>
+      <enclosure
+        url="https://github.com/Therealzelensky/Snap/releases/download/v1.0.0-beta.1/SnapBeta.zip"
+        sparkle:edSignature="mSE+MXVb7siiFvyNVvs4Da2wm9WfI7o8vviweU2fIs+D8nlq29MAtcXHQJlG4TEhvMQWxZ5P5o23vmEgrXc4DQ=="
+        length="3148182"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>

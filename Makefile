@@ -1,4 +1,4 @@
-.PHONY: app app-beta run run-beta clean keys
+.PHONY: app app-beta run run-beta clean keys test acceptance
 
 app:
 	chmod +x scripts/build_app.sh
@@ -19,6 +19,12 @@ run-beta: app-beta
 keys:
 	chmod +x scripts/ensure_sparkle_keys.sh
 	./scripts/ensure_sparkle_keys.sh
+
+test: acceptance
+
+acceptance:
+	chmod +x scripts/acceptance_tests.sh
+	./scripts/acceptance_tests.sh
 
 clean:
 	rm -rf .build dist
