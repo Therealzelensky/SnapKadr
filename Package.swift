@@ -8,14 +8,17 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
-        .package(path: "../Zelensky/Snap")
+        // Worktree: Snap feature/prefs-polish (sibling path stays ../Zelensky/Snap for main checkout)
+        .package(path: "../Zelensky/Snap/.worktrees/prefs-polish"),
+        .package(path: "../NotchHUDKit")
     ],
     targets: [
         .executableTarget(
             name: "SnapKadr",
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle"),
-                .product(name: "SnapKit", package: "Snap")
+                .product(name: "SnapKit", package: "Snap"),
+                .product(name: "NotchHUDKit", package: "NotchHUDKit")
             ],
             path: "Sources/SnapKadr",
             linkerSettings: [

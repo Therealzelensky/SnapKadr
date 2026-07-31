@@ -7,9 +7,6 @@ struct PrefsGeneralView: View {
     @State private var hideMenubar = SuiteSharedSettings.hideMenubarIcon
     @State private var urlScheme = SuiteSharedSettings.urlSchemeEnabled
     @State private var diagnostics = SuiteSharedSettings.allowDiagnostics
-    @State private var confirmation = SuiteConfirmationStyle(
-        rawValue: SuiteSharedSettings.confirmationStyleRaw
-    ) ?? .notch
 
     var body: some View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
@@ -80,22 +77,6 @@ struct PrefsGeneralView: View {
                         L10n.tr("Разрешить сбор диагностики", "Allow diagnostics"),
                         $diagnostics
                     ) { SuiteSharedSettings.allowDiagnostics = $0 }
-
-                    HStack {
-                        Text(L10n.tr("Стиль подтверждения", "Confirmation style"))
-                            .foregroundStyle(SuiteTheme.textPrimary)
-                        Spacer()
-                        Picker("", selection: $confirmation) {
-                            ForEach(SuiteConfirmationStyle.allCases) { style in
-                                Text(style.title).tag(style)
-                            }
-                        }
-                        .labelsHidden()
-                        .frame(width: 220)
-                        .onChange(of: confirmation) { _, newValue in
-                            SuiteSharedSettings.confirmationStyleRaw = newValue.rawValue
-                        }
-                    }
                 }
             }
         }
