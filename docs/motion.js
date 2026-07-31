@@ -100,8 +100,19 @@
     if (heroShot) {
       setTimeout(function () {
         activate(heroShot);
-      }, 280);
+      }, 200);
     }
+
+    // Safety: never leave media invisible if IO misses
+    setTimeout(function () {
+      document.querySelectorAll(".media-pending:not(.is-media-ready)").forEach(function (el) {
+        el.classList.add("is-media-ready");
+      });
+      document.querySelectorAll("[data-reveal]:not(.is-ready)").forEach(function (el) {
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 1.2) activate(el);
+      });
+    }, 1200);
   }
 
   function initParallax() {

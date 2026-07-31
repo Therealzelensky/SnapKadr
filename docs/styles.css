@@ -268,19 +268,19 @@ html.js-motion [data-fade].is-ready {
 
 html.js-motion .feature-media.media-pending,
 html.js-motion .hero-shot.media-pending {
-  opacity: 0;
-  transform: translate3d(0, 48px, 0) scale(0.97);
-  filter: blur(12px);
+  /* Keep shots visible — only lift into place (dark UI on dark bg must not start at opacity 0) */
+  opacity: 1;
+  transform: translate3d(0, 28px, 0);
+  filter: none;
   transition:
-    opacity 1.15s var(--motion-ease) var(--reveal-delay),
-    transform 1.15s var(--motion-ease) var(--reveal-delay),
-    filter 1.15s var(--motion-ease) var(--reveal-delay);
+    transform 0.9s var(--motion-ease) var(--reveal-delay),
+    opacity 0.9s var(--motion-ease) var(--reveal-delay);
 }
 html.js-motion .feature-media.is-media-ready,
 html.js-motion .hero-shot.is-media-ready {
   opacity: 1;
   filter: none;
-  transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1);
+  transform: translate3d(0, var(--parallax-y, 0px), 0);
 }
 
 @keyframes reveal-up {
@@ -367,13 +367,36 @@ html.js-motion .hero-shot.is-media-ready {
 .shot {
   width: 100%;
   height: auto;
-  max-height: 420px;
-  object-fit: cover;
-  object-position: top center;
+  max-height: 440px;
+  object-fit: contain;
+  object-position: center center;
   border-radius: 14px;
   border: 1px solid var(--line);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  background: var(--bg-elevated);
+  background:
+    linear-gradient(180deg, #1a1a22 0%, #121218 100%);
+  padding: 12px;
+  box-sizing: border-box;
+}
+.feature-media {
+  position: relative;
+}
+.feature-media::before {
+  content: "";
+  position: absolute;
+  inset: 8% 4%;
+  border-radius: 18px;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.feature-media .shot {
+  position: relative;
+  z-index: 1;
 }
 .hero-shot {
   position: relative;
@@ -382,11 +405,12 @@ html.js-motion .hero-shot.is-media-ready {
   margin: 0 auto;
 }
 .hero-shot .shot {
-  max-height: 480px;
+  max-height: 520px;
   border-radius: 16px 16px 0 0;
   border-bottom: none;
   object-fit: contain;
-  background: #0c0c0e;
+  background: #14141a;
+  padding: 16px 16px 0;
 }
 .value-strip {
   max-width: 720px;
