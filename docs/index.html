@@ -3,44 +3,101 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Щёлк · Кадр · Щёлк.Кадр</title>
-  <meta name="description" content="Скриншоты, запись экрана и suite на macOS" />
+  <title>Щёлк.Кадр — скриншоты и запись на macOS</title>
+  <meta name="description" content="Щёлк.Кадр — suite: скриншоты и запись экрана в одном приложении для macOS. Бета отдельно от релиза." />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <main>
-    <h1>Щёлк · Кадр · Щёлк.Кадр</h1>
-    <p class="lead">Три приложения для macOS: скриншоты (Щёлк), запись и монтаж (Кадр), и объединённый suite (Щёлк.Кадр). Бета-каналы отдельно от релизов.</p>
-    <section class="grid" aria-label="Продукты">
-      <article class="card">
-        <h2>Щёлк</h2>
+<body class="page-suite">
+  <header class="site-header">
+    <a class="brand" href="./">Щёлк.Кадр</a>
+    <nav aria-label="Продукты">
+      <ul class="nav-links">
+        <li><a href="snap/">Щёлк</a></li>
+        <li><a href="kadr/">Кадр</a></li>
+        <li><a href="./" aria-current="page">Щёлк.Кадр</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
+  </header>
+
+  <section class="hero" aria-label="Главный экран">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-inner" data-fade>
+      <h1>Щёлк.Кадр</h1>
+      <p class="lead">Скриншоты и запись экрана — в одном приложении для macOS. Dual status, общие настройки, бета отдельно от релиза.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету</a>
+        <a class="btn btn-secondary" href="#inside">Что внутри</a>
+      </div>
+    </div>
+    <div class="hero-mock" data-fade aria-hidden="true">
+      <div class="mock-window mock-dots">
+        <img src="assets/neon-iris.png" alt="" width="64" height="64" style="width:64px;height:64px;border-radius:14px;margin:12px auto;" />
+        <p style="text-align:center;color:var(--muted);font-size:0.9rem;margin:0;">Suite · два status item · общие настройки</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-fade>
+    <h2>Один suite. Два инструмента.</h2>
+    <p>Щёлк отвечает за захват и аннотации. Кадр — за запись и монтаж. Вместе — без переключения между приложениями.</p>
+  </section>
+
+  <section class="section" id="inside" data-fade>
+    <h2>Что внутри</h2>
+    <div class="pillars">
+      <div class="pillar">
+        <h3>Щёлк</h3>
         <p>Скриншоты, аннотации, OCR, scrolling.</p>
-        <div class="actions">
-          <a class="btn" href="https://github.com/Therealzelensky/Snap/releases/latest">Скачать</a>
-          <a class="btn secondary" href="https://github.com/Therealzelensky/Snap/releases">Бета / Releases</a>
-        </div>
-      </article>
-      <article class="card">
-        <h2>Кадр</h2>
+        <a href="snap/">Лендинг Щёлка →</a>
+      </div>
+      <div class="pillar">
+        <h3>Кадр</h3>
         <p>Запись экрана, таймлайн, экспорт.</p>
-        <div class="actions">
-          <a class="btn" href="https://github.com/Therealzelensky/Kadr/releases/latest">Скачать</a>
-          <a class="btn secondary" href="https://github.com/Therealzelensky/Kadr/releases">Бета / Releases</a>
-        </div>
-      </article>
-      <article class="card">
-        <h2>Щёлк.Кадр</h2>
-        <p>Suite: оба продукта в одном приложении (в разработке).</p>
-        <div class="actions">
-          <a class="btn" href="https://github.com/Therealzelensky/SnapKadr/releases/latest">Скачать</a>
-          <a class="btn secondary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Бета v0.1.0</a>
-          <a class="btn secondary" href="https://github.com/Therealzelensky/app-feedback/issues/new?template=beta_feedback.yml">Сообщить о проблеме</a>
-        </div>
-      </article>
-    </section>
-    <footer>
-      <p>macOS 14+ · Обратная связь: <a href="https://github.com/Therealzelensky/app-feedback">app-feedback</a> · Каналы: <a href="https://github.com/Therealzelensky/SnapKadr/blob/main/CHANNELS.md">CHANNELS.md</a></p>
-    </footer>
-  </main>
+        <a href="kadr/">Лендинг Кадра →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-fade>
+    <h2>Как устроено</h2>
+    <ul class="feature-list">
+      <li><strong>Два значка в строке меню</strong>Щёлк и Кадр остаются привычными точками входа.</li>
+      <li><strong>Общие настройки</strong>Один prefs shell: общие, Кадр, Щёлк, клавиши, версия.</li>
+      <li><strong>Обновления из Releases</strong>Проверка обновлений через Sparkle; артефакты с GitHub Releases.</li>
+    </ul>
+  </section>
+
+  <section class="section" id="download" data-fade>
+    <h2>Скачать</h2>
+    <p>Сейчас доступна бета suite. Стабильный релиз — скоро.</p>
+    <div class="hero-cta" style="margin-top:16px;">
+      <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/tag/v0.1.0-beta.2">Скачать бету v0.1.0</a>
+      <a class="btn btn-secondary" href="https://github.com/Therealzelensky/SnapKadr/releases/latest">Stable (если есть)</a>
+      <a class="btn btn-secondary" href="https://github.com/Therealzelensky/app-feedback/issues/new?template=beta_feedback.yml">Сообщить о проблеме</a>
+    </div>
+  </section>
+
+  <section class="section" data-fade>
+    <h2>Отдельные приложения</h2>
+    <p>Нужен только один продукт — ставь standalone.</p>
+    <div class="hero-cta" style="margin-top:16px;">
+      <a class="btn btn-secondary" href="snap/">Щёлк</a>
+      <a class="btn btn-secondary" href="kadr/">Кадр</a>
+    </div>
+  </section>
+
+  <section class="section" data-fade>
+    <h2>Требования и privacy</h2>
+    <p>macOS 14+. Могут понадобиться Screen Recording, Microphone, Camera — по сценарию. На волне 1 нет трекинга пользователей; краш-репорты — только когда появятся явно.</p>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>macOS 14+ · <a href="https://github.com/Therealzelensky/app-feedback">app-feedback</a> · <a href="https://github.com/Therealzelensky/SnapKadr/blob/main/CHANNELS.md">CHANNELS.md</a></p>
+      <p><a href="snap/">Щёлк</a> · <a href="kadr/">Кадр</a> · <a href="./">Щёлк.Кадр</a></p>
+    </div>
+  </footer>
+  <script src="motion.js" defer></script>
 </body>
 </html>
