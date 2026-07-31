@@ -39,6 +39,22 @@ enum AppBranding {
         URL(string: "https://therealzelensky.github.io/SnapKadr/")!
     }
 
+    static var developerGitHubURL: URL {
+        URL(string: "https://github.com/Therealzelensky")!
+    }
+
+    static var snapReleasesURL: URL {
+        URL(string: "https://github.com/Therealzelensky/Snap/releases")!
+    }
+
+    static var kadrReleasesURL: URL {
+        URL(string: "https://github.com/Therealzelensky/Kadr/releases")!
+    }
+
+    static var suiteReleasesURL: URL {
+        URL(string: "https://github.com/Therealzelensky/SnapKadr/releases")!
+    }
+
     static var feedbackNewIssueURL: URL {
         var c = URLComponents(string: "https://github.com/Therealzelensky/app-feedback/issues/new")!
         c.queryItems = [
