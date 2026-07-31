@@ -49,21 +49,39 @@ enum SuiteBrandRenderer {
         let iconset = resources.appendingPathComponent("AppIcon.iconset", isDirectory: true)
         try fm.createDirectory(at: iconset, withIntermediateDirectories: true)
 
-        try writePNG(renderMaster(neon: neon, pixels: Int(canvas), mode: .color), to: resources.appendingPathComponent("AppIcon.png"))
+        try writePNG(renderMaster(neon: neon, pixels: Int(canvas), mode: .color(betaBadge: false)), to: resources.appendingPathComponent("AppIcon.png"))
 
         for icon in iconsetSizes {
             try writePNG(
-                renderMaster(neon: neon, pixels: icon.pixels, mode: .color),
+                renderMaster(neon: neon, pixels: icon.pixels, mode: .color(betaBadge: false)),
                 to: iconset.appendingPathComponent(icon.name)
             )
         }
         try runIconutil(iconset: iconset, output: resources.appendingPathComponent("AppIcon.icns"))
 
+        // Beta Dock/Finder icon — same mark + β badge
+        let betaIconset = resources.appendingPathComponent("AppIcon-Beta.iconset", isDirectory: true)
+        try fm.createDirectory(at: betaIconset, withIntermediateDirectories: true)
+        try writePNG(
+            renderMaster(neon: neon, pixels: Int(canvas), mode: .color(betaBadge: true)),
+            to: resources.appendingPathComponent("AppIcon-Beta.png")
+        )
+        for icon in iconsetSizes {
+            try writePNG(
+                renderMaster(neon: neon, pixels: icon.pixels, mode: .color(betaBadge: true)),
+                to: betaIconset.appendingPathComponent(icon.name)
+            )
+        }
+        try runIconutil(iconset: betaIconset, output: resources.appendingPathComponent("AppIcon-Beta.icns"))
+
         try writePNG(renderMaster(neon: neon, pixels: 18, mode: .template), to: resources.appendingPathComponent("MenuBarIcon.png"))
         try writePNG(renderMaster(neon: neon, pixels: 36, mode: .template), to: resources.appendingPathComponent("MenuBarIcon@2x.png"))
     }
 
-    enum Mode { case color, template }
+    enum Mode {
+        case color(betaBadge: Bool)
+        case template
+    }
 
     static func renderMaster(neon: NSImage, pixels: Int, mode: Mode) -> NSBitmapImageRep {
         let size = CGFloat(pixels)
@@ -92,10 +110,13 @@ enum SuiteBrandRenderer {
         bounds.fill()
 
         switch mode {
-        case .color:
+        case .color(let betaBadge):
             drawDockBackground(in: bounds)
             drawIrisPhoto(neon: neon, in: bounds)
             drawSnapFrame(in: bounds, color: NSColor(calibratedWhite: 0.965, alpha: 1))
+            if betaBadge {
+                drawBetaBadge(in: bounds)
+            }
         case .template:
             drawIrisTemplate(in: bounds)
             drawSnapFrame(in: bounds, color: .black)
@@ -103,6 +124,41 @@ enum SuiteBrandRenderer {
 
         NSGraphicsContext.restoreGraphicsState()
         return rep
+    }
+
+    /// Bottom-trailing β pill (coral) — channel marker for SnapKadrBeta only.
+    static func drawBetaBadge(in bounds: NSRect) {
+        let s = bounds.width
+        guard s >= 32 else { return }
+
+        let pad = s * 0.06
+        let h = max(10, s * 0.14)
+        let w = max(h * 1.15, s * 0.16)
+        let rect = NSRect(
+            x: bounds.maxX - pad - w,
+            y: bounds.minY + pad,
+            width: w,
+            height: h
+        )
+        let radius = h * 0.42
+        let pill = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
+        // Snap coral — OK as beta channel chip, not as viewfinder focus
+        NSColor(calibratedRed: 0.98, green: 0.235, blue: 0.388, alpha: 1).setFill()
+        pill.fill()
+
+        let fontSize = h * 0.72
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.white,
+        ]
+        let text = NSAttributedString(string: "β", attributes: attrs)
+        let textSize = text.size()
+        let textOrigin = NSPoint(
+            x: rect.midX - textSize.width / 2,
+            y: rect.midY - textSize.height / 2 - fontSize * 0.06
+        )
+        text.draw(at: textOrigin)
     }
 
     static func drawDockBackground(in bounds: NSRect) {
