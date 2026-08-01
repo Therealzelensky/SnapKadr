@@ -21,12 +21,15 @@ need "$ROOT/appcast-beta.xml"
 grep -q 'page-suite' "$ROOT/index.html" || { echo "root not page-suite"; fail=1; }
 grep -q 'page-snap' "$ROOT/snap/index.html" || { echo "snap page missing class"; fail=1; }
 grep -q 'page-kadr' "$ROOT/kadr/index.html" || { echo "kadr page missing class"; fail=1; }
-grep -q 'releases/download/' "$ROOT/index.html" || { echo "missing direct zip download CTA"; fail=1; }
+grep -q 'releases/download/' "$ROOT/index.html" || { echo "missing direct download CTA"; fail=1; }
 grep -q 'releases/tag/' "$ROOT/index.html" && { echo "CTA still points to release HTML page"; fail=1; }
-grep -q 'SnapKadrBeta.zip' "$ROOT/index.html" || { echo "missing SnapKadrBeta.zip in CTA"; fail=1; }
+grep -q 'SnapKadrBeta.dmg' "$ROOT/index.html" || { echo "missing SnapKadrBeta.dmg in CTA"; fail=1; }
+grep -q 'SnapKadrBeta.zip' "$ROOT/index.html" && { echo "CTA still points at zip (should be dmg)"; fail=1; }
 grep -q 'data-download="beta"' "$ROOT/index.html" || { echo "missing data-download hooks"; fail=1; }
 grep -q 'class="grid"' "$ROOT/index.html" && { echo "old hub grid still present"; fail=1; }
 [[ -s "$ROOT/appcast-beta.xml" ]] || { echo "appcast-beta empty"; fail=1; }
+grep -q 'SnapKadrBeta.zip' "$ROOT/appcast-beta.xml" || { echo "appcast must enclose SnapKadrBeta.zip"; fail=1; }
+grep -q 'SnapKadrBeta.dmg' "$ROOT/appcast-beta.xml" && { echo "appcast must not enclose dmg"; fail=1; }
 grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../styles.css"; fail=1; }
 grep -q '../styles.css' "$ROOT/kadr/index.html" || { echo "kadr missing ../styles.css"; fail=1; }
 grep -q 'motion.js' "$ROOT/index.html" || { echo "root missing motion.js"; fail=1; }
@@ -71,6 +74,7 @@ grep -q 'reveal-up' "$ROOT/styles.css" || { echo "missing reveal-up keyframes"; 
 grep -q 'initParallax' "$ROOT/motion.js" || { echo "missing parallax in motion.js"; fail=1; }
 grep -q 'js-motion' "$ROOT/motion.js" || { echo "missing js-motion class toggle"; fail=1; }
 grep -q 'appcast-beta.xml' "$ROOT/download.js" || { echo "download.js must read appcast"; fail=1; }
+grep -q 'SnapKadrBeta.dmg' "$ROOT/download.js" || { echo "download.js must set dmg CTA"; fail=1; }
 
 band_count="$(grep -c 'class="feature-band' "$ROOT/index.html" || true)"
 if [[ "$band_count" -lt 20 ]]; then
