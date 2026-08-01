@@ -31,3 +31,18 @@ make ship-beta
 - Override tag: `SHIP_BETA_TAG=v0.1.0-beta.99 make ship-beta`
 
 Requires a clean tracked working tree, GitHub auth (`gh` / `GH_TOKEN` / git credentials), and a Sparkle private key (`keys/ed25519` or keychain account from `generate_keys`).
+
+## Install + updates (suite beta)
+
+- Landing download: **DMG** (`SnapKadrBeta.dmg`) — drag into Applications
+- Sparkle feed (`appcast-beta.xml`): **ZIP** enclosure (`SnapKadrBeta.zip`) — in-place update, not Downloads
+- Dogfood may use Apple Development signing on the developer Mac
+
+### Public landing gate (not done yet)
+
+Before claiming the landing works on arbitrary Macs:
+
+1. **Developer ID Application** certificate in the keychain
+2. Sign with Developer ID (not Apple Development)
+3. `SNAPKADR_NOTARIZE=1` (or equivalent notarytool profile) + staple
+4. Verify Gatekeeper: `spctl -a -vv dist/SnapKadrBeta.app` → accepted / notarized

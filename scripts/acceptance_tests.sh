@@ -58,6 +58,31 @@ else
   ko "Sparkle.framework missing"
 fi
 
+# DMG builder smoke (does not upload)
+if [[ -d "$ROOT/dist/SnapKadrBeta.app" ]]; then
+  chmod +x "$ROOT/scripts/make_dmg.sh"
+  "$ROOT/scripts/make_dmg.sh" "$ROOT/dist/SnapKadrBeta.app"
+  if [[ -f "$ROOT/dist/SnapKadrBeta.dmg" ]]; then
+    ok "SnapKadrBeta.dmg built"
+  else
+    ko "SnapKadrBeta.dmg missing after make_dmg.sh"
+  fi
+fi
+
+if grep -q 'SnapKadrBeta.zip' "$ROOT/docs/appcast-beta.xml" \
+  && ! grep -q 'SnapKadrBeta.dmg' "$ROOT/docs/appcast-beta.xml"; then
+  ok "appcast-beta encloses zip only"
+else
+  ko "appcast-beta enclosure should be zip-only"
+fi
+
+if grep -q 'SnapKadrBeta.dmg' "$ROOT/docs/index.html" \
+  && ! grep -q 'SnapKadrBeta.zip' "$ROOT/docs/index.html"; then
+  ok "landing CTA is dmg"
+else
+  ko "landing CTA should be dmg-only"
+fi
+
 # Companion Sparkle feeds
 SNAP_FEED="$(defaults read "$SNAP_ROOT/dist/SnapBeta.app/Contents/Info" SUFeedURL 2>/dev/null || true)"
 if [[ "$SNAP_FEED" == *"appcast-snap-beta.xml"* ]]; then
@@ -121,6 +146,7 @@ for f in \
   Sources/SnapKadr/PrefsHotkeysView.swift \
   Sources/SnapKadr/SuiteStatusController.swift \
   Sources/SnapKadr/UpdateService.swift \
+  Sources/SnapKadr/InstallLocationGuard.swift \
   Sources/SnapKadr/FeedbackService.swift \
   docs/index.html \
   docs/appcast-beta.xml \
