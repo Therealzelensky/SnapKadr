@@ -130,6 +130,12 @@ ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>Copyright © 2026 Snap.Kadr. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Щёлк.Кадр использует камеру для наложения веб-камеры на запись экрана.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Щёлк.Кадр записывает микрофон вместе с экраном.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Щёлк.Кадр создаёт субтитры из записи голоса.</string>
 	<key>SUFeedURL</key>
 	<string>${FEED_URL}</string>
 	<key>SUEnableAutomaticChecks</key>
@@ -167,11 +173,18 @@ else
   echo "==> Codesign: $SIGN_ID"
 fi
 
-# Sign nested Sparkle first
+# Sign nested Sparkle first (camera/mic entitlements required for Continuity in-suite)
+ENTITLEMENTS_FILE="$ROOT/SnapKadr.entitlements"
 if [[ -d "$FRAMEWORKS_DIR/Sparkle.framework" ]]; then
   codesign --force --deep --sign "$SIGN_ID" "$FRAMEWORKS_DIR/Sparkle.framework" || true
 fi
-codesign --force --deep --sign "$SIGN_ID" --identifier "$BUNDLE_ID" "$APP_DIR"
+if [[ -f "$ENTITLEMENTS_FILE" ]]; then
+  echo "==> Entitlements: $ENTITLEMENTS_FILE"
+  codesign --force --deep --sign "$SIGN_ID" --entitlements "$ENTITLEMENTS_FILE" --identifier "$BUNDLE_ID" "$APP_DIR"
+else
+  echo "==> WARNING: SnapKadr.entitlements missing — Continuity/camera may be black"
+  codesign --force --deep --sign "$SIGN_ID" --identifier "$BUNDLE_ID" "$APP_DIR"
+fi
 
 # Optional notarize when Developer ID + credentials present
 if [[ "${SNAPKADR_NOTARIZE:-0}" == "1" ]]; then
