@@ -12,6 +12,8 @@
 - Only Kadr → Kadr Beta → Kadr release
 - Suite / shared → SnapKadr Beta → SnapKadr release
 
+Suite beta is **autonomous** (SnapKit + KadrKit in-process). Standalone Snap/Kadr remain optional dogfood alongside suite.
+
 Кадр Beta must never be renamed into suite beta.
 
 See also: [unification spec](https://github.com/Therealzelensky/Zelensky) (monorepo docs) / local `Zelensky/docs/superpowers/specs/2026-07-31-snapkadr-unification-design.md`.
