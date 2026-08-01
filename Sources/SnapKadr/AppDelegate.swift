@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppBranding.applyApplicationIcon()
         UpdateService.shared.start()
+        InstallLocationGuard.warnIfNeeded()
         SnapEngine.shared.prepare()
         KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()

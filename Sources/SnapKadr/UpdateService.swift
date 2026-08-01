@@ -15,12 +15,27 @@ final class UpdateService: NSObject, ObservableObject, SPUUpdaterDelegate {
     private var foundUpdateThisCycle = false
 
     func start() {
-        guard controller == nil else { return }
+        guard controller == nil else {
+            applyAutomaticUpdatePolicy()
+            return
+        }
         controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
             userDriverDelegate: nil
         )
+        applyAutomaticUpdatePolicy()
+    }
+
+    /// When auto-check is on: background check + download + silent install.
+    /// When off: only user-initiated checks (standard Sparkle UI).
+    func applyAutomaticUpdatePolicy() {
+        let enabled = SuiteSharedSettings.autoCheckUpdates
+        guard let updater = controller?.updater else { return }
+        updater.automaticallyChecksForUpdates = enabled
+        updater.automaticallyDownloadsUpdates = enabled
+        // Sparkle 2 user default: install downloaded updates without prompting
+        UserDefaults.standard.set(enabled, forKey: "SUAutomaticallyUpdate")
     }
 
     func checkForUpdates() {
@@ -39,7 +54,11 @@ final class UpdateService: NSObject, ObservableObject, SPUUpdaterDelegate {
         get { controller?.updater.automaticallyChecksForUpdates ?? true }
         set {
             start()
-            controller?.updater.automaticallyChecksForUpdates = newValue
+            if SuiteSharedSettings.autoCheckUpdates != newValue {
+                SuiteSharedSettings.autoCheckUpdates = newValue
+            } else {
+                applyAutomaticUpdatePolicy()
+            }
         }
     }
 

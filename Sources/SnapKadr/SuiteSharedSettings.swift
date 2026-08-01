@@ -34,7 +34,7 @@ enum SuiteSharedSettings {
         get { d.object(forKey: "shared.autoCheckUpdates") as? Bool ?? true }
         set {
             d.set(newValue, forKey: "shared.autoCheckUpdates")
-            UpdateService.shared.automaticallyChecksForUpdates = newValue
+            UpdateService.shared.applyAutomaticUpdatePolicy()
         }
     }
 }

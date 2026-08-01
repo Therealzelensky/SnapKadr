@@ -24,7 +24,6 @@ if [[ "$VARIANT" == "beta" ]]; then
   APP_BUNDLE_NAME="SnapKadrBeta"
   BUNDLE_ID="com.snapkadr.app.beta"
   DISPLAY_NAME="Snap.Kadr Beta"
-  URL_SCHEME="snapkadr-beta"
   BETA_PLIST_KEY=$'	<key>SnapKadrBetaBuild</key>\n	<true/>\n'
   FEED_URL="https://therealzelensky.github.io/SnapKadr/appcast-beta.xml"
 else
@@ -32,7 +31,6 @@ else
   APP_BUNDLE_NAME="SnapKadr"
   BUNDLE_ID="com.snapkadr.app"
   DISPLAY_NAME="Snap.Kadr"
-  URL_SCHEME="snapkadr"
   BETA_PLIST_KEY=""
   FEED_URL="https://therealzelensky.github.io/SnapKadr/appcast.xml"
 fi
@@ -140,18 +138,7 @@ ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>${FEED_URL}</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
-${SU_KEY_XML}	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>${BUNDLE_ID}</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>${URL_SCHEME}</string>
-			</array>
-		</dict>
-	</array>
-</dict>
+${SU_KEY_XML}</dict>
 </plist>
 EOF
 
@@ -173,35 +160,67 @@ else
   echo "==> Codesign: $SIGN_ID"
 fi
 
-# Sign nested Sparkle first (camera/mic entitlements required for Continuity in-suite)
+# Sign Sparkle inside-out (no --deep), then the app with Hardened Runtime.
 ENTITLEMENTS_FILE="$ROOT/SnapKadr.entitlements"
-if [[ -d "$FRAMEWORKS_DIR/Sparkle.framework" ]]; then
-  codesign --force --deep --sign "$SIGN_ID" "$FRAMEWORKS_DIR/Sparkle.framework" || true
+TIMESTAMP_FLAG=(--timestamp)
+if [[ "$SIGN_ID" == "-" ]]; then
+  TIMESTAMP_FLAG=(--timestamp=none)
 fi
+sign_one() {
+  local target="$1"
+  shift
+  codesign --force --sign "$SIGN_ID" --options runtime "${TIMESTAMP_FLAG[@]}" "$@" "$target"
+}
+
+if [[ -d "$FRAMEWORKS_DIR/Sparkle.framework" ]]; then
+  SPARKLE="$FRAMEWORKS_DIR/Sparkle.framework"
+  SPARKLE_B="$SPARKLE/Versions/B"
+  echo "==> Codesign Sparkle nested binaries (Hardened Runtime)"
+  # Inside-out per Sparkle docs: XPC → Autoupdate/Updater → framework (no --deep).
+  # Downloader.xpc (≥2.6): preserve entitlements metadata.
+  for xpc in "$SPARKLE_B"/XPCServices/*.xpc; do
+    [[ -d "$xpc" ]] || continue
+    if [[ "$(basename "$xpc")" == "Downloader.xpc" ]]; then
+      sign_one "$xpc" --preserve-metadata=entitlements
+    else
+      sign_one "$xpc"
+    fi
+  done
+  if [[ -d "$SPARKLE_B/Updater.app" ]]; then
+    sign_one "$SPARKLE_B/Updater.app"
+  fi
+  if [[ -f "$SPARKLE_B/Autoupdate" ]]; then
+    sign_one "$SPARKLE_B/Autoupdate"
+  fi
+  sign_one "$SPARKLE"
+fi
+
 if [[ -f "$ENTITLEMENTS_FILE" ]]; then
-  echo "==> Entitlements: $ENTITLEMENTS_FILE"
-  codesign --force --deep --sign "$SIGN_ID" --entitlements "$ENTITLEMENTS_FILE" --identifier "$BUNDLE_ID" "$APP_DIR"
+  echo "==> Entitlements: $ENTITLEMENTS_FILE (Hardened Runtime)"
+  sign_one "$APP_DIR" --entitlements "$ENTITLEMENTS_FILE" --identifier "$BUNDLE_ID"
 else
   echo "==> WARNING: SnapKadr.entitlements missing — Continuity/camera may be black"
-  codesign --force --deep --sign "$SIGN_ID" --identifier "$BUNDLE_ID" "$APP_DIR"
+  sign_one "$APP_DIR" --identifier "$BUNDLE_ID"
 fi
 
 # Optional notarize when Developer ID + credentials present
 if [[ "${SNAPKADR_NOTARIZE:-0}" == "1" ]]; then
   echo "==> Notarizing..."
-  ditto -c -k --keepParent "$APP_DIR" /tmp/${APP_BUNDLE_NAME}.zip
-  xcrun notarytool submit /tmp/${APP_BUNDLE_NAME}.zip \
+  NOTARY_ZIP="$(mktemp -t ${APP_BUNDLE_NAME}.XXXXXX.zip)"
+  ditto -c -k --keepParent "$APP_DIR" "$NOTARY_ZIP"
+  xcrun notarytool submit "$NOTARY_ZIP" \
     --apple-id "${APP_STORE_APPLE_ID:?}" \
     --team-id "${APP_STORE_TEAM_ID:?}" \
     --password "${APP_STORE_APP_SPECIFIC_PASSWORD:?}" \
     --wait
+  rm -f "$NOTARY_ZIP"
   xcrun stapler staple "$APP_DIR"
 fi
 
 INSTALL_FLAG="${SNAPKADR_INSTALL:-0}"
 if [[ "$INSTALL_FLAG" == "1" ]]; then
   ditto "$APP_DIR" "/Applications/${APP_BUNDLE_NAME}.app"
-  codesign --force --deep --sign "$SIGN_ID" --identifier "$BUNDLE_ID" "/Applications/${APP_BUNDLE_NAME}.app"
+  sign_one "/Applications/${APP_BUNDLE_NAME}.app" --identifier "$BUNDLE_ID"
   echo "==> Done: /Applications/${APP_BUNDLE_NAME}.app"
 else
   echo "==> Done: $APP_DIR"

@@ -27,7 +27,7 @@ acceptance:
 	./scripts/acceptance_tests.sh
 
 ship-beta:
-	chmod +x scripts/ship_beta.sh scripts/publish_beta_release.sh scripts/build_beta_app.sh scripts/build_app.sh scripts/ensure_sparkle_keys.sh
+	chmod +x scripts/ship_beta.sh scripts/publish_beta_release.sh scripts/make_dmg.sh scripts/build_beta_app.sh scripts/build_app.sh scripts/ensure_sparkle_keys.sh
 	./scripts/ship_beta.sh
 
 clean:
