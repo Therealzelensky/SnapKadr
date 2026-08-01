@@ -9,6 +9,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
         .package(path: "../Zelensky/Snap"),
+        .package(name: "Kadr", path: "../Zelensky/Kadr/.worktrees/multi-source-layout"),
         .package(path: "../NotchHUDKit")
     ],
     targets: [
@@ -17,6 +18,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle"),
                 .product(name: "SnapKit", package: "Snap"),
+                .product(name: "KadrKit", package: "Kadr"),
                 .product(name: "NotchHUDKit", package: "NotchHUDKit")
             ],
             path: "Sources/SnapKadr",

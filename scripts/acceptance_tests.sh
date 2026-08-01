@@ -229,9 +229,9 @@ if grep -q 'SuiteControlPanelView' "$ROOT/Sources/SnapKadr/SuiteStatusController
 else
   ko "suite panel not wired on LMB"
 fi
-if grep -q 'openKadr(path: "capture")' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+if grep -q 'KadrEngine.shared.openCaptureBar' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
   && grep -q 'rightMouseUp' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift"; then
-  ok "RMB/⌥ opens capture bar"
+  ok "RMB/⌥ opens in-process capture bar"
 else
   ko "RMB capture shortcut missing"
 fi
@@ -240,8 +240,7 @@ fi
 if grep -q 'SnapEngine.shared.captureArea' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
   && grep -q 'SnapEngine.shared.captureFull' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
   && grep -q 'SnapEngine.shared.captureActiveWindow' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
-  && ! grep -qE 'openSnap\(' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
-  && ! grep -qE 'openSnap\(' "$ROOT/Sources/SnapKadr/CompanionLaunch.swift"; then
+  && ! grep -qE 'openSnap\(' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift"; then
   ok "Snap panel actions use SnapEngine (no openSnap)"
 else
   ko "Snap still companion / SnapEngine not wired"
@@ -250,6 +249,22 @@ if grep -q 'SnapEngine.shared.prepare' "$ROOT/Sources/SnapKadr/AppDelegate.swift
   ok "SnapEngine.prepare on suite launch"
 else
   ko "SnapEngine.prepare missing on launch"
+fi
+
+# E2: Kadr in-process (no kadr:// companion)
+if grep -q 'KadrEngine.shared' "$ROOT/Sources/SnapKadr/SuiteStatusController.swift" \
+  && grep -q 'import KadrKit' "$ROOT/Sources/SnapKadr/AppDelegate.swift" \
+  && grep -q 'KadrKit' "$ROOT/Package.swift" \
+  && [[ ! -f "$ROOT/Sources/SnapKadr/CompanionLaunch.swift" ]] \
+  && ! grep -rqE 'CompanionLaunch|openKadr\(|kadr://|kadr-beta://' "$ROOT/Sources/SnapKadr" --include='*.swift'; then
+  ok "KadrKit in-process (no Kadr companion URL)"
+else
+  ko "Kadr companion still present / KadrKit not wired"
+fi
+if grep -q 'KadrEngine.shared.prepare' "$ROOT/Sources/SnapKadr/AppDelegate.swift"; then
+  ok "KadrEngine.prepare on suite launch"
+else
+  ko "KadrEngine.prepare missing on launch"
 fi
 
 # rpath for Sparkle

@@ -1,9 +1,10 @@
 import AppKit
 import SnapKit
+import KadrKit
 import SwiftUI
 
 /// Single suite status item — Kadr MenuBarIcon.
-/// LMB → Kadr-style control panel (Snap + Kadr). RMB/⌥ → capture bar.
+/// LMB → Kadr-style control panel (Snap + Kadr). RMB/⌥ → in-process capture bar.
 @MainActor
 final class SuiteStatusController: NSObject {
     private let item: NSStatusItem
@@ -39,7 +40,7 @@ final class SuiteStatusController: NSObject {
         let event = NSApp.currentEvent
         if event?.type == .rightMouseUp || event?.modifierFlags.contains(.option) == true {
             closePanel()
-            CompanionLaunch.openKadr(path: "capture")
+            KadrEngine.shared.openCaptureBar()
             return
         }
         togglePanel()
@@ -163,8 +164,8 @@ final class SuiteStatusController: NSObject {
         case .snapArea: SnapEngine.shared.captureArea()
         case .snapFull: SnapEngine.shared.captureFull()
         case .snapWindow: SnapEngine.shared.captureActiveWindow()
-        case .kadrCapture: CompanionLaunch.openKadr(path: "capture")
-        case .kadrDisplay: CompanionLaunch.openKadr(path: "display")
+        case .kadrCapture: KadrEngine.shared.openCaptureBar()
+        case .kadrDisplay: KadrEngine.shared.recordDisplay()
         case .preferences: onPreferences()
         case .quit: onQuit()
         }

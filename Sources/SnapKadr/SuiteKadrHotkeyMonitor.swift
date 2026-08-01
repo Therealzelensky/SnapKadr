@@ -1,7 +1,8 @@
 import AppKit
 import Carbon
+import KadrKit
 
-/// Carbon hotkeys for Kadr deep links. Signature `'SKKD'` — separate from Snap `'SKHK'`.
+/// Carbon hotkeys for in-process KadrEngine. Signature `'SKKD'` — separate from Snap `'SKHK'`.
 @MainActor
 final class SuiteKadrHotkeyMonitor {
     static let signature = OSType(0x534B4B44) // 'SKKD'
@@ -37,7 +38,7 @@ final class SuiteKadrHotkeyMonitor {
                       let action = SuiteKadrHotkey.from(carbonID: hotKeyID.id)
                 else { return noErr }
                 DispatchQueue.main.async {
-                    CompanionLaunch.openKadr(path: action.path)
+                    SuiteKadrHotkeyMonitor.dispatch(action)
                 }
                 return noErr
             },
@@ -63,6 +64,22 @@ final class SuiteKadrHotkeyMonitor {
         }
         if Self.shared === self {
             Self.shared = nil
+        }
+    }
+
+    static func dispatch(_ action: SuiteKadrHotkey) {
+        let engine = KadrEngine.shared
+        switch action {
+        case .capture: engine.openCaptureBar()
+        case .display: engine.recordDisplay()
+        case .area: engine.recordArea()
+        case .window: engine.recordWindow()
+        case .device: engine.recordDevice()
+        case .stop: engine.stopRecording()
+        case .newProject: engine.newProject()
+        case .openProject: engine.openProject()
+        case .snapshot: engine.takeSnapshot()
+        case .show: engine.showHome()
         }
     }
 

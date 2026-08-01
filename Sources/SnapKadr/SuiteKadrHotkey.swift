@@ -2,7 +2,7 @@ import Carbon
 import Foundation
 import SnapKit
 
-/// Suite-owned Kadr hotkey bindings (empty defaults). Dispatch via `kadr://` / `kadr-beta://`.
+/// Suite-owned Kadr hotkey bindings (empty defaults). Dispatch via `KadrEngine` in-process.
 enum SuiteKadrHotkey: String, CaseIterable, Hashable {
     case capture, display, area, window, device, stop, newProject, openProject, snapshot, show
 
@@ -10,7 +10,7 @@ enum SuiteKadrHotkey: String, CaseIterable, Hashable {
         [.capture, .display, .area, .window, .device, .stop, .newProject, .openProject, .snapshot, .show]
     }
 
-    /// Host path for `CompanionLaunch.openKadr(path:)`.
+    /// Legacy host path name (kept for prefs labels / migration); dispatch uses `SuiteKadrHotkeyMonitor.dispatch`.
     var path: String {
         switch self {
         case .capture: return "capture"

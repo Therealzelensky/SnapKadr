@@ -1,5 +1,6 @@
 import AppKit
 import SnapKit
+import KadrKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -10,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppBranding.applyApplicationIcon()
         UpdateService.shared.start()
         SnapEngine.shared.prepare()
+        KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()
 
         status = SuiteStatusController(

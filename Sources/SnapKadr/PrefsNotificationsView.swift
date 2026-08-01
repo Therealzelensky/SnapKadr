@@ -94,7 +94,7 @@ struct PrefsNotificationsView: View {
                     }
                     Text(L10n.tr(
                         "Тогглы Кадра сохраняются в suite; синхронизация с компаньоном — позже.",
-                        "Kadr toggles are stored in the suite; companion sync comes later."
+                        "Kadr notification toggles apply in-process via KadrKit."
                     ))
                     .font(.system(size: 11))
                     .foregroundStyle(SuiteTheme.textTertiary)
