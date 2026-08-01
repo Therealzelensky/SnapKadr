@@ -1,0 +1,65 @@
+/* SnapKadr landing mocks — tokens from linked product code.
+ *
+ * SuiteTheme.swift (Sources/SnapKadr):
+ *   background #0A0D10 (0.043,0.051,0.063), surface #141820,
+ *   accent #C026D3, snapAccent #38BDF8, record #EF4444,
+ *   radiusControl 10, radiusCard 14, radiusPanel 16,
+ *   spaceS 8, spaceM 12, spaceL 16, spaceXL 24
+ *
+ * PrefsShellView: sidebar width 180
+ * SuiteControlPanelView: panel width 320, padding spaceL
+ *
+ * KadrKit via Package.swift → ../../Kadr/Kadr/.worktrees/multi-source-layout
+ *   KadrTheme: background #0B0D10, surface #141820, accent #C026D3, …
+ *   EditorView.Grid: gutter 16, stack 12, sidebarWidth 300, toolStripWidth 36
+ *   StudioCaptureToolbar: lowerCapsule height 64, mini preview 84×40,
+ *     horizontal padding 14, quietCapsule fill background@0.88
+ */
+:root {
+  --suite-bg: #0A0D10;
+  --kadr-bg: #0B0D10;
+  --surface: #141820;
+  --surface-elevated: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #C026D3;
+  --snap-accent: #38BDF8;
+  --record: #EF4444;
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.55);
+  --text-3: rgba(255, 255, 255, 0.35);
+  --success: #22C55E;
+  --violet: #7C3AED;
+  --orange: #F97316;
+  --pink: #EC4899;
+
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 16px;
+
+  --space-s: 8px;
+  --space-m: 12px;
+  --space-l: 16px;
+  --space-xl: 24px;
+
+  --grid-gutter: 16px;
+  --grid-stack: 12px;
+  --grid-sidebar: 300px;
+  --grid-tools: 36px;
+
+  --prefs-sidebar: 180px;
+  --suite-panel-w: 320px;
+  --capsule-h: 64px;
+  --mini-layout-w: 84px;
+  --mini-layout-h: 40px;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: #050506;
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}

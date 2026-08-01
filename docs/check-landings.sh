@@ -53,15 +53,15 @@ grep -q 'install-steps' "$ROOT/index.html" || { echo "missing install steps"; fa
 grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in install guide"; fail=1; }
 grep -q 'assets/shots/' "$ROOT/index.html" || { echo "missing real feature shots"; fail=1; }
 grep -q 'shot-slot' "$ROOT/index.html" && { echo "shot-slot placeholders still present"; fail=1; }
-need "$ROOT/assets/shots/02-multi-window-anon.png"
-need "$ROOT/assets/shots/03-layout-before-record-anon.png"
-need "$ROOT/assets/shots/04-phone-in-frame-anon.png"
-need "$ROOT/assets/shots/05-camera-pip-anon.png"
-grep -q '02-multi-window-anon.png' "$ROOT/index.html" || { echo "landing missing multi-window anon"; fail=1; }
-grep -q '05-camera-pip-anon.png' "$ROOT/index.html" || { echo "landing missing camera anon"; fail=1; }
+need "$ROOT/assets/shots/02-multi-window-html.png"
+need "$ROOT/assets/shots/03-layout-before-record-html.png"
+need "$ROOT/assets/shots/04-phone-in-frame-html.png"
+need "$ROOT/assets/shots/05-camera-pip-html.png"
+grep -q '02-multi-window-html.png' "$ROOT/index.html" || { echo "landing missing multi-window html mock"; fail=1; }
+grep -q '05-camera-pip-html.png' "$ROOT/index.html" || { echo "landing missing camera html mock"; fail=1; }
 # Wave A must not still point at schematic mocks
 for f in 02-multi-window 03-layout-before-record 04-phone-in-frame 05-camera-pip; do
-  grep -q "${f}-mock.png" "$ROOT/index.html" && { echo "wave A still uses ${f}-mock"; fail=1; }
+  grep -q "${f}-html.png" "$ROOT/index.html" || { echo "wave A missing ${f}-html"; fail=1; }
 done
 grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band CSS"; fail=1; }
 grep -q 'wave-label' "$ROOT/styles.css" || { echo "missing wave-label CSS"; fail=1; }
