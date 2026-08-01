@@ -70,6 +70,11 @@ rm -f "$ZIP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 LENGTH=$(stat -f%z "$ZIP")
 
+chmod +x "$ROOT/scripts/make_dmg.sh"
+"$ROOT/scripts/make_dmg.sh" "$APP"
+DMG="$ROOT/dist/SnapKadrBeta.dmg"
+test -f "$DMG" || die "missing $DMG"
+
 # --- sign zip for Sparkle
 SIGN_UPDATE=$(find "$ROOT/.build" -type f -name sign_update 2>/dev/null | grep -v old_dsa | head -1 || true)
 test -n "$SIGN_UPDATE" || die "sign_update not found (run swift build / make app-beta once)"
@@ -101,27 +106,33 @@ test -n "$ED_SIG" || die "failed to parse edSignature from: $SIG_OUT"
 
 # --- publish release
 chmod +x "$ROOT/scripts/publish_beta_release.sh"
-DOWNLOAD_URL=$("$ROOT/scripts/publish_beta_release.sh" "$TAG" "$ZIP")
+DOWNLOAD_URL=$("$ROOT/scripts/publish_beta_release.sh" "$TAG" "$ZIP" "$DMG")
 echo "==> Asset: $DOWNLOAD_URL"
 
 ENCLOSURE_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${TAG}/SnapKadrBeta.zip"
+DMG_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${TAG}/SnapKadrBeta.dmg"
 TAG_URL="https://github.com/Therealzelensky/SnapKadr/releases/tag/${TAG}"
 
-# --- update landing CTAs (direct zip, not release HTML page)
+# --- update landing CTAs (direct dmg, not release HTML page / zip)
 python3 - <<PY
 from pathlib import Path
 import re
 p = Path("docs/index.html")
 text = p.read_text()
 text2, n = re.subn(
-    r"https://github.com/Therealzelensky/SnapKadr/releases/(?:tag|download)/v0\.1\.0-beta\.\d+(?:/SnapKadrBeta\.zip)?",
-    "${ENCLOSURE_URL}",
+    r"https://github.com/Therealzelensky/SnapKadr/releases/download/v0\.1\.0-beta\.\d+/SnapKadrBeta\.(?:zip|dmg)",
+    "${DMG_URL}",
     text,
 )
 if n == 0:
     raise SystemExit("no beta CTA URLs replaced in docs/index.html")
+text2, n2 = re.subn(
+    r'download="SnapKadrBeta\.(?:zip|dmg)"',
+    'download="SnapKadrBeta.dmg"',
+    text2,
+)
 p.write_text(text2)
-print(f"updated {n} CTA link(s) → ${ENCLOSURE_URL}")
+print(f"updated {n} CTA link(s) → ${DMG_URL}; download attrs={n2}")
 PY
 
 # --- appcast
@@ -169,6 +180,7 @@ git push origin "$TAG"
 
 echo ""
 echo "==> Done"
-echo "    Release:  $TAG_URL"
-echo "    Download: $ENCLOSURE_URL"
-echo "    Landing:  https://therealzelensky.github.io/SnapKadr/"
+echo "    Release:      $TAG_URL"
+echo "    Download DMG: $DMG_URL"
+echo "    Sparkle ZIP:  $ENCLOSURE_URL"
+echo "    Landing:      https://therealzelensky.github.io/SnapKadr/"
