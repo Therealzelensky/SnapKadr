@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Щёлк.Кадр — скриншоты и запись экрана для Mac</title>
   <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана для Mac в одном приложении. Несколько окон в одном кадре, монтаж, пометки, длинная страница. Скачайте бету." />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body class="page-suite">
   <header class="site-header">
@@ -30,8 +30,27 @@
         <a class="btn btn-secondary" href="#features">К возможностям</a>
       </div>
     </div>
-    <div class="hero-shot" data-reveal data-parallax>
-      <img class="shot" src="assets/shots/editor-main.png" alt="Редактор Кадра: превью, стиль и шкала времени" width="1400" height="900" decoding="async" loading="eager" fetchpriority="high" />
+    <div class="hero-shot hero-carousel" data-reveal data-parallax data-carousel>
+      <div class="hero-carousel-viewport" aria-roledescription="карусель" aria-label="Кадры приложения">
+        <!-- Временные слайды: заменим удачными кадрами из блоков ниже -->
+        <figure class="hero-slide is-active" data-slide="0">
+          <img class="shot" src="assets/shots/editor-main.png" alt="Редактор Кадра" width="1400" height="900" decoding="async" loading="eager" fetchpriority="high" />
+        </figure>
+        <figure class="hero-slide" data-slide="1" hidden>
+          <img class="shot" src="assets/shots/editor-timeline.png" alt="Шкала времени" width="1400" height="900" decoding="async" loading="lazy" />
+        </figure>
+        <figure class="hero-slide" data-slide="2" hidden>
+          <img class="shot" src="assets/shots/editor-preview.png" alt="Превью и маски" width="1400" height="900" decoding="async" loading="lazy" />
+        </figure>
+        <figure class="hero-slide" data-slide="3" hidden>
+          <img class="shot" src="assets/shots/capture-modes.png" alt="Режимы записи" width="1400" height="900" decoding="async" loading="lazy" />
+        </figure>
+      </div>
+      <div class="hero-carousel-ui">
+        <button type="button" class="hero-carousel-btn" data-carousel-prev aria-label="Предыдущий кадр">‹</button>
+        <div class="hero-carousel-dots" role="tablist" aria-label="Слайды"></div>
+        <button type="button" class="hero-carousel-btn" data-carousel-next aria-label="Следующий кадр">›</button>
+      </div>
     </div>
   </section>
 
@@ -404,7 +423,8 @@
       <p>Щёлк.Кадр · beta landing</p>
     </div>
   </footer>
-  <script src="download.js?v=7" defer></script>
-  <script src="motion.js?v=7" defer></script>
+  <script src="download.js?v=8" defer></script>
+  <script src="carousel.js?v=8" defer></script>
+  <script src="motion.js?v=8" defer></script>
 </body>
 </html>

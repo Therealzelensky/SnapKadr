@@ -31,6 +31,10 @@ grep -q '../styles.css' "$ROOT/snap/index.html" || { echo "snap missing ../style
 grep -q '../styles.css' "$ROOT/kadr/index.html" || { echo "kadr missing ../styles.css"; fail=1; }
 grep -q 'motion.js' "$ROOT/index.html" || { echo "root missing motion.js"; fail=1; }
 grep -q 'download.js' "$ROOT/index.html" || { echo "root missing download.js"; fail=1; }
+need "$ROOT/carousel.js"
+grep -q 'carousel.js' "$ROOT/index.html" || { echo "root missing carousel.js"; fail=1; }
+grep -q 'data-carousel' "$ROOT/index.html" || { echo "missing hero carousel"; fail=1; }
+grep -q 'hero-carousel' "$ROOT/styles.css" || { echo "missing hero-carousel CSS"; fail=1; }
 
 if grep -E 'Dual status|два значка|Один значок|Sparkle|\bOCR\b|scrolling|suite:' "$ROOT/index.html" >/dev/null; then
   echo "forbidden jargon in index.html"; fail=1

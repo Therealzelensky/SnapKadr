@@ -412,6 +412,97 @@ html.js-motion .hero-shot.is-media-ready {
   background: #14141a;
   padding: 16px 16px 0;
 }
+
+.hero-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 8px;
+}
+.hero-carousel-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  background: #14141a;
+}
+.hero-slide {
+  margin: 0;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.55s var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.hero-slide.is-active {
+  display: block;
+  opacity: 1;
+}
+.hero-carousel .shot {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  max-height: min(52vh, 520px);
+  width: 100%;
+  padding: 16px 16px 8px;
+}
+.hero-carousel-ui {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 16px 8px;
+}
+.hero-carousel-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.hero-carousel-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+}
+.hero-carousel-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.hero-carousel-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.hero-carousel-dot {
+  appearance: none;
+  border: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  padding: 0;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+  cursor: pointer;
+  transition: width 0.25s var(--motion-ease, ease), background 0.25s ease;
+}
+.hero-carousel-dot[aria-selected="true"] {
+  width: 22px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+}
+.hero-carousel-dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+}
 .value-strip {
   max-width: 720px;
   margin: 0 auto;
