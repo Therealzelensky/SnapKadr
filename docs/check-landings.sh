@@ -82,4 +82,13 @@ if [[ "$shot_count" -lt 20 ]]; then
   echo "expected 20+ shot references, got $shot_count"; fail=1
 fi
 
+
+html_refs="$(grep -c '\-html\.png' "$ROOT/index.html" || true)"
+if [[ "$html_refs" -lt 20 ]]; then
+  echo "expected 20+ html mock refs, got $html_refs"; fail=1
+fi
+need "$ROOT/assets/shots/06-tracks-separate-html.png"
+need "$ROOT/assets/shots/18-export-html.png"
+need "$ROOT/assets/shots/27-updates-html.png"
+
 exit "$fail"
