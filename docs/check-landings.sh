@@ -53,18 +53,16 @@ grep -q 'install-steps' "$ROOT/index.html" || { echo "missing install steps"; fa
 grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in install guide"; fail=1; }
 grep -q 'assets/shots/' "$ROOT/index.html" || { echo "missing real feature shots"; fail=1; }
 grep -q 'shot-slot' "$ROOT/index.html" && { echo "shot-slot placeholders still present"; fail=1; }
-need "$ROOT/assets/shots/02-multi-window-mock.png"
-need "$ROOT/assets/shots/03-layout-before-record-mock.png"
-need "$ROOT/assets/shots/05-camera-pip-mock.png"
-need "$ROOT/assets/shots/18-export-mock.png"
-need "$ROOT/assets/shots/20-snap-annotate-mock.png"
-need "$ROOT/assets/shots/27-updates-mock.png"
-grep -q '02-multi-window-mock.png' "$ROOT/index.html" || { echo "landing missing multi-window mock"; fail=1; }
-grep -q '\-mock\.png' "$ROOT/index.html" || { echo "landing missing anonymized mocks"; fail=1; }
-mock_refs="$(grep -c '\-mock\.png' "$ROOT/index.html" || true)"
-if [[ "$mock_refs" -lt 20 ]]; then
-  echo "expected 20+ mock shot refs, got $mock_refs"; fail=1
-fi
+need "$ROOT/assets/shots/02-multi-window-anon.png"
+need "$ROOT/assets/shots/03-layout-before-record-anon.png"
+need "$ROOT/assets/shots/04-phone-in-frame-anon.png"
+need "$ROOT/assets/shots/05-camera-pip-anon.png"
+grep -q '02-multi-window-anon.png' "$ROOT/index.html" || { echo "landing missing multi-window anon"; fail=1; }
+grep -q '05-camera-pip-anon.png' "$ROOT/index.html" || { echo "landing missing camera anon"; fail=1; }
+# Wave A must not still point at schematic mocks
+for f in 02-multi-window 03-layout-before-record 04-phone-in-frame 05-camera-pip; do
+  grep -q "${f}-mock.png" "$ROOT/index.html" && { echo "wave A still uses ${f}-mock"; fail=1; }
+done
 grep -q 'feature-band--killer' "$ROOT/styles.css" || { echo "missing killer band CSS"; fail=1; }
 grep -q 'wave-label' "$ROOT/styles.css" || { echo "missing wave-label CSS"; fail=1; }
 grep -q 'data-reveal-child' "$ROOT/styles.css" || { echo "missing reveal CSS"; fail=1; }
