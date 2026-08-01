@@ -1,4 +1,5 @@
 import SwiftUI
+import KadrKit
 
 enum SuitePanelAction {
     case snapArea
@@ -6,6 +7,8 @@ enum SuitePanelAction {
     case snapWindow
     case kadrCapture
     case kadrDisplay
+    case openProject
+    case openRecent(URL)
     case preferences
     case quit
 }
@@ -13,17 +16,42 @@ enum SuitePanelAction {
 /// Control panel chrome matched to Kadr, with Snap + Kadr sections.
 struct SuiteControlPanelView: View {
     let onAction: (SuitePanelAction) -> Void
+    var onLayoutNeeded: (() -> Void)? = nil
+
+    private enum Screen {
+        case home
+        case projects
+    }
+
+    @State private var screen: Screen = .home
+
+    private var recentURLs: [URL] {
+        AppSettings.recentProjectPaths
+            .map { URL(fileURLWithPath: $0) }
+            .filter { FileManager.default.fileExists(atPath: $0.path) }
+            .prefix(5)
+            .map { $0 }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
-            header
-            snapSection
-            kadrSection
+            switch screen {
+            case .home:
+                header
+                snapSection
+                kadrSection
+            case .projects:
+                projectsHeader
+                projectsSection
+            }
             footer
         }
         .padding(SuiteTheme.spaceL)
         .frame(width: 320)
         .background(SuiteTheme.background)
+        .onChange(of: screen) { _, _ in
+            DispatchQueue.main.async { onLayoutNeeded?() }
+        }
     }
 
     private var header: some View {
@@ -41,6 +69,31 @@ struct SuiteControlPanelView: View {
                     .foregroundStyle(SuiteTheme.textTertiary)
             }
             Spacer()
+        }
+        .suiteAppear()
+    }
+
+    private var projectsHeader: some View {
+        HStack(spacing: 8) {
+            Button {
+                screen = .home
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(L10n.tr("Назад", "Back"))
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundStyle(SuiteTheme.textSecondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            Text(L10n.tr("Проекты", "Projects"))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(SuiteTheme.textPrimary)
+            Spacer()
+            Color.clear.frame(width: 56, height: 1)
         }
         .suiteAppear()
     }
@@ -93,6 +146,91 @@ struct SuiteControlPanelView: View {
                 action: { onAction(.kadrDisplay) }
             )
             .suiteAppear(delay: 0.1)
+
+            SuiteRowButton(
+                title: L10n.tr("Проекты", "Projects"),
+                icon: "film.stack",
+                subtitle: L10n.tr("Недавние и открыть…", "Recent and open…"),
+                accent: SuiteTheme.accent,
+                action: { screen = .projects }
+            )
+            .suiteAppear(delay: 0.12)
+        }
+    }
+
+    private var projectsSection: some View {
+        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
+            SuiteSectionHeader(title: L10n.tr("Недавние", "Recent"))
+            if recentURLs.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "film.stack")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(SuiteTheme.textTertiary)
+                    Text(L10n.tr("Пока пусто", "Nothing yet"))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(SuiteTheme.textPrimary)
+                    Text(L10n.tr("Запишите первый ролик", "Record your first clip"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(SuiteTheme.textTertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(
+                    RoundedRectangle(cornerRadius: SuiteTheme.radiusCard, style: .continuous)
+                        .fill(SuiteTheme.surface)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: SuiteTheme.radiusCard, style: .continuous)
+                                .strokeBorder(SuiteTheme.border, lineWidth: 1)
+                        )
+                )
+                .suiteAppear(delay: 0.04)
+            } else {
+                SuiteCard {
+                    VStack(spacing: 0) {
+                        ForEach(Array(recentURLs.enumerated()), id: \.offset) { idx, url in
+                            Button {
+                                onAction(.openRecent(url))
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(url.deletingPathExtension().lastPathComponent)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(SuiteTheme.textPrimary)
+                                            .lineLimit(1)
+                                        Text(url.deletingLastPathComponent().lastPathComponent)
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(SuiteTheme.textTertiary)
+                                            .lineLimit(1)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(SuiteTheme.textTertiary)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            if idx < recentURLs.count - 1 {
+                                Rectangle()
+                                    .fill(SuiteTheme.border)
+                                    .frame(height: 1)
+                                    .padding(.leading, 12)
+                            }
+                        }
+                    }
+                }
+                .suiteAppear(delay: 0.04)
+            }
+
+            SuiteRowButton(
+                title: L10n.tr("Открыть проект…", "Open Project…"),
+                icon: "folder",
+                accent: SuiteTheme.accent,
+                action: { onAction(.openProject) }
+            )
+            .suiteAppear(delay: 0.08)
         }
     }
 

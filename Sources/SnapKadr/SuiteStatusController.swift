@@ -56,6 +56,7 @@ final class SuiteStatusController: NSObject {
 
     private func openPanel() {
         let panel = ensurePanel()
+        refreshPanelRoot()
         resizePanelToFit()
         positionPanel(panel)
         panel.orderFrontRegardless()
@@ -83,13 +84,28 @@ final class SuiteStatusController: NSObject {
         }
     }
 
+    private func makePanelRoot() -> SuiteControlPanelView {
+        SuiteControlPanelView(
+            onAction: { [weak self] action in
+                self?.handle(action)
+            },
+            onLayoutNeeded: { [weak self] in
+                self?.resizePanelToFit()
+                if let panel = self?.panel {
+                    self?.positionPanel(panel)
+                }
+            }
+        )
+    }
+
+    private func refreshPanelRoot() {
+        hosting?.rootView = makePanelRoot()
+    }
+
     private func ensurePanel() -> NSPanel {
         if let panel { return panel }
 
-        let root = SuiteControlPanelView { [weak self] action in
-            self?.handle(action)
-        }
-        let hosting = NSHostingView(rootView: root)
+        let hosting = NSHostingView(rootView: makePanelRoot())
         hosting.frame = NSRect(x: 0, y: 0, width: panelWidth, height: 420)
         self.hosting = hosting
 
@@ -166,6 +182,8 @@ final class SuiteStatusController: NSObject {
         case .snapWindow: SnapEngine.shared.captureActiveWindow()
         case .kadrCapture: KadrEngine.shared.openCaptureBar()
         case .kadrDisplay: KadrEngine.shared.recordDisplay()
+        case .openProject: KadrEngine.shared.openProject()
+        case .openRecent(let url): KadrEngine.shared.openProject(at: url)
         case .preferences: onPreferences()
         case .quit: onQuit()
         }
