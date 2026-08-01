@@ -87,7 +87,9 @@ if [[ -n "$PRIV" ]]; then
   SIG_OUT=$("$SIGN_UPDATE" "$ZIP" -f "$PRIV")
 else
   # Sparkle may use the keychain account created by generate_keys.
-  SIG_OUT=$("$SIGN_UPDATE" "$ZIP") || die "sign_update failed; put private key in keys/ed25519 or unlock Sparkle keychain key"
+  # Keychain account from generate_keys (default Sparkle name is "ed25519").
+  SIG_OUT=$("$SIGN_UPDATE" --account "${SPARKLE_ACCOUNT:-snapkadr}" "$ZIP") \
+    || die "sign_update failed; put private key in keys/ed25519 or unlock Sparkle keychain key (account=${SPARKLE_ACCOUNT:-snapkadr})"
 fi
 
 ED_SIG=$(printf '%s' "$SIG_OUT" | sed -n 's/.*edSignature="\([^"]*\)".*/\1/p')
