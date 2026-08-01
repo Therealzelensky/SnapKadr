@@ -4,7 +4,6 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export ROOT
 mkdir -p "$ROOT/keys"
 PUB="$ROOT/keys/ed25519.pub"
-PRIV="$ROOT/keys/ed25519"
 
 if [[ -f "$PUB" && -s "$PUB" ]]; then
   echo "==> Sparkle public key present"
@@ -35,15 +34,10 @@ if [[ -n "$GEN" && -x "$GEN" ]]; then
 fi
 
 if [[ ! -s "$PUB" ]]; then
-  # Last resort: allow app to launch; update signatures won't verify until real keys.
-  python3 - <<'PY'
-import base64, pathlib, os
-root = pathlib.Path(os.environ["ROOT"])
-pub = base64.b64encode(bytes(range(32))).decode()
-(root / "keys" / "ed25519.pub").write_text(pub + "\n")
-(root / "keys" / "ed25519").write_text("PENDING_SPARKLE_PRIVATE\n")
-print("Wrote temporary public key for Info.plist; regenerate with Sparkle generate_keys for releases")
-PY
+  echo "error: no Sparkle public key at $PUB" >&2
+  echo "  Run Sparkle generate_keys (or place ed25519.pub under keys/) before building." >&2
+  echo "  Refusing to embed a placeholder key — updates would be unverifiable or forgeable." >&2
+  exit 1
 fi
 
 echo "==> Public key: $(cat "$PUB")"

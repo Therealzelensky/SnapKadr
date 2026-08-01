@@ -58,6 +58,11 @@ enum SuiteKadrSettings {
         set { AppSettings.hideDesktopIconsWhileRecording = newValue }
     }
 
+    static var captureKeystrokes: Bool {
+        get { AppSettings.captureKeystrokes }
+        set { AppSettings.captureKeystrokes = newValue }
+    }
+
     static var playClickSounds: Bool {
         get { AppSettings.playClickSounds }
         set { AppSettings.playClickSounds = newValue }

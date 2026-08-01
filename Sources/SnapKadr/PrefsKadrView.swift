@@ -11,6 +11,7 @@ struct PrefsKadrView: View {
     @State private var systemAudio = SuiteKadrSettings.captureSystemAudio
     @State private var recordWebcam = SuiteKadrSettings.recordWebcam
     @State private var hideIcons = SuiteKadrSettings.hideDesktopIconsWhileRecording
+    @State private var captureKeystrokes = SuiteKadrSettings.captureKeystrokes
     @State private var clickSounds = SuiteKadrSettings.playClickSounds
     @State private var micID = SuiteKadrSettings.preferredMicrophoneUID ?? ""
     @State private var cameraID = SuiteKadrSettings.preferredCameraUniqueID ?? ""
@@ -102,6 +103,9 @@ struct PrefsKadrView: View {
                     liveToggle(L10n.tr("Скрывать иконки рабочего стола", "Hide desktop icons"), $hideIcons) {
                         SuiteKadrSettings.hideDesktopIconsWhileRecording = $0
                     }
+                    liveToggle(L10n.tr("Записывать нажатия клавиш", "Capture keystrokes"), $captureKeystrokes) {
+                        SuiteKadrSettings.captureKeystrokes = $0
+                    }
                     liveToggle(L10n.tr("Звуки кликов при экспорте", "Click sounds on export"), $clickSounds) {
                         SuiteKadrSettings.playClickSounds = $0
                     }
@@ -160,6 +164,7 @@ struct PrefsKadrView: View {
         systemAudio = SuiteKadrSettings.captureSystemAudio
         recordWebcam = SuiteKadrSettings.recordWebcam
         hideIcons = SuiteKadrSettings.hideDesktopIconsWhileRecording
+        captureKeystrokes = SuiteKadrSettings.captureKeystrokes
         clickSounds = SuiteKadrSettings.playClickSounds
         micID = SuiteKadrSettings.preferredMicrophoneUID ?? ""
         cameraID = SuiteKadrSettings.preferredCameraUniqueID ?? ""
