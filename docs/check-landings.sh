@@ -75,6 +75,8 @@ grep -q 'initParallax' "$ROOT/motion.js" || { echo "missing parallax in motion.j
 grep -q 'js-motion' "$ROOT/motion.js" || { echo "missing js-motion class toggle"; fail=1; }
 grep -q 'appcast-beta.xml' "$ROOT/download.js" || { echo "download.js must read appcast"; fail=1; }
 grep -q 'SnapKadrBeta.dmg' "$ROOT/download.js" || { echo "download.js must set dmg CTA"; fail=1; }
+grep -q 'reachGoal' "$ROOT/download.js" || { echo "download.js must fire Metrika download goal"; fail=1; }
+grep -q 'download_beta' "$ROOT/download.js" || { echo "download.js must use download_beta goal id"; fail=1; }
 
 band_count="$(grep -c 'class="feature-band' "$ROOT/index.html" || true)"
 if [[ "$band_count" -lt 20 ]]; then
