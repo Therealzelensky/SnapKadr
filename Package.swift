@@ -8,7 +8,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
-        .package(path: "../../Snap/Snap"),
+        // Suite-only SnapKit worktree (autonomous in-process). Companion Snap checkout stays separate.
+        .package(name: "Snap", path: "../../Snap/Snap/.worktrees/suite-embed"),
         .package(name: "Kadr", path: "../../Kadr/Kadr/.worktrees/multi-source-layout"),
         .package(path: "../../NotchHUDKit")
     ],
