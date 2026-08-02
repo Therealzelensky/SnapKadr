@@ -126,40 +126,38 @@ enum SuiteBrandRenderer {
         return rep
     }
 
-    /// Bottom-trailing BETA capsule (systemOrange) — matches KadrBetaBadge; SnapKadrBeta only.
+    /// Bottom BETA ribbon inside the dock squircle — same treatment as Kadr `stampedBetaIcon`.
     static func drawBetaBadge(in bounds: NSRect) {
         let s = bounds.width
         guard s >= 32 else { return }
 
-        let pad = s * 0.06
-        let h = max(10, s * 0.12)
-        let fontSize = h * 0.58
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .heavy)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.white,
-            .kern: fontSize * 0.06,
-        ]
-        let text = NSAttributedString(string: "BETA", attributes: attrs)
-        let textSize = text.size()
-        // Horizontal/vertical padding ratio ≈ KadrBetaBadge (7/3 at 10pt)
-        let w = max(h * 2.4, textSize.width + h * 0.7)
-        let rect = NSRect(
-            x: bounds.maxX - pad - w,
-            y: bounds.minY + pad,
-            width: w,
-            height: h
+        NSGraphicsContext.saveGraphicsState()
+        // Keep the band inside the logo silhouette (no square corners past the squircle).
+        let clip = NSBezierPath(
+            roundedRect: bounds,
+            xRadius: s * 0.223,
+            yRadius: s * 0.223
         )
-        let radius = h * 0.5
-        let pill = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
-        NSColor.systemOrange.setFill()
-        pill.fill()
+        clip.addClip()
 
+        let bandH = s * 0.22
+        let band = NSRect(x: bounds.minX, y: bounds.minY, width: s, height: bandH)
+        NSColor.systemOrange.setFill()
+        band.fill()
+
+        let fontSize = s * 0.11
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: fontSize, weight: .heavy),
+            .foregroundColor: NSColor.white,
+        ]
+        let label = "BETA" as NSString
+        let textSize = label.size(withAttributes: attrs)
         let textOrigin = NSPoint(
-            x: rect.midX - textSize.width / 2,
-            y: rect.midY - textSize.height / 2 - fontSize * 0.06
+            x: bounds.midX - textSize.width / 2,
+            y: bandH / 2 - textSize.height / 2
         )
-        text.draw(at: textOrigin)
+        label.draw(at: textOrigin, withAttributes: attrs)
+        NSGraphicsContext.restoreGraphicsState()
     }
 
     static func drawDockBackground(in bounds: NSRect) {
