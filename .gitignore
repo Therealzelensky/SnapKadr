@@ -5,3 +5,7 @@ keys/generate_keys.out
 .build/
 dist/
 .DS_Store
+docs/assets/shots/_raw/
+docs/scripts/__pycache__/
+**/__pycache__/
+*.pyc
