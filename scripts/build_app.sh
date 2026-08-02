@@ -19,12 +19,17 @@ if [[ -f "$ROOT/keys/ed25519.pub" ]]; then
   SU_PUBLIC_ED_KEY="$(tr -d '\n' < "$ROOT/keys/ed25519.pub")"
 fi
 
+# Monotonic build from env or timestamp
+MARKETING_VERSION="${SNAPKADR_VERSION:-0.1.0}"
+BUILD_NUMBER="${SNAPKADR_BUILD:-$(date +%Y%m%d%H%M)}"
+
 if [[ "$VARIANT" == "beta" ]]; then
   APP_NAME="SnapKadrBeta"
   APP_BUNDLE_NAME="SnapKadrBeta"
   BUNDLE_ID="com.snapkadr.app.beta"
   DISPLAY_NAME="Snap.Kadr Beta"
-  BETA_PLIST_KEY=$'	<key>SnapKadrBetaBuild</key>\n	<true/>\n'
+  RELEASE_TAG="${SNAPKADR_TAG:-v${MARKETING_VERSION}-beta.dev}"
+  BETA_PLIST_KEY=$'	<key>SnapKadrBetaBuild</key>\n	<true/>\n	<key>SnapKadrReleaseTag</key>\n	<string>'"${RELEASE_TAG}"$'</string>\n'
   FEED_URL="https://therealzelensky.github.io/SnapKadr/appcast-beta.xml"
 else
   APP_NAME="SnapKadr"
@@ -34,10 +39,6 @@ else
   BETA_PLIST_KEY=""
   FEED_URL="https://therealzelensky.github.io/SnapKadr/appcast.xml"
 fi
-
-# Monotonic build from env or timestamp
-MARKETING_VERSION="${SNAPKADR_VERSION:-0.1.0}"
-BUILD_NUMBER="${SNAPKADR_BUILD:-$(date +%Y%m%d%H%M)}"
 
 APP_DIR="$ROOT/dist/${APP_BUNDLE_NAME}.app"
 CONTENTS="$APP_DIR/Contents"

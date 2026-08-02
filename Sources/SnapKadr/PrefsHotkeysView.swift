@@ -140,9 +140,9 @@ struct PrefsHotkeysView: View {
     }
 
     private func beginRecording(_ hotkey: AppSettings.Hotkey) {
-        stopRecording()
-        stopKadrRecording()
-        SnapEngine.shared.cancelActiveCapture()
+        stopRecording(resumeCarbon: false)
+        stopKadrRecording(resumeCarbon: false)
+        SuiteHotkeyMonitor.shared.pauseForBindingAssignment()
         NSApp.activate(ignoringOtherApps: true)
         recording = hotkey
         rowLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
@@ -161,16 +161,15 @@ struct PrefsHotkeysView: View {
             Task { @MainActor in
                 self.stopRecording()
                 self.refreshLabels()
-                SuiteHotkeyMonitor.shared.refreshCoexistence()
             }
             return nil
         }
     }
 
     private func beginKadrRecording(_ hotkey: SuiteKadrHotkey) {
-        stopRecording()
-        stopKadrRecording()
-        SnapEngine.shared.cancelActiveCapture()
+        stopRecording(resumeCarbon: false)
+        stopKadrRecording(resumeCarbon: false)
+        SuiteHotkeyMonitor.shared.pauseForBindingAssignment()
         NSApp.activate(ignoringOtherApps: true)
         recordingKadr = hotkey
         kadrLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
@@ -189,26 +188,29 @@ struct PrefsHotkeysView: View {
             Task { @MainActor in
                 self.stopKadrRecording()
                 self.refreshKadrLabels()
-                SuiteHotkeyMonitor.shared.reloadKadrHotkeys()
             }
             return nil
         }
     }
 
-    private func stopRecording() {
+    private func stopRecording(resumeCarbon: Bool = true) {
+        let was = recording != nil || mon != nil
         if let mon {
             NSEvent.removeMonitor(mon)
             self.mon = nil
         }
         recording = nil
+        if was, resumeCarbon { SuiteHotkeyMonitor.shared.resumeAfterBindingAssignment() }
     }
 
-    private func stopKadrRecording() {
+    private func stopKadrRecording(resumeCarbon: Bool = true) {
+        let was = recordingKadr != nil || kadrMon != nil
         if let kadrMon {
             NSEvent.removeMonitor(kadrMon)
             self.kadrMon = nil
         }
         recordingKadr = nil
+        if was, resumeCarbon { SuiteHotkeyMonitor.shared.resumeAfterBindingAssignment() }
     }
 
     private func resetDefaults() {

@@ -35,6 +35,15 @@ enum AppBranding {
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "1"
     }
 
+    /// Ship tag for UI (e.g. `v0.1.0-beta.8`). Falls back to marketing short version.
+    static var releaseLabel: String {
+        if let tag = Bundle.main.object(forInfoDictionaryKey: "SnapKadrReleaseTag") as? String {
+            let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { return trimmed }
+        }
+        return shortVersion
+    }
+
     static var siteURL: URL {
         URL(string: "https://therealzelensky.github.io/SnapKadr/")!
     }
@@ -59,7 +68,7 @@ enum AppBranding {
         var c = URLComponents(string: "https://github.com/Therealzelensky/app-feedback/issues/new")!
         c.queryItems = [
             URLQueryItem(name: "template", value: "beta_feedback.yml"),
-            URLQueryItem(name: "title", value: "[\(isBeta ? "beta" : "release")] \(displayName) \(shortVersion) (\(build))")
+            URLQueryItem(name: "title", value: "[\(isBeta ? "beta" : "release")] \(displayName) \(releaseLabel) (\(build))")
         ]
         return c.url!
     }

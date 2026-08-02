@@ -47,17 +47,15 @@ struct PrefsVersionView: View {
             Button {
                 showBuild.toggle()
             } label: {
-                Text(showBuild
-                     ? AppBranding.build
-                     : L10n.tr("Версия \(AppBranding.shortVersion)", "Version \(AppBranding.shortVersion)"))
+                Text(showBuild ? AppBranding.build : AppBranding.releaseLabel)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(SuiteTheme.textTertiary)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
             .accessibilityLabel(L10n.tr(
-                "Версия \(AppBranding.shortVersion), сборка \(AppBranding.build)",
-                "Version \(AppBranding.shortVersion), build \(AppBranding.build)"
+                "\(AppBranding.releaseLabel), сборка \(AppBranding.build)",
+                "\(AppBranding.releaseLabel), build \(AppBranding.build)"
             ))
 
             if updates.updateAvailable, let pending = updates.pendingShortVersion {
