@@ -126,34 +126,35 @@ enum SuiteBrandRenderer {
         return rep
     }
 
-    /// Bottom-trailing β pill (coral) — channel marker for SnapKadrBeta only.
+    /// Bottom-trailing BETA capsule (systemOrange) — matches KadrBetaBadge; SnapKadrBeta only.
     static func drawBetaBadge(in bounds: NSRect) {
         let s = bounds.width
         guard s >= 32 else { return }
 
         let pad = s * 0.06
-        let h = max(10, s * 0.14)
-        let w = max(h * 1.15, s * 0.16)
+        let h = max(10, s * 0.12)
+        let fontSize = h * 0.58
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .heavy)
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.white,
+            .kern: fontSize * 0.06,
+        ]
+        let text = NSAttributedString(string: "BETA", attributes: attrs)
+        let textSize = text.size()
+        // Horizontal/vertical padding ratio ≈ KadrBetaBadge (7/3 at 10pt)
+        let w = max(h * 2.4, textSize.width + h * 0.7)
         let rect = NSRect(
             x: bounds.maxX - pad - w,
             y: bounds.minY + pad,
             width: w,
             height: h
         )
-        let radius = h * 0.42
+        let radius = h * 0.5
         let pill = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
-        // Snap coral — OK as beta channel chip, not as viewfinder focus
-        NSColor(calibratedRed: 0.98, green: 0.235, blue: 0.388, alpha: 1).setFill()
+        NSColor.systemOrange.setFill()
         pill.fill()
 
-        let fontSize = h * 0.72
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.white,
-        ]
-        let text = NSAttributedString(string: "β", attributes: attrs)
-        let textSize = text.size()
         let textOrigin = NSPoint(
             x: rect.midX - textSize.width / 2,
             y: rect.midY - textSize.height / 2 - fontSize * 0.06
