@@ -171,12 +171,19 @@ if git diff --cached --quiet; then
 fi
 git commit -m "docs: ship ${TAG}"
 
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  die "tag $TAG already exists locally"
-fi
-git tag -a "$TAG" -m "$TAG"
 git push origin main
-git push origin "$TAG"
+
+# publish_beta_release.sh creates the GitHub Release tag first; avoid failing on re-push.
+if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q .; then
+  echo "==> Tag ${TAG} already on remote (GitHub Release); syncing locally"
+  git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || true
+else
+  if git rev-parse "$TAG" >/dev/null 2>&1; then
+    die "tag $TAG already exists locally"
+  fi
+  git tag -a "$TAG" -m "$TAG"
+  git push origin "$TAG"
+fi
 
 echo ""
 echo "==> Done"
