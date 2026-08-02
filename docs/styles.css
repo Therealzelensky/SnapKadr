@@ -571,6 +571,39 @@ html.js-motion .hero-shot.is-media-ready {
   color: var(--fg, #f4f4f5);
   font-weight: 600;
 }
+.faq-list {
+  display: grid;
+  gap: 10px;
+  max-width: 720px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+  padding: 0 16px;
+}
+.faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  padding: 14px 0;
+  letter-spacing: -0.02em;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+";
+  float: right;
+  color: var(--muted);
+  font-weight: 400;
+}
+.faq-item[open] summary::after { content: "–"; }
+.faq-item p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
 .how-shot {
   max-width: 960px;
   margin: 28px auto 0;

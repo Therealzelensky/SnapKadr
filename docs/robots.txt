@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Legacy product stubs — keep crawl budget on the suite landing
+Disallow: /mocks/
+Disallow: /scripts/
+
+Sitemap: https://therealzelensky.github.io/SnapKadr/sitemap.xml

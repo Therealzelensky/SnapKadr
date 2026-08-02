@@ -3,9 +3,130 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Щёлк.Кадр — скриншоты и запись экрана для Mac</title>
-  <meta name="description" content="Щёлк.Кадр — скриншоты и запись экрана для Mac в одном приложении. Несколько окон в одном кадре, монтаж, пометки, длинная страница. Скачайте бету." />
-  <link rel="stylesheet" href="styles.css?v=17" />
+  <title>Щёлк.Кадр — запись экрана и скриншоты для Mac</title>
+  <meta name="description" content="Щёлк.Кадр для Mac: запись нескольких окон в одном кадре, монтаж ролика и скриншоты с пометками. Бета для macOS 14+ — скачайте бесплатно." />
+  <meta name="keywords" content="запись экрана Mac, скриншоты Mac, screen recorder macOS, захват экрана, несколько окон, Щёлк.Кадр, SnapKadr" />
+  <meta name="author" content="Щёлк.Кадр" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="yandex" content="index, follow" />
+  <meta name="googlebot" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#0A0A0C" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="canonical" href="https://therealzelensky.github.io/SnapKadr/" />
+  <link rel="alternate" hreflang="ru" href="https://therealzelensky.github.io/SnapKadr/" />
+  <link rel="alternate" hreflang="x-default" href="https://therealzelensky.github.io/SnapKadr/" />
+  <link rel="icon" href="assets/app-icon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/app-icon.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:site_name" content="Щёлк.Кадр" />
+  <meta property="og:url" content="https://therealzelensky.github.io/SnapKadr/" />
+  <meta property="og:title" content="Щёлк.Кадр — запись экрана и скриншоты для Mac" />
+  <meta property="og:description" content="Несколько окон в одном кадре, монтаж и скриншоты с пометками. Бета для macOS 14+." />
+  <meta property="og:image" content="https://therealzelensky.github.io/SnapKadr/assets/shots/02-multi-window-html.png" />
+  <meta property="og:image:width" content="1600" />
+  <meta property="og:image:height" content="1000" />
+  <meta property="og:image:alt" content="Несколько окон Mac в одном кадре записи Щёлк.Кадр" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Щёлк.Кадр — запись экрана и скриншоты для Mac" />
+  <meta name="twitter:description" content="Несколько окон в одном кадре, монтаж и скриншоты с пометками. Бета для macOS 14+." />
+  <meta name="twitter:image" content="https://therealzelensky.github.io/SnapKadr/assets/shots/02-multi-window-html.png" />
+
+  <link rel="stylesheet" href="styles.css?v=18" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://therealzelensky.github.io/SnapKadr/#website",
+        "url": "https://therealzelensky.github.io/SnapKadr/",
+        "name": "Щёлк.Кадр",
+        "inLanguage": "ru-RU",
+        "description": "Скриншоты и запись экрана для Mac в одном приложении.",
+        "publisher": { "@id": "https://therealzelensky.github.io/SnapKadr/#org" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://therealzelensky.github.io/SnapKadr/#org",
+        "name": "Щёлк.Кадр",
+        "url": "https://therealzelensky.github.io/SnapKadr/",
+        "logo": "https://therealzelensky.github.io/SnapKadr/assets/app-icon.png",
+        "sameAs": [
+          "https://github.com/Therealzelensky/SnapKadr"
+        ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://therealzelensky.github.io/SnapKadr/#app",
+        "name": "Щёлк.Кадр",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "macOS 14+",
+        "inLanguage": "ru-RU",
+        "description": "Скриншоты и запись экрана для Mac: несколько окон в одном кадре, монтаж ролика и пометки на снимках.",
+        "url": "https://therealzelensky.github.io/SnapKadr/",
+        "image": "https://therealzelensky.github.io/SnapKadr/assets/shots/02-multi-window-html.png",
+        "downloadUrl": "https://therealzelensky.github.io/SnapKadr/#download",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "RUB",
+          "availability": "https://schema.org/InStock"
+        },
+        "author": { "@id": "https://therealzelensky.github.io/SnapKadr/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://therealzelensky.github.io/SnapKadr/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Что такое Щёлк.Кадр?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Щёлк.Кадр — приложение для Mac, в котором совмещены скриншоты (Щёлк) и запись экрана с монтажом (Кадр). Несколько окон можно записать в одном кадре без склейки в другом редакторе."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "На каких Mac работает?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Нужен macOS 14 или новее. Приложение работает на Apple Silicon и Intel."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Чем это лучше встроенной записи экрана macOS?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Можно собрать несколько окон в одном кадре до старта записи, добавить камеру или телефон, смонтировать ролик (зумы, курсор, маски, субтитры) и сразу сделать скриншоты с пометками — всё в одном приложении."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Как скачать и установить?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Скачайте бета-образ SnapKadrBeta.dmg с этой страницы, перетащите приложение в «Программы» и откройте его оттуда. При первом захвате разрешите доступ к экрану в настройках macOS."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Это бесплатно?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Сейчас доступна бесплатная бета. Стабильный релиз появится позже."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="page-suite">
   <!-- Yandex.Metrika counter -->
@@ -27,6 +148,7 @@
       <ul class="nav-links">
         <li><a href="#features">Возможности</a></li>
         <li><a href="#how">Как устроено</a></li>
+        <li><a href="#faq">Вопросы</a></li>
         <li><a href="#download">Скачать</a></li>
       </ul>
     </nav>
@@ -37,7 +159,7 @@
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="hero-inner" data-reveal>
       <h1 data-reveal-child>Щёлк.Кадр</h1>
-      <p class="lead" data-reveal-child>Скриншоты и запись экрана для Mac в одном приложении. Несколько окон — в одном кадре.</p>
+      <p class="lead" data-reveal-child>Запись экрана и скриншоты для Mac в одном приложении. Несколько окон — в одном кадре.</p>
       <div class="hero-cta" data-reveal-child>
         <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.0-beta016/SnapKadrBeta.dmg" data-download="beta" download="SnapKadrBeta.dmg">Скачать бету</a>
         <a class="btn btn-secondary" href="#features">К возможностям</a>
@@ -47,16 +169,16 @@
       <div class="hero-carousel-viewport" aria-roledescription="карусель" aria-label="Кадры приложения">
         <!-- Временные слайды: заменим удачными кадрами из блоков ниже -->
         <figure class="hero-slide is-active" data-slide="0">
-          <img class="shot" src="assets/shots/02-multi-window-html.png" alt="Несколько окон" width="1400" height="900" decoding="async" loading="eager" fetchpriority="high" />
+          <img class="shot" src="assets/shots/02-multi-window-html.png" alt="Запись экрана Mac: несколько окон в одном кадре Щёлк.Кадр" width="1400" height="900" decoding="async" loading="eager" fetchpriority="high" />
         </figure>
         <figure class="hero-slide" data-slide="1" hidden>
-          <img class="shot" src="assets/shots/03-layout-before-record-html.png" alt="Раскладка" width="1400" height="900" decoding="async" loading="lazy" />
+          <img class="shot" src="assets/shots/03-layout-before-record-html.png" alt="Раскладка окон перед записью экрана на Mac" width="1400" height="900" decoding="async" loading="lazy" />
         </figure>
         <figure class="hero-slide" data-slide="2" hidden>
-          <img class="shot" src="assets/shots/04-phone-in-frame-html.png" alt="Телефон" width="1400" height="900" decoding="async" loading="lazy" />
+          <img class="shot" src="assets/shots/04-phone-in-frame-html.png" alt="Экран iPhone в той же записи экрана на Mac" width="1400" height="900" decoding="async" loading="lazy" />
         </figure>
         <figure class="hero-slide" data-slide="3" hidden>
-          <img class="shot" src="assets/shots/05-camera-pip-html.png" alt="Камера" width="1400" height="900" decoding="async" loading="lazy" />
+          <img class="shot" src="assets/shots/05-camera-pip-html.png" alt="Камера Continuity в кадре записи экрана Mac" width="1400" height="900" decoding="async" loading="lazy" />
         </figure>
       </div>
       <div class="hero-carousel-ui">
@@ -412,9 +534,35 @@
     </div>
   </section>
 
+  <section class="section" id="faq" data-reveal>
+    <h2 data-reveal-child>Частые вопросы</h2>
+    <div class="faq-list">
+      <details class="faq-item" data-reveal-child>
+        <summary>Что такое Щёлк.Кадр?</summary>
+        <p>Приложение для Mac: скриншоты (Щёлк) и запись экрана с монтажом (Кадр) в одном месте. Несколько окон — в одном кадре, без склейки в другом редакторе.</p>
+      </details>
+      <details class="faq-item" data-reveal-child>
+        <summary>На каких Mac работает?</summary>
+        <p>macOS&nbsp;14 или новее. Подходят компьютеры на Apple Silicon и Intel.</p>
+      </details>
+      <details class="faq-item" data-reveal-child>
+        <summary>Чем лучше встроенной записи экрана macOS?</summary>
+        <p>Соберите раскладку окон до старта, добавьте камеру или телефон, смонтируйте ролик (зумы, курсор, маски, субтитры) и сделайте скриншоты с пометками — всё в одном приложении.</p>
+      </details>
+      <details class="faq-item" data-reveal-child>
+        <summary>Как скачать и установить?</summary>
+        <p>Скачайте <strong>SnapKadrBeta.dmg</strong>, перетащите приложение в «Программы» и откройте его оттуда. При первом захвате разрешите доступ к экрану.</p>
+      </details>
+      <details class="faq-item" data-reveal-child>
+        <summary>Это бесплатно?</summary>
+        <p>Сейчас доступна бесплатная бета. Стабильная версия появится позже.</p>
+      </details>
+    </div>
+  </section>
+
   <section class="section-download" id="download" data-reveal>
-    <h2 data-reveal-child>Скачать</h2>
-    <p data-reveal-child>Сейчас доступна бета. Стабильная версия появится позже.</p>
+    <h2 data-reveal-child>Скачать запись экрана и скриншоты для Mac</h2>
+    <p data-reveal-child>Бесплатная бета Щёлк.Кадр для macOS&nbsp;14+. Стабильная версия появится позже.</p>
     <div class="hero-cta" style="justify-content:center;margin-top:20px;" data-reveal-child>
       <a class="btn btn-primary" href="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.0-beta016/SnapKadrBeta.dmg" data-download="beta" download="SnapKadrBeta.dmg">Скачать бету</a>
       <a class="btn btn-secondary" href="https://github.com/Therealzelensky/app-feedback/issues/new?template=beta_feedback.yml">Сообщить о проблеме</a>
@@ -432,8 +580,8 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <p>macOS 14+ · <a href="https://github.com/Therealzelensky/app-feedback">обратная связь</a> · <a href="https://github.com/Therealzelensky/SnapKadr/blob/main/CHANNELS.md">каналы</a></p>
-      <p>Щёлк.Кадр · beta landing</p>
+      <p>macOS 14+ · <a href="https://github.com/Therealzelensky/app-feedback">обратная связь</a> · <a href="https://github.com/Therealzelensky/SnapKadr/blob/main/CHANNELS.md">каналы</a> · <a href="https://github.com/Therealzelensky/SnapKadr">GitHub</a></p>
+      <p>Щёлк.Кадр — скриншоты и запись экрана для Mac</p>
     </div>
   </footer>
   <script src="download.js?v=18" defer></script>

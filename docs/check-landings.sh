@@ -96,5 +96,17 @@ fi
 need "$ROOT/assets/shots/06-tracks-separate-html.png"
 need "$ROOT/assets/shots/18-export-html.png"
 need "$ROOT/assets/shots/27-updates-html.png"
+need "$ROOT/robots.txt"
+need "$ROOT/sitemap.xml"
+grep -q 'Sitemap:' "$ROOT/robots.txt" || { echo "robots.txt missing Sitemap"; fail=1; }
+grep -q 'therealzelensky.github.io/SnapKadr' "$ROOT/sitemap.xml" || { echo "sitemap missing canonical host"; fail=1; }
+grep -q 'rel="canonical"' "$ROOT/index.html" || { echo "index missing canonical"; fail=1; }
+grep -q 'application/ld+json' "$ROOT/index.html" || { echo "index missing JSON-LD"; fail=1; }
+grep -q 'og:image' "$ROOT/index.html" || { echo "index missing og:image"; fail=1; }
+grep -q 'id="faq"' "$ROOT/index.html" || { echo "index missing FAQ section"; fail=1; }
+grep -q 'FAQPage' "$ROOT/index.html" || { echo "index missing FAQPage schema"; fail=1; }
+grep -q 'SoftwareApplication' "$ROOT/index.html" || { echo "index missing SoftwareApplication schema"; fail=1; }
+grep -q 'noindex' "$ROOT/snap/index.html" || { echo "snap should be noindex"; fail=1; }
+grep -q 'noindex' "$ROOT/kadr/index.html" || { echo "kadr should be noindex"; fail=1; }
 
 exit "$fail"
