@@ -43,17 +43,26 @@ git checkout main
 git pull --ff-only origin main
 
 # --- next tag
+# Format: v0.1.0-betaNNN (zero-padded, no dot before N).
+# Legacy was v0.1.0-beta.N — GitHub sorts tags as text, so beta.9 ranked above beta.15.
+# New form sorts above all legacy dotted tags (after "beta", digit > '.').
 if [[ -n "${SHIP_BETA_TAG:-}" ]]; then
   TAG="$SHIP_BETA_TAG"
 else
   git fetch --tags origin 2>/dev/null || true
-  LAST=$(git tag -l 'v0.1.0-beta.*' --sort=-v:refname | head -1 || true)
-  if [[ -z "$LAST" ]]; then
-    TAG="v0.1.0-beta.1"
-  else
-    N="${LAST##*.}"
-    TAG="v0.1.0-beta.$((N + 1))"
-  fi
+  TAG="$(
+    python3 - <<'PY'
+import re, subprocess
+raw = subprocess.check_output(["git", "tag", "-l", "v0.1.0-beta*"], text=True)
+nums = []
+for t in raw.split():
+    m = re.fullmatch(r"v0\.1\.0-beta\.?(\d+)", t)
+    if m:
+        nums.append(int(m.group(1)))
+n = (max(nums) if nums else 0) + 1
+print(f"v0.1.0-beta{n:03d}")
+PY
+  )"
 fi
 echo "==> Shipping $TAG"
 
@@ -120,7 +129,7 @@ import re
 p = Path("docs/index.html")
 text = p.read_text()
 text2, n = re.subn(
-    r"https://github.com/Therealzelensky/SnapKadr/releases/download/v0\.1\.0-beta\.\d+/SnapKadrBeta\.(?:zip|dmg)",
+    r"https://github.com/Therealzelensky/SnapKadr/releases/download/v0\.1\.0-beta\.?\d+/SnapKadrBeta\.(?:zip|dmg)",
     "${DMG_URL}",
     text,
 )
