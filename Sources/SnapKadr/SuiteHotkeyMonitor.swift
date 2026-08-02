@@ -12,6 +12,8 @@ final class SuiteHotkeyMonitor: ObservableObject {
     private var monitor: HotkeyMonitor?
     private let kadrMonitor = SuiteKadrHotkeyMonitor()
     private var workspaceObs: [NSObjectProtocol] = []
+    /// True while prefs is listening for a new binding — Carbon must stay off.
+    private var isPausedForBindingAssignment = false
 
     private static let snapBundleIDs = ["com.snap.app", "com.snap.app.beta"]
 
@@ -31,10 +33,28 @@ final class SuiteHotkeyMonitor: ObservableObject {
         monitor?.stop()
         monitor = nil
         kadrMonitor.stop()
+        isPausedForBindingAssignment = false
     }
 
     func reloadKadrHotkeys() {
+        guard !isPausedForBindingAssignment else { return }
         kadrMonitor.reload()
+    }
+
+    /// While the user is typing a new binding in prefs, Carbon must not fire capture overlays
+    /// (that hides the cursor and steals the chord before the local monitor can save it).
+    func pauseForBindingAssignment() {
+        isPausedForBindingAssignment = true
+        SnapEngine.shared.cancelActiveCapture()
+        monitor?.pause()
+        kadrMonitor.stop()
+    }
+
+    func resumeAfterBindingAssignment() {
+        guard isPausedForBindingAssignment else { return }
+        isPausedForBindingAssignment = false
+        SnapEngine.shared.cancelActiveCapture()
+        refreshCoexistence()
     }
 
     func refreshCoexistence() {
@@ -45,6 +65,9 @@ final class SuiteHotkeyMonitor: ObservableObject {
             isPausedForCompanionSnap = true
             monitor?.stop()
             monitor = nil
+        } else if isPausedForBindingAssignment {
+            isPausedForCompanionSnap = false
+            monitor?.pause()
         } else {
             isPausedForCompanionSnap = false
             if monitor == nil {
@@ -56,6 +79,8 @@ final class SuiteHotkeyMonitor: ObservableObject {
                 m.start()
                 monitor = m
             } else {
+                // resume() is a no-op when not paused; reload() re-reads bindings from defaults.
+                monitor?.resume()
                 monitor?.reload()
             }
         }

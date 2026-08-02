@@ -33,10 +33,12 @@ final class SuiteKadrHotkeyMonitor {
                     nil,
                     &hotKeyID
                 )
+                // Pass through Snap `'SKHK'` (and any other) hotkeys — claiming them with
+                // `noErr` prevents the suite Snap HotkeyMonitor handler from running.
                 guard err == noErr,
                       hotKeyID.signature == SuiteKadrHotkeyMonitor.signature,
                       let action = SuiteKadrHotkey.from(carbonID: hotKeyID.id)
-                else { return noErr }
+                else { return OSStatus(eventNotHandledErr) }
                 DispatchQueue.main.async {
                     SuiteKadrHotkeyMonitor.dispatch(action)
                 }

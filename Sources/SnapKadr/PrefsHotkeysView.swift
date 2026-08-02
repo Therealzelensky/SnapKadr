@@ -54,6 +54,7 @@ struct PrefsHotkeysView: View {
         .onAppear {
             refreshLabels()
             refreshKadrLabels()
+            SnapEngine.shared.cancelActiveCapture()
         }
         .onDisappear {
             stopRecording()
@@ -74,6 +75,7 @@ struct PrefsHotkeysView: View {
                 .foregroundStyle(SuiteTheme.textPrimary)
                 Spacer()
                 Button(L10n.tr("Обновить", "Refresh")) {
+                    SnapEngine.shared.cancelActiveCapture()
                     SuiteHotkeyMonitor.shared.refreshCoexistence()
                 }
                 .controlSize(.small)
@@ -140,9 +142,14 @@ struct PrefsHotkeysView: View {
     private func beginRecording(_ hotkey: AppSettings.Hotkey) {
         stopRecording()
         stopKadrRecording()
+        SnapEngine.shared.cancelActiveCapture()
+        NSApp.activate(ignoringOtherApps: true)
         recording = hotkey
         rowLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
         mon = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let pureModifiers: Set<UInt16> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+            if pureModifiers.contains(event.keyCode) { return nil }
+
             let mods = carbonMods(from: event.modifierFlags)
             let key = UInt32(event.keyCode)
             if key == UInt32(kVK_Escape) {
@@ -163,9 +170,14 @@ struct PrefsHotkeysView: View {
     private func beginKadrRecording(_ hotkey: SuiteKadrHotkey) {
         stopRecording()
         stopKadrRecording()
+        SnapEngine.shared.cancelActiveCapture()
+        NSApp.activate(ignoringOtherApps: true)
         recordingKadr = hotkey
         kadrLabels[hotkey] = L10n.tr("Нажмите…", "Press…")
         kadrMon = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let pureModifiers: Set<UInt16> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+            if pureModifiers.contains(event.keyCode) { return nil }
+
             let mods = carbonMods(from: event.modifierFlags)
             let key = UInt32(event.keyCode)
             if key == UInt32(kVK_Escape) {
@@ -216,10 +228,11 @@ struct PrefsHotkeysView: View {
 
     private func carbonMods(from flags: NSEvent.ModifierFlags) -> UInt32 {
         var mods: UInt32 = 0
-        if flags.contains(.control) { mods |= UInt32(controlKey) }
-        if flags.contains(.option) { mods |= UInt32(optionKey) }
-        if flags.contains(.shift) { mods |= UInt32(shiftKey) }
-        if flags.contains(.command) { mods |= UInt32(cmdKey) }
+        let device = flags.intersection(.deviceIndependentFlagsMask)
+        if device.contains(.control) { mods |= UInt32(controlKey) }
+        if device.contains(.option) { mods |= UInt32(optionKey) }
+        if device.contains(.shift) { mods |= UInt32(shiftKey) }
+        if device.contains(.command) { mods |= UInt32(cmdKey) }
         return mods
     }
 }
