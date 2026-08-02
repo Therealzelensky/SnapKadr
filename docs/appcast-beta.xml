@@ -7,14 +7,14 @@
     <language>ru</language>
     <item>
       <title>0.1.0</title>
-      <pubDate>Sun, 02 Aug 2026 11:15:37 +0000</pubDate>
-      <sparkle:version>202608021415</sparkle:version>
+      <pubDate>Sun, 02 Aug 2026 11:26:58 +0000</pubDate>
+      <sparkle:version>202608021426</sparkle:version>
       <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
-      <description><![CDATA[<p>Snap.Kadr Beta v0.1.0-beta.11</p>]]></description>
+      <description><![CDATA[<p>Snap.Kadr Beta v0.1.0-beta.12</p>]]></description>
       <enclosure
-        url="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.0-beta.11/SnapKadrBeta.zip"
-        sparkle:edSignature="m3Z7nmdTfDNxVWxPfYhjpE4H0mAxUk8qm7swGZsT2xs9xu5G56vIePMDTbDLb+Zbx/S+u/rEIHQtM0tmpMpaCg=="
-        length="6060254"
+        url="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.0-beta.12/SnapKadrBeta.zip"
+        sparkle:edSignature="zaSpLUNtNW4mpDcYmZ0h9DEHgg8tqKtMeV8fykkdpaSYyS1sK920y9sT3y/D2zQFXYsj0/FAFj8umsS1szfGBw=="
+        length="6058820"
         type="application/octet-stream" />
     </item>
   </channel>
