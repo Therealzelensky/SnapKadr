@@ -38,8 +38,12 @@ final class SuiteStatusController: NSObject {
 
     @objc private func statusItemClicked(_ sender: Any?) {
         let event = NSApp.currentEvent
-        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.option) == true {
+        let flags = event?.modifierFlags.intersection(.deviceIndependentFlagsMask) ?? []
+        // RMB or Option+LMB → capture bar. Plain LMB must not treat stale Option from another chord.
+        if event?.type == .rightMouseUp
+            || (event?.type == .leftMouseUp && flags.contains(.option)) {
             closePanel()
+            restoreSystemCursor()
             KadrEngine.shared.openCaptureBar()
             return
         }
@@ -55,6 +59,8 @@ final class SuiteStatusController: NSObject {
     }
 
     private func openPanel() {
+        // Stuck area/OCR capture leaves NSCursor.hide() active — panel open makes it obvious.
+        restoreSystemCursor()
         let panel = ensurePanel()
         refreshPanelRoot()
         resizePanelToFit()
@@ -82,6 +88,13 @@ final class SuiteStatusController: NSObject {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
         }
+    }
+
+    /// Undo a leaked `NSCursor.hide()` from Snap area overlay / cancelled capture.
+    private func restoreSystemCursor() {
+        SnapEngine.shared.cancelActiveCapture()
+        NSCursor.unhide()
+        NSCursor.arrow.set()
     }
 
     private func makePanelRoot() -> SuiteControlPanelView {
