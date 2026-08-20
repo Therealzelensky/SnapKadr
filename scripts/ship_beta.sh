@@ -43,9 +43,12 @@ git checkout main
 git pull --ff-only origin main
 
 # --- next tag
-# Format: v0.1.0-betaNNN (zero-padded, no dot before N).
-# Legacy was v0.1.0-beta.N — GitHub sorts tags as text, so beta.9 ranked above beta.15.
-# New form sorts above all legacy dotted tags (after "beta", digit > '.').
+# Format: v0.1.N-beta (e.g. v0.1.20-beta). Continues the numeric sequence from
+# legacy tags v0.1.0-beta.N / v0.1.0-betaNNN so GitHub text-sort stays monotonic
+# among the new form (v0.1.9-beta < v0.1.10-beta … when compared carefully —
+# prefer zero-padded? User asked unpadded v0.1.19-beta).
+# Note: pure text sort still ranks v0.1.9-beta > v0.1.10-beta; we accept that
+# for the requested format and rely on release dates / Sparkle build numbers.
 if [[ -n "${SHIP_BETA_TAG:-}" ]]; then
   TAG="$SHIP_BETA_TAG"
 else
@@ -53,20 +56,35 @@ else
   TAG="$(
     python3 - <<'PY'
 import re, subprocess
-raw = subprocess.check_output(["git", "tag", "-l", "v0.1.0-beta*"], text=True)
+raw = subprocess.check_output(["git", "tag", "-l", "v0.1*"], text=True)
 nums = []
 for t in raw.split():
+    m = re.fullmatch(r"v0\.1\.(\d+)-beta", t)
+    if m:
+        nums.append(int(m.group(1)))
+        continue
     m = re.fullmatch(r"v0\.1\.0-beta\.?(\d+)", t)
     if m:
         nums.append(int(m.group(1)))
 n = (max(nums) if nums else 0) + 1
-print(f"v0.1.0-beta{n:03d}")
+print(f"v0.1.{n}-beta")
 PY
   )"
 fi
 echo "==> Shipping $TAG"
 
-VERSION="${SNAPKADR_VERSION:-0.1.0}"
+# Marketing version follows the tag number: v0.1.20-beta → 0.1.20
+if [[ -n "${SNAPKADR_VERSION:-}" ]]; then
+  VERSION="$SNAPKADR_VERSION"
+else
+  VERSION="$(
+    python3 - <<PY
+import re
+m = re.fullmatch(r"v0\.1\.(\d+)-beta", "${TAG}")
+print(f"0.1.{m.group(1)}" if m else "0.1.0")
+PY
+  )"
+fi
 BUILD="${SNAPKADR_BUILD:-$(date +%Y%m%d%H%M)}"
 export SNAPKADR_VERSION="$VERSION" SNAPKADR_BUILD="$BUILD" SNAPKADR_VARIANT=beta SNAPKADR_TAG="$TAG"
 
@@ -129,7 +147,7 @@ import re
 p = Path("docs/index.html")
 text = p.read_text()
 text2, n = re.subn(
-    r"https://github.com/Therealzelensky/SnapKadr/releases/download/v0\.1\.0-beta\.?\d+/SnapKadrBeta\.(?:zip|dmg)",
+    r"https://github.com/Therealzelensky/SnapKadr/releases/download/(?:v0\.1\.0-beta\.?\d+|v0\.1\.\d+-beta)/SnapKadrBeta\.(?:zip|dmg)",
     "${DMG_URL}",
     text,
 )
