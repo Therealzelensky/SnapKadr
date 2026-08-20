@@ -189,16 +189,21 @@ final class SuiteStatusController: NSObject {
 
     private func handle(_ action: SuitePanelAction) {
         closePanel()
-        switch action {
-        case .snapArea: SnapEngine.shared.captureArea()
-        case .snapFull: SnapEngine.shared.captureFull()
-        case .snapWindow: SnapEngine.shared.captureActiveWindow()
-        case .kadrCapture: KadrEngine.shared.openCaptureBar()
-        case .kadrDisplay: KadrEngine.shared.recordDisplay()
-        case .openProject: KadrEngine.shared.openProject()
-        case .openRecent(let url): KadrEngine.shared.openProject(at: url)
-        case .preferences: onPreferences()
-        case .quit: onQuit()
+        // Defer so the panel button's mouseUp is not delivered to the new overlay
+        // (orphan mouseUp used to cancel the first capture attempt).
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            switch action {
+            case .snapArea: SnapEngine.shared.captureArea()
+            case .snapFull: SnapEngine.shared.captureFull()
+            case .snapWindow: SnapEngine.shared.captureActiveWindow()
+            case .kadrCapture: KadrEngine.shared.openCaptureBar()
+            case .kadrDisplay: KadrEngine.shared.recordDisplay()
+            case .openProject: KadrEngine.shared.openProject()
+            case .openRecent(let url): KadrEngine.shared.openProject(at: url)
+            case .preferences: self.onPreferences()
+            case .quit: self.onQuit()
+            }
         }
     }
 }

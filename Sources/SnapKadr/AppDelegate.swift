@@ -28,6 +28,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where url.pathExtension.lowercased() == "kadr" {
+            KadrEngine.shared.openProject(at: url)
+        }
+    }
+
     private func showPreferences() {
         if prefs == nil {
             prefs = PreferencesWindowController()
