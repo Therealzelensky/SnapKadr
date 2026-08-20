@@ -35,7 +35,7 @@ enum AppBranding {
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "1"
     }
 
-    /// Ship tag for UI (e.g. `v0.1.0-beta.8`). Falls back to marketing short version.
+    /// Ship tag for UI (e.g. `v0.1.20-beta`). Falls back to marketing short version.
     static var releaseLabel: String {
         if let tag = Bundle.main.object(forInfoDictionaryKey: "SnapKadrReleaseTag") as? String {
             let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
