@@ -82,4 +82,19 @@ enum SuiteKadrSettings {
         get { AppSettings.exportFPS }
         set { AppSettings.exportFPS = newValue }
     }
+
+    static var speechEngine: SpeechEnginePreference {
+        get { AppSettings.speechEngine }
+        set { AppSettings.speechEngine = newValue }
+    }
+
+    static var whisperModelSize: WhisperModelSize {
+        get { AppSettings.whisperModelSize }
+        set { AppSettings.whisperModelSize = newValue }
+    }
+
+    static var speechLanguage: SpeechLanguagePreference {
+        get { AppSettings.speechLanguage }
+        set { AppSettings.speechLanguage = newValue }
+    }
 }
