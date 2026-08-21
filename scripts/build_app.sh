@@ -135,6 +135,8 @@ ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>Щёлк.Кадр записывает микрофон вместе с экраном.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Щёлк.Кадр создаёт субтитры из записи голоса.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Щёлк.Кадр создаёт заметку с текстом транскрипта в приложении Заметки.</string>
 	<key>SUFeedURL</key>
 	<string>${FEED_URL}</string>
 	<key>SUEnableAutomaticChecks</key>
