@@ -141,41 +141,7 @@ ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>${FEED_URL}</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
-${SU_KEY_XML}	<key>NSServices</key>
-	<array>
-		<dict>
-			<key>NSMenuItem</key>
-			<dict>
-				<key>default</key>
-				<string>Распознать текст</string>
-			</dict>
-			<key>NSMessage</key>
-			<string>transcribeService</string>
-			<key>NSPortName</key>
-			<string>${APP_NAME}</string>
-			<key>NSRequiredContext</key>
-			<dict>
-				<key>NSFileTypes</key>
-				<array>
-					<string>public.audio</string>
-					<string>public.movie</string>
-					<string>public.audiovisual-content</string>
-				</array>
-			</dict>
-			<key>NSSendTypes</key>
-			<array>
-				<string>public.file-url</string>
-				<string>NSFilenamesPboardType</string>
-			</array>
-			<key>NSSendFileTypes</key>
-			<array>
-				<string>public.audio</string>
-				<string>public.movie</string>
-				<string>public.audiovisual-content</string>
-			</array>
-		</dict>
-	</array>
-	<key>CFBundleDocumentTypes</key>
+${SU_KEY_XML}	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>

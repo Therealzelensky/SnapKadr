@@ -18,7 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
-        TranscriptQuickActionInstaller.removeLegacyWorkflowIfNeeded()
+        TranscriptQuickActionInstaller.installIfNeeded()
 
         status = SuiteStatusController(
             onPreferences: { [weak self] in self?.showPreferences() },
