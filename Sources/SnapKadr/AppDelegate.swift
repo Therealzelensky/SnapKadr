@@ -16,6 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()
 
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
+
         status = SuiteStatusController(
             onPreferences: { [weak self] in self?.showPreferences() },
             onQuit: {

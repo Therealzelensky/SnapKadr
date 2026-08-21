@@ -151,6 +151,15 @@ ${SU_KEY_XML}	<key>NSServices</key>
 			<string>transcribeService</string>
 			<key>NSPortName</key>
 			<string>${APP_NAME}</string>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSFileTypes</key>
+				<array>
+					<string>public.audio</string>
+					<string>public.movie</string>
+					<string>public.audiovisual-content</string>
+				</array>
+			</dict>
 			<key>NSSendTypes</key>
 			<array>
 				<string>public.file-url</string>
@@ -160,6 +169,7 @@ ${SU_KEY_XML}	<key>NSServices</key>
 			<array>
 				<string>public.audio</string>
 				<string>public.movie</string>
+				<string>public.audiovisual-content</string>
 			</array>
 		</dict>
 	</array>
