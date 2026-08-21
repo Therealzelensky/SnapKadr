@@ -139,7 +139,48 @@ ${BETA_PLIST_KEY}	<key>CFBundlePackageType</key>
 	<string>${FEED_URL}</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
-${SU_KEY_XML}</dict>
+${SU_KEY_XML}	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Распознать текст</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>transcribeService</string>
+			<key>NSPortName</key>
+			<string>${APP_NAME}</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>public.file-url</string>
+				<string>NSFilenamesPboardType</string>
+			</array>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.audio</string>
+				<string>public.movie</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Проект Кадра</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSTypeIsPackage</key>
+			<true/>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>kadr</string>
+			</array>
+		</dict>
+	</array>
+</dict>
 </plist>
 EOF
 
