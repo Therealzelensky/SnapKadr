@@ -114,6 +114,79 @@ final class SuiteNotchHUD {
         promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
     }
 
+    func showStenoVideoPrompt(
+        appTitle: String,
+        onYes: @escaping () -> Void,
+        onNo: @escaping () -> Void
+    ) {
+        promptActions.onAccept = {
+            onYes()
+        }
+        promptActions.onLater = { [weak self] in
+            self?.dismissStenoPrompt {
+                onNo()
+            }
+        }
+
+        let clipped: String = {
+            if appTitle.count <= 28 { return appTitle }
+            return String(appTitle.prefix(27)) + "…"
+        }()
+
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "video", accessibilityDescription: nil)
+        icon.contentTintColor = NSColor(calibratedRed: 0.753, green: 0.149, blue: 0.827, alpha: 1)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+
+        let title = NSTextField(labelWithString: L10n.tr("Записать видео окна?", "Record the call window?"))
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        title.textColor = .white
+        title.isBezeled = false
+        title.drawsBackground = false
+
+        let subtitle = NSTextField(labelWithString: clipped)
+        subtitle.font = .systemFont(ofSize: 11, weight: .regular)
+        subtitle.textColor = NSColor.white.withAlphaComponent(0.55)
+        subtitle.isBezeled = false
+        subtitle.drawsBackground = false
+
+        let textCol = NSStackView(views: [title, subtitle])
+        textCol.orientation = .vertical
+        textCol.alignment = .leading
+        textCol.spacing = 1
+
+        let no = NSButton(title: L10n.tr("Нет", "No"), target: promptActions, action: #selector(StenoPromptActions.later))
+        no.bezelStyle = .rounded
+        no.controlSize = .small
+        no.font = .systemFont(ofSize: 12)
+        no.keyEquivalent = "\u{1b}"
+
+        let yes = NSButton(title: L10n.tr("Да", "Yes"), target: promptActions, action: #selector(StenoPromptActions.accept))
+        yes.bezelStyle = .rounded
+        yes.controlSize = .small
+        yes.font = .systemFont(ofSize: 12, weight: .semibold)
+        yes.keyEquivalent = "\r"
+
+        let row = NSStackView(views: [icon, textCol, no, yes])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+        row.setHuggingPriority(.defaultHigh, for: .horizontal)
+
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 56))
+        row.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
+        ])
+
+        promptShell.contentView = host
+        promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
+    }
+
     func dismissStenoPrompt(completion: (() -> Void)? = nil) {
         promptShell.dismiss(completion: completion)
     }
