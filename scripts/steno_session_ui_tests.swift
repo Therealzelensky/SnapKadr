@@ -17,6 +17,11 @@ enum StenoSessionUITests {
         expect(session.contains("willSleepNotification"), "sleep stops session")
         expect(session.contains("hangupArmedAt"), "hangup grace after start")
         expect(session.contains("replacementWindowID"), "retarget replaced call window")
+        expect(session.contains("StenoOverlayPanel"), "session shows floating card")
+        expect(session.contains("StenoShareProbe"), "session probes share")
+        expect(session.contains("startAdditionalWindowRecording"), "session starts share track")
+        expect(session.contains("StenoSettings.showCard"), "respects showCard pref")
+        expect(session.contains("StenoSettings.recordShare"), "respects recordShare pref")
 
         let hud = try! String(
             contentsOf: root.appendingPathComponent("Sources/SnapKadr/SuiteNotchHUD.swift"),
