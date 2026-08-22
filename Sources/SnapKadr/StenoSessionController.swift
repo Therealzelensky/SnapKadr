@@ -57,7 +57,8 @@ final class StenoSessionController: ObservableObject {
         let name = projectName(source: call.source)
         guard let url = KadrEngine.shared.startRecording(
             windowID: CGWindowID(call.windowID),
-            projectName: name
+            projectName: name,
+            options: StenoCapture.windowRecord
         ) else {
             promptedWindowID = nil
             return
