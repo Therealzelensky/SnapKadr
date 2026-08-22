@@ -1,10 +1,14 @@
 import KadrKit
+import StenoKit
 
-/// Light ScreenCaptureKit profile for Стено. Lives in SnapKadr so standalone Kadr stays sharp.
+/// ScreenCaptureKit profile for Стено. Lives in SnapKadr so standalone Kadr stays sharp.
 enum StenoCapture {
-    /// Same picture as Kadr. Only skip the cursor tap and the editor — those do not change the file.
-    static let windowRecord = KadrWindowRecordOptions(
-        recordsInputEvents: false,
-        presentsEditor: false
-    )
+    static func windowRecord(recordVideo: Bool = StenoSettings.recordCallVideo) -> KadrWindowRecordOptions {
+        KadrWindowRecordOptions(
+            recordsInputEvents: false,
+            presentsEditor: false,
+            capturesVideo: recordVideo,
+            activatesOwnerApp: false
+        )
+    }
 }

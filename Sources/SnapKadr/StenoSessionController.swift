@@ -55,24 +55,26 @@ final class StenoSessionController: ObservableObject {
 
     private func accept(_ call: StenoDetectedCall) {
         let name = projectName(source: call.source)
-        guard let url = KadrEngine.shared.startRecording(
+        switch KadrEngine.shared.startRecording(
             windowID: CGWindowID(call.windowID),
             projectName: name,
-            options: StenoCapture.windowRecord
-        ) else {
+            options: StenoCapture.windowRecord()
+        ) {
+        case .success(let url):
+            sessionProjectURL = url
+            sessionWindowID = call.windowID
+            isSessionActive = true
+            hangupTicks = 0
+            startHangupWatch()
+            let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
+            do {
+                try StenoSidecarIO.write(sidecar, inProject: url)
+            } catch {
+                NSLog("Steno sidecar write failed: \(error.localizedDescription)")
+            }
+        case .failure(let error):
+            NSLog("Steno start failed: \(error.localizedDescription)")
             promptedWindowID = nil
-            return
-        }
-        sessionProjectURL = url
-        sessionWindowID = call.windowID
-        isSessionActive = true
-        hangupTicks = 0
-        startHangupWatch()
-        let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
-        do {
-            try StenoSidecarIO.write(sidecar, inProject: url)
-        } catch {
-            NSLog("Steno sidecar write failed: \(error.localizedDescription)")
         }
     }
 
