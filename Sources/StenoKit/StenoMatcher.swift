@@ -20,7 +20,10 @@ public enum StenoMatcher {
         case .googleMeet:
             return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .telemost:
-            if bundle.contains("telemost") { return true }
+            // Native app: lobby title stays "Яндекс Телемост" — require in-call AX chrome.
+            if bundle.contains("telemost") {
+                return StenoTelemostCallState.isInCall(pid: snap.ownerPID)
+            }
             return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .bitrixSync:
             guard containsAny(haystack, source.titleNeedles) else { return false }

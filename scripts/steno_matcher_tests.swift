@@ -26,20 +26,42 @@ enum StenoMatcherTests {
         let tm = StenoWindowSnapshot(windowID: 6, bundleID: "com.apple.Safari", title: "Планерка — Телемост", ownerName: "Safari")
         expect(StenoMatcher.match(tm, enabled: all) == .telemost, "telemost safari")
 
-        let tmApp = StenoWindowSnapshot(
+        let tmAppLobby = StenoWindowSnapshot(
             windowID: 11,
             bundleID: "ru.yandex.desktop.telemost",
             title: "Яндекс Телемост",
-            ownerName: "Яндекс Телемост"
+            ownerName: "Яндекс Телемост",
+            ownerPID: 1
         )
-        expect(StenoMatcher.match(tmApp, enabled: all) == .telemost, "telemost desktop app")
+        // Without live AX call chrome (or with lobby), open app is not a call.
+        expect(StenoMatcher.match(tmAppLobby, enabled: all) == nil, "telemost desktop lobby ignored")
         let tmAppBlank = StenoWindowSnapshot(
             windowID: 12,
             bundleID: "ru.yandex.desktop.telemost",
             title: "",
-            ownerName: "Яндекс Телемост"
+            ownerName: "Яндекс Телемост",
+            ownerPID: 1
         )
-        expect(StenoMatcher.match(tmAppBlank, enabled: all) == .telemost, "telemost desktop empty title")
+        expect(StenoMatcher.match(tmAppBlank, enabled: all) == nil, "telemost desktop empty title ignored")
+
+        expect(
+            !StenoTelemostCallState.isInCall(axLabels: [
+                "Новая видеовстреча", "Подключиться", "Запланировать", "Яндекс Телемост"
+            ]),
+            "ax lobby labels are not in-call"
+        )
+        expect(
+            StenoTelemostCallState.isInCall(axLabels: [
+                "Демонстрация", "Участники", "Чат", "Яндекс Телемост"
+            ]),
+            "ax in-call chrome"
+        )
+        expect(
+            !StenoTelemostCallState.isInCall(axLabels: [
+                "Новая видеовстреча", "Демонстрация"
+            ]),
+            "lobby wins over mixed labels"
+        )
 
         let b24 = StenoWindowSnapshot(windowID: 7, bundleID: "com.bitrixsoft.Bitrix24", title: "Видеозвонок", ownerName: "Bitrix24")
         expect(StenoMatcher.match(b24, enabled: all) == .bitrixSync, "bitrix desktop in-call")

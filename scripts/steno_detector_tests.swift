@@ -106,16 +106,16 @@ enum StenoDetectorTests {
 
         let replaced = StenoWindowSnapshot(
             windowID: 77,
-            bundleID: "ru.yandex.desktop.telemost",
-            title: "Яндекс Телемост",
-            ownerName: "Яндекс Телемост",
+            bundleID: "us.zoom.xos",
+            title: "Zoom Meeting",
+            ownerName: "zoom.us",
             ownerPID: 99
         )
         expect(
             !StenoSessionEnd.shouldStop(
                 sessionWindowID: 42,
                 sessionPID: 99,
-                sessionBundleID: "ru.yandex.desktop.telemost",
+                sessionBundleID: "us.zoom.xos",
                 snapshots: [replaced],
                 enabled: all
             ),
@@ -125,7 +125,7 @@ enum StenoDetectorTests {
             StenoSessionEnd.replacementWindowID(
                 sessionWindowID: 42,
                 sessionPID: 99,
-                sessionBundleID: "ru.yandex.desktop.telemost",
+                sessionBundleID: "us.zoom.xos",
                 snapshots: [replaced],
                 enabled: all
             ) == 77,

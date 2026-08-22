@@ -19,7 +19,8 @@ let package = Package(
             path: "Sources/StenoKit",
             linkerSettings: [
                 .linkedFramework("AppKit"),
-                .linkedFramework("CoreGraphics")
+                .linkedFramework("CoreGraphics"),
+                .linkedFramework("ApplicationServices")
             ]
         ),
         .executableTarget(
