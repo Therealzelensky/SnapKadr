@@ -18,6 +18,7 @@ final class StenoSessionController: ObservableObject {
     private var sessionBundleID = ""
     private var hangupWatch: Timer?
     private var hangupTicks = 0
+    private var hangupArmedAt: Date?
     private var endingSession = false
     private var sawCapture = false
     private var sleepObserver: NSObjectProtocol?
@@ -235,6 +236,8 @@ final class StenoSessionController: ObservableObject {
     private func startHangupWatch() {
         hangupWatch?.invalidate()
         hangupTicks = 0
+        // CGWindowList / SCK often blips the captured window right after start.
+        hangupArmedAt = Date().addingTimeInterval(5)
         endingSession = false
         sawCapture = false
         hangupWatch = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -250,17 +253,30 @@ final class StenoSessionController: ObservableObject {
             clearSession()
             return
         }
+        if let armed = hangupArmedAt, Date() < armed { return }
         guard let windowID = sessionWindowID else { return }
         let snaps = StenoWindowProbe.snapshots()
+        let enabled = StenoSettings.enabledSources
+        if let replacement = StenoSessionEnd.replacementWindowID(
+            sessionWindowID: windowID,
+            sessionPID: sessionPID,
+            sessionBundleID: sessionBundleID,
+            snapshots: snaps,
+            enabled: enabled
+        ) {
+            sessionWindowID = replacement
+            hangupTicks = 0
+            return
+        }
         if StenoSessionEnd.shouldStop(
             sessionWindowID: windowID,
             sessionPID: sessionPID,
             sessionBundleID: sessionBundleID,
             snapshots: snaps,
-            enabled: StenoSettings.enabledSources
+            enabled: enabled
         ) {
             hangupTicks += 1
-            if hangupTicks >= 2 {
+            if hangupTicks >= 3 {
                 endSessionBecauseCallEnded()
             }
         } else {
@@ -290,5 +306,6 @@ final class StenoSessionController: ObservableObject {
         hangupTicks = 0
         sawCapture = false
         endingSession = false
+        hangupArmedAt = nil
     }
 }

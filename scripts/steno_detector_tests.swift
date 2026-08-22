@@ -104,6 +104,34 @@ enum StenoDetectorTests {
             "reused window id ends session"
         )
 
+        let replaced = StenoWindowSnapshot(
+            windowID: 77,
+            bundleID: "ru.yandex.desktop.telemost",
+            title: "Яндекс Телемост",
+            ownerName: "Яндекс Телемост",
+            ownerPID: 99
+        )
+        expect(
+            !StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "ru.yandex.desktop.telemost",
+                snapshots: [replaced],
+                enabled: all
+            ),
+            "same PID new window id still a call keeps session"
+        )
+        expect(
+            StenoSessionEnd.replacementWindowID(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "ru.yandex.desktop.telemost",
+                snapshots: [replaced],
+                enabled: all
+            ) == 77,
+            "replacement window id for retarget"
+        )
+
         exit(failures == 0 ? 0 : 1)
     }
 }

@@ -15,6 +15,8 @@ enum StenoSessionUITests {
         )
         expect(session.contains("func stopFromUser()"), "user stop")
         expect(session.contains("willSleepNotification"), "sleep stops session")
+        expect(session.contains("hangupArmedAt"), "hangup grace after start")
+        expect(session.contains("replacementWindowID"), "retarget replaced call window")
 
         let hud = try! String(
             contentsOf: root.appendingPathComponent("Sources/SnapKadr/SuiteNotchHUD.swift"),
