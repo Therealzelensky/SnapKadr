@@ -187,6 +187,14 @@ struct SuiteControlPanelView: View {
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
+                    if steno.isSessionActive {
+                        Button(L10n.tr("Стоп", "Stop")) {
+                            StenoSessionController.shared.stopFromUser()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(SuiteTheme.record)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -209,7 +217,7 @@ struct SuiteControlPanelView: View {
 
     private var stenoStatusSubtitle: String {
         if steno.isSessionActive {
-            return L10n.tr("Стоп — в панели Кадра", "Stop from the Kadr HUD")
+            return L10n.tr("Стоп в челке или здесь", "Stop in the notch or here")
         }
         if stenoDetector.activeCall != nil {
             return L10n.tr("Подтвердите в челке", "Confirm in the notch")

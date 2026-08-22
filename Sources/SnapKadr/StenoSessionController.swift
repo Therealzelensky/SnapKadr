@@ -19,8 +19,17 @@ final class StenoSessionController: ObservableObject {
     private var hangupTicks = 0
     private var endingSession = false
     private var sawCapture = false
+    private var sleepObserver: NSObjectProtocol?
 
-    private init() {}
+    private init() {
+        sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.stopFromUser() }
+        }
+    }
 
     func start() {
         if cancellable == nil {
@@ -85,6 +94,10 @@ final class StenoSessionController: ObservableObject {
             isSessionActive = true
             hangupTicks = 0
             startHangupWatch()
+            SuiteNotchHUD.shared.showStenoRecording(
+                title: L10n.tr("Идёт конспект", "Noting the call"),
+                onStop: { [weak self] in self?.stopFromUser() }
+            )
             let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
             do {
                 try StenoSidecarIO.write(sidecar, inProject: url)
@@ -95,6 +108,14 @@ final class StenoSessionController: ObservableObject {
             NSLog("Steno start failed: \(error.localizedDescription)")
             promptedWindowID = nil
         }
+    }
+
+    func stopFromUser() {
+        guard isSessionActive, !endingSession else { return }
+        endingSession = true
+        SuiteNotchHUD.shared.dismissStenoRecording()
+        KadrEngine.shared.stopRecording()
+        clearSession()
     }
 
     private func projectName(source: StenoSource) -> String {
@@ -159,6 +180,7 @@ final class StenoSessionController: ObservableObject {
     private func clearSession() {
         hangupWatch?.invalidate()
         hangupWatch = nil
+        SuiteNotchHUD.shared.dismissStenoRecording()
         sessionProjectURL = nil
         sessionWindowID = nil
         sessionPID = 0
