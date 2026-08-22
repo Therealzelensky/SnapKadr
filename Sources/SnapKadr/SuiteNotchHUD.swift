@@ -305,7 +305,7 @@ final class SuiteNotchHUD {
         label.drawsBackground = false
 
         let open = NSButton(
-            title: L10n.tr("Открыть", "Open"),
+            title: L10n.tr("В Finder", "In Finder"),
             target: promptActions,
             action: #selector(StenoPromptActions.accept)
         )

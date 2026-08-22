@@ -198,7 +198,7 @@ struct SuiteControlPanelView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(SuiteTheme.record)
                     } else if steno.lastProjectURL != nil {
-                        Button(L10n.tr("Открыть сводку", "Open notes")) {
+                        Button(L10n.tr("В Finder", "In Finder")) {
                             StenoSessionController.shared.openLastProject()
                         }
                         .buttonStyle(.plain)

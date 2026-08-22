@@ -162,7 +162,11 @@ final class StenoSessionController: ObservableObject {
 
     func openLastProject() {
         guard let url = lastProjectURL else { return }
-        KadrEngine.shared.openProject(at: url)
+        revealProjectInFinder(url)
+    }
+
+    private func revealProjectInFinder(_ url: URL) {
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     private func presentStartFailure(_ error: Error) {
@@ -201,6 +205,7 @@ final class StenoSessionController: ObservableObject {
         case .success(let url):
             lastProjectURL = url
             SuiteNotchHUD.shared.dismissStenoRecording()
+            revealProjectInFinder(url)
             SuiteNotchHUD.shared.showStenoSaved { [weak self] in
                 self?.openLastProject()
             }
