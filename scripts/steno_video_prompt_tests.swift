@@ -18,6 +18,24 @@ enum StenoVideoPromptTests {
         expect(hud.contains("systemSymbolName: \"video\""), "video SF Symbol")
         expect(hud.contains("onYes") && hud.contains("onNo"), "yes/no callbacks")
 
+        let session = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoSessionController.swift"),
+            encoding: .utf8
+        )
+        expect(session.contains("showStenoVideoPrompt"), "session shows video step")
+        expect(session.contains("pendingCall"), "holds call until video answered")
+        expect(
+            session.contains("recordVideo: true")
+                && session.contains("recordVideo: false"),
+            "both video answers"
+        )
+        expect(
+            session.contains("clearPendingAccept"),
+            "abort step 2"
+        )
+        expect(session.contains("willSleepNotification"), "sleep observed")
+        expect(session.contains("offerVideoStep"), "video step wired")
+
         exit(failures == 0 ? 0 : 1)
     }
 }

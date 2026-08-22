@@ -22,6 +22,7 @@ final class StenoSessionController: ObservableObject {
     private var sawCapture = false
     private var sleepObserver: NSObjectProtocol?
     private var pendingStenoFinish = false
+    private var pendingCall: StenoDetectedCall?
 
     private init() {
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
@@ -29,7 +30,14 @@ final class StenoSessionController: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.stopFromUser() }
+            Task { @MainActor in
+                guard let self else { return }
+                if self.pendingCall != nil {
+                    self.clearPendingAccept(resetPrompted: true)
+                    return
+                }
+                self.stopFromUser()
+            }
         }
         KadrEngine.shared.onCaptureFinished = { [weak self] result in
             Task { @MainActor in self?.handleCaptureFinished(result) }
@@ -51,12 +59,14 @@ final class StenoSessionController: ObservableObject {
         if StenoSettings.isEnabled {
             detector.start()
         } else {
+            clearPendingAccept(resetPrompted: true)
             detector.stop()
         }
     }
 
     private func handle(_ call: StenoDetectedCall?) {
         guard let call else {
+            clearPendingAccept(resetPrompted: true)
             if promptedWindowID != nil {
                 SuiteNotchHUD.shared.dismissStenoPrompt()
                 promptedWindowID = nil
@@ -64,27 +74,40 @@ final class StenoSessionController: ObservableObject {
             return
         }
         if sessionProjectURL != nil { return }
+        if pendingCall != nil { return }
         if promptedWindowID == call.windowID { return }
         promptedWindowID = call.windowID
         let title = call.title.isEmpty ? sourceLabel(call.source) : call.title
         SuiteNotchHUD.shared.showStenoPrompt(
             appTitle: title,
-            onAccept: { [weak self] in self?.accept(call) },
+            onAccept: { [weak self] in self?.offerVideoStep(call) },
             onLater: { [weak self] in self?.later(call) }
         )
     }
 
     private func later(_ call: StenoDetectedCall) {
+        clearPendingAccept(resetPrompted: false)
         detector.snooze(windowID: call.windowID)
         promptedWindowID = nil
     }
 
-    private func accept(_ call: StenoDetectedCall) {
+    private func offerVideoStep(_ call: StenoDetectedCall) {
+        pendingCall = call
+        let title = call.title.isEmpty ? sourceLabel(call.source) : call.title
+        SuiteNotchHUD.shared.showStenoVideoPrompt(
+            appTitle: title,
+            onYes: { [weak self] in self?.beginCapture(call, recordVideo: true) },
+            onNo: { [weak self] in self?.beginCapture(call, recordVideo: false) }
+        )
+    }
+
+    private func beginCapture(_ call: StenoDetectedCall, recordVideo: Bool) {
+        pendingCall = nil
         let name = projectName(source: call.source)
         switch KadrEngine.shared.startRecording(
             windowID: CGWindowID(call.windowID),
             projectName: name,
-            options: StenoCapture.windowRecord(recordVideo: false)
+            options: StenoCapture.windowRecord(recordVideo: recordVideo)
         ) {
         case .success(let url):
             SuiteNotchHUD.shared.dismissStenoPrompt()
@@ -115,6 +138,16 @@ final class StenoSessionController: ObservableObject {
         case .failure(let error):
             SuiteNotchHUD.shared.dismissStenoPrompt()
             presentStartFailure(error)
+            promptedWindowID = nil
+        }
+    }
+
+    private func clearPendingAccept(resetPrompted: Bool) {
+        if pendingCall != nil {
+            pendingCall = nil
+            SuiteNotchHUD.shared.dismissStenoPrompt()
+        }
+        if resetPrompted {
             promptedWindowID = nil
         }
     }
