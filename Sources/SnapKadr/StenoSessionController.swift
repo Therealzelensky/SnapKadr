@@ -84,7 +84,7 @@ final class StenoSessionController: ObservableObject {
         switch KadrEngine.shared.startRecording(
             windowID: CGWindowID(call.windowID),
             projectName: name,
-            options: StenoCapture.windowRecord()
+            options: StenoCapture.windowRecord(recordVideo: false)
         ) {
         case .success(let url):
             SuiteNotchHUD.shared.dismissStenoPrompt()

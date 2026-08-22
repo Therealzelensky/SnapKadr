@@ -14,7 +14,8 @@ enum StenoPrefsTests {
             encoding: .utf8
         )
         expect(prefs.contains("Enable Steno") || prefs.contains("Включить Стено"), "prefs master")
-        expect(prefs.contains("StenoSettings.recordCallVideo"), "prefs video")
+        expect(!prefs.contains("recordCallVideo"), "prefs has no video toggle")
+        expect(!prefs.contains("Писать видео окна звонка") && !prefs.contains("Record call window video"), "prefs copy has no video toggle")
         expect(prefs.contains("applyEnabledFromSettings"), "prefs stops detector")
 
         let det = try! String(

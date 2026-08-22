@@ -32,17 +32,13 @@ enum StenoSettingsTests {
         expect(StenoSettings.enabledSources == [.zoom, .telegram], "unknown raw ignored")
 
         expect(StenoSettings.isEnabled, "master on by default")
-        expect(!StenoSettings.recordCallVideo, "call video off by default")
 
         StenoSettings.isEnabled = false
         expect(!StenoSettings.isEnabled, "master off persists")
-        StenoSettings.recordCallVideo = true
-        expect(StenoSettings.recordCallVideo, "call video on persists")
 
         ud.removePersistentDomain(forName: suite)
         StenoSettings.defaults = ud
         expect(StenoSettings.isEnabled, "missing master key → on")
-        expect(!StenoSettings.recordCallVideo, "missing video key → off")
 
         ud.removePersistentDomain(forName: suite)
         exit(failures == 0 ? 0 : 1)

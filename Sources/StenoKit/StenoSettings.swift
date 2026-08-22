@@ -4,7 +4,6 @@ public enum StenoSettings {
     public static var defaults: UserDefaults = .standard
     private static let key = "steno.enabledSources"
     private static let enabledKey = "steno.isEnabled"
-    private static let videoKey = "steno.recordCallVideo"
 
     public static var isEnabled: Bool {
         get {
@@ -12,11 +11,6 @@ public enum StenoSettings {
             return defaults.bool(forKey: enabledKey)
         }
         set { defaults.set(newValue, forKey: enabledKey) }
-    }
-
-    public static var recordCallVideo: Bool {
-        get { defaults.bool(forKey: videoKey) }
-        set { defaults.set(newValue, forKey: videoKey) }
     }
 
     public static var enabledSources: Set<StenoSource> {

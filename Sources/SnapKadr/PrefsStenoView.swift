@@ -22,22 +22,6 @@ struct PrefsStenoView: View {
                         }
                         .toggleStyle(.switch)
                         .controlSize(.small)
-
-                        Toggle(isOn: Binding(
-                            get: { _ = revision; return StenoSettings.recordCallVideo },
-                            set: { StenoSettings.recordCallVideo = $0; revision += 1 }
-                        )) {
-                            Text(L10n.tr("Писать видео окна звонка", "Record call window video"))
-                                .foregroundStyle(SuiteTheme.textPrimary)
-                        }
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                        Text(L10n.tr(
-                            "Выкл — только звук, Mac не тормозит на звонке.",
-                            "Off — audio only, keeps the Mac smooth on a call."
-                        ))
-                        .font(.system(size: 11))
-                        .foregroundStyle(SuiteTheme.textTertiary)
                     }
                 }
             }
