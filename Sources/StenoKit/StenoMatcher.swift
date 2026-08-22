@@ -13,7 +13,8 @@ public enum StenoMatcher {
         let haystack = (snap.title + " " + snap.ownerName).lowercased()
         switch source {
         case .zoom:
-            return bundle.hasPrefix("us.zoom.") || source.bundleIDs.contains(bundle)
+            let isZoom = bundle.hasPrefix("us.zoom.") || source.bundleIDs.contains(bundle)
+            return isZoom && containsAny(haystack, source.titleNeedles)
         case .telegram:
             return source.bundleIDs.contains(bundle) && containsAny(haystack, source.titleNeedles)
         case .googleMeet:
@@ -22,13 +23,10 @@ public enum StenoMatcher {
             if bundle.contains("telemost") { return true }
             return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .bitrixSync:
+            guard containsAny(haystack, source.titleNeedles) else { return false }
             if bundle.lowercased().contains("bitrix") { return true }
             guard StenoSource.isBrowser(bundle) else { return false }
-            if containsAny(haystack, ["чат и звонки", "chat and calls"]) { return true }
-            let hasBitrix24 = haystack.contains("bitrix24") || haystack.contains("битрикс24")
-            let callish = haystack.contains("звонок") || haystack.contains("звонки")
-                || haystack.contains("call") || haystack.contains("синк") || haystack.contains("sync")
-            return hasBitrix24 && callish
+            return haystack.contains("bitrix24") || haystack.contains("битрикс24")
         }
     }
 

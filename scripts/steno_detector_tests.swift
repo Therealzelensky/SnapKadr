@@ -25,34 +25,83 @@ enum StenoDetectorTests {
         expect(!state.isSnoozed(11), "empty probe clears snooze")
 
         let all = Set(StenoSource.allCases)
-        let zoom = StenoWindowSnapshot(windowID: 42, bundleID: "us.zoom.xos", title: "Zoom Meeting", ownerName: "zoom.us")
+        let zoom = StenoWindowSnapshot(
+            windowID: 42,
+            bundleID: "us.zoom.xos",
+            title: "Zoom Meeting",
+            ownerName: "zoom.us",
+            ownerPID: 99
+        )
         expect(
-            !StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [zoom], enabled: all),
+            !StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "us.zoom.xos",
+                snapshots: [zoom],
+                enabled: all
+            ),
             "live zoom window keeps session"
         )
         expect(
-            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [], enabled: all),
+            StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "us.zoom.xos",
+                snapshots: [],
+                enabled: all
+            ),
             "closed call window ends session"
         )
         let leftover = StenoWindowSnapshot(
             windowID: 42,
             bundleID: "com.apple.Safari",
             title: "Hacker News",
-            ownerName: "Safari"
+            ownerName: "Safari",
+            ownerPID: 99
         )
         expect(
-            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [leftover], enabled: all),
+            StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "us.zoom.xos",
+                snapshots: [leftover],
+                enabled: all
+            ),
             "window still open but no longer a call ends session"
         )
         let otherCall = StenoWindowSnapshot(
             windowID: 99,
             bundleID: "us.zoom.xos",
             title: "Other meeting",
-            ownerName: "zoom.us"
+            ownerName: "zoom.us",
+            ownerPID: 50
         )
         expect(
-            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [otherCall], enabled: all),
+            StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "us.zoom.xos",
+                snapshots: [otherCall],
+                enabled: all
+            ),
             "a different call window does not keep this session"
+        )
+        let reused = StenoWindowSnapshot(
+            windowID: 42,
+            bundleID: "com.apple.Safari",
+            title: "News",
+            ownerName: "Safari",
+            ownerPID: 100
+        )
+        expect(
+            StenoSessionEnd.shouldStop(
+                sessionWindowID: 42,
+                sessionPID: 99,
+                sessionBundleID: "us.zoom.xos",
+                snapshots: [reused],
+                enabled: all
+            ),
+            "reused window id ends session"
         )
 
         exit(failures == 0 ? 0 : 1)

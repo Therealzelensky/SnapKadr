@@ -21,7 +21,13 @@ public enum StenoWindowProbe {
             } else {
                 bundle = ""
             }
-            result.append(StenoWindowSnapshot(windowID: number, bundleID: bundle, title: title, ownerName: owner))
+            result.append(StenoWindowSnapshot(
+                windowID: number,
+                bundleID: bundle,
+                title: title,
+                ownerName: owner,
+                ownerPID: pid ?? 0
+            ))
         }
         return result
     }

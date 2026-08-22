@@ -42,7 +42,15 @@ enum StenoMatcherTests {
         expect(StenoMatcher.match(tmAppBlank, enabled: all) == .telemost, "telemost desktop empty title")
 
         let b24 = StenoWindowSnapshot(windowID: 7, bundleID: "com.bitrixsoft.Bitrix24", title: "Видеозвонок", ownerName: "Bitrix24")
-        expect(StenoMatcher.match(b24, enabled: all) == .bitrixSync, "bitrix desktop")
+        expect(StenoMatcher.match(b24, enabled: all) == .bitrixSync, "bitrix desktop in-call")
+
+        let b24BrowserCall = StenoWindowSnapshot(
+            windowID: 28,
+            bundleID: "com.apple.Safari",
+            title: "Гекса — Видеозвонок — Bitrix24",
+            ownerName: "Safari"
+        )
+        expect(StenoMatcher.match(b24BrowserCall, enabled: all) == .bitrixSync, "bitrix safari in-call")
 
         let safariSync = StenoWindowSnapshot(
             windowID: 8,
@@ -50,7 +58,7 @@ enum StenoMatcherTests {
             title: "Гекса — (16) Чат и звонки",
             ownerName: "Safari"
         )
-        expect(StenoMatcher.match(safariSync, enabled: all) == .bitrixSync, "bitrix safari chat-and-calls")
+        expect(StenoMatcher.match(safariSync, enabled: all) == nil, "bitrix chat tab is not a live call")
         expect(StenoMatcher.match(safariSync, enabled: [.zoom]) == nil, "bitrix safari disabled")
 
         let safariCRM = StenoWindowSnapshot(
@@ -67,12 +75,14 @@ enum StenoMatcherTests {
             title: "Acme — (3) Chat and Calls",
             ownerName: "Chrome"
         )
-        expect(StenoMatcher.match(chromeEN, enabled: all) == .bitrixSync, "bitrix chrome english im")
+        expect(StenoMatcher.match(chromeEN, enabled: all) == nil, "bitrix chrome english im is not a live call")
 
         let zoomBlank = StenoWindowSnapshot(windowID: 13, bundleID: "us.zoom.xos", title: "", ownerName: "zoom.us")
-        expect(StenoMatcher.match(zoomBlank, enabled: all) == .zoom, "zoom empty title")
+        expect(StenoMatcher.match(zoomBlank, enabled: all) == nil, "zoom empty title is not a call")
+        let zoomMain = StenoWindowSnapshot(windowID: 27, bundleID: "us.zoom.xos", title: "Zoom", ownerName: "zoom.us")
+        expect(StenoMatcher.match(zoomMain, enabled: all) == nil, "zoom main window ignored")
         let zoomClips = StenoWindowSnapshot(windowID: 14, bundleID: "us.zoom.ZoomPresence", title: "", ownerName: "Zoom")
-        expect(StenoMatcher.match(zoomClips, enabled: all) == .zoom, "zoom presence empty title")
+        expect(StenoMatcher.match(zoomClips, enabled: all) == nil, "zoom presence empty title")
 
         let tgVideo = StenoWindowSnapshot(
             windowID: 15,
@@ -139,21 +149,21 @@ enum StenoMatcherTests {
             title: "Б24 Гекса — (16) Чат и звонки",
             ownerName: "Б24 Гекса [ prod ]"
         )
-        expect(StenoMatcher.match(b24WebApp, enabled: all) == .bitrixSync, "bitrix safari web app")
+        expect(StenoMatcher.match(b24WebApp, enabled: all) == nil, "bitrix safari web app chat is not a live call")
         let b24Gost = StenoWindowSnapshot(
             windowID: 24,
             bundleID: "ru.cryptopro.chromium-gost",
             title: "ГорСтрой — (6) Чат и звонки",
             ownerName: "Chromium-Gost"
         )
-        expect(StenoMatcher.match(b24Gost, enabled: all) == .bitrixSync, "bitrix chromium-gost")
+        expect(StenoMatcher.match(b24Gost, enabled: all) == nil, "bitrix chromium-gost chat is not a live call")
         let b24DesktopBlank = StenoWindowSnapshot(
             windowID: 25,
             bundleID: "com.bitrixsoft.Bitrix24",
             title: "",
             ownerName: "Bitrix24"
         )
-        expect(StenoMatcher.match(b24DesktopBlank, enabled: all) == .bitrixSync, "bitrix desktop empty title")
+        expect(StenoMatcher.match(b24DesktopBlank, enabled: all) == nil, "bitrix desktop empty title is not a call")
         let b24WebAppCRM = StenoWindowSnapshot(
             windowID: 26,
             bundleID: "com.apple.Safari.WebApp.927C1839-8229-476C-99F6-6AEB5FEAC285",

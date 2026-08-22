@@ -13,6 +13,8 @@ final class StenoSessionController: ObservableObject {
     private var promptedWindowID: UInt32?
     private var sessionProjectURL: URL?
     private var sessionWindowID: UInt32?
+    private var sessionPID: pid_t = 0
+    private var sessionBundleID = ""
     private var hangupWatch: Timer?
     private var hangupTicks = 0
     private var endingSession = false
@@ -73,6 +75,13 @@ final class StenoSessionController: ObservableObject {
         case .success(let url):
             sessionProjectURL = url
             sessionWindowID = call.windowID
+            if let snap = StenoWindowProbe.snapshots().first(where: { $0.windowID == call.windowID }) {
+                sessionPID = snap.ownerPID
+                sessionBundleID = snap.bundleID
+            } else {
+                sessionPID = 0
+                sessionBundleID = ""
+            }
             isSessionActive = true
             hangupTicks = 0
             startHangupWatch()
@@ -127,6 +136,8 @@ final class StenoSessionController: ObservableObject {
         let snaps = StenoWindowProbe.snapshots()
         if StenoSessionEnd.shouldStop(
             sessionWindowID: windowID,
+            sessionPID: sessionPID,
+            sessionBundleID: sessionBundleID,
             snapshots: snaps,
             enabled: StenoSettings.enabledSources
         ) {
@@ -150,6 +161,8 @@ final class StenoSessionController: ObservableObject {
         hangupWatch = nil
         sessionProjectURL = nil
         sessionWindowID = nil
+        sessionPID = 0
+        sessionBundleID = ""
         isSessionActive = false
         promptedWindowID = nil
         hangupTicks = 0

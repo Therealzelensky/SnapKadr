@@ -25,7 +25,7 @@ public enum StenoSource: String, CaseIterable, Sendable {
     public var titleNeedles: [String] {
         switch self {
         case .zoom:
-            return []
+            return ["zoom meeting", "zoom webinar", "meeting", "webinar", "конференц", "вебинар"]
         case .googleMeet:
             // In-call Chrome tab is often "Meet – …" (en dash), not "Meet -".
             return ["meet.google", "google meet", "meet -", "meet –", "meet—"]
@@ -34,7 +34,7 @@ public enum StenoSource: String, CaseIterable, Sendable {
         case .telemost:
             return ["телемост", "telemost"]
         case .bitrixSync:
-            return ["чат и звонки", "chat and calls", "bitrix24"]
+            return ["видеозвонок", "video call", "идёт звонок", "идет звонок", "incoming call", "исходящ"]
         }
     }
 
@@ -71,11 +71,13 @@ public struct StenoWindowSnapshot: Equatable, Sendable {
     public var bundleID: String
     public var title: String
     public var ownerName: String
+    public var ownerPID: pid_t
 
-    public init(windowID: UInt32, bundleID: String, title: String, ownerName: String) {
+    public init(windowID: UInt32, bundleID: String, title: String, ownerName: String, ownerPID: pid_t = 0) {
         self.windowID = windowID
         self.bundleID = bundleID
         self.title = title
         self.ownerName = ownerName
+        self.ownerPID = ownerPID
     }
 }
