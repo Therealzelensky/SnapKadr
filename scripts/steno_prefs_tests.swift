@@ -17,6 +17,10 @@ enum StenoPrefsTests {
         expect(!prefs.contains("recordCallVideo"), "prefs has no video toggle")
         expect(!prefs.contains("Писать видео окна звонка") && !prefs.contains("Record call window video"), "prefs copy has no video toggle")
         expect(prefs.contains("applyEnabledFromSettings"), "prefs stops detector")
+        expect(prefs.contains("StenoSettings.recordShare"), "prefs share")
+        expect(prefs.contains("StenoSettings.showCard"), "prefs card")
+        expect(prefs.contains("Писать шару") || prefs.contains("Record screen share"), "share copy")
+        expect(prefs.contains("Показывать карточку") || prefs.contains("Show floating card"), "card copy")
 
         let det = try! String(
             contentsOf: root.appendingPathComponent("Sources/StenoKit/StenoDetector.swift"),

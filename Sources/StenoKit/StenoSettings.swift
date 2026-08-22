@@ -4,6 +4,8 @@ public enum StenoSettings {
     public static var defaults: UserDefaults = .standard
     private static let key = "steno.enabledSources"
     private static let enabledKey = "steno.isEnabled"
+    private static let recordShareKey = "steno.recordShare"
+    private static let showCardKey = "steno.showCard"
 
     public static var isEnabled: Bool {
         get {
@@ -11,6 +13,22 @@ public enum StenoSettings {
             return defaults.bool(forKey: enabledKey)
         }
         set { defaults.set(newValue, forKey: enabledKey) }
+    }
+
+    public static var recordShare: Bool {
+        get {
+            if defaults.object(forKey: recordShareKey) == nil { return true }
+            return defaults.bool(forKey: recordShareKey)
+        }
+        set { defaults.set(newValue, forKey: recordShareKey) }
+    }
+
+    public static var showCard: Bool {
+        get {
+            if defaults.object(forKey: showCardKey) == nil { return true }
+            return defaults.bool(forKey: showCardKey)
+        }
+        set { defaults.set(newValue, forKey: showCardKey) }
     }
 
     public static var enabledSources: Set<StenoSource> {
