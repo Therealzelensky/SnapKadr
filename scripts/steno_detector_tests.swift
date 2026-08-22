@@ -24,6 +24,37 @@ enum StenoDetectorTests {
         state.reap(presentIDs: [])
         expect(!state.isSnoozed(11), "empty probe clears snooze")
 
+        let all = Set(StenoSource.allCases)
+        let zoom = StenoWindowSnapshot(windowID: 42, bundleID: "us.zoom.xos", title: "Zoom Meeting", ownerName: "zoom.us")
+        expect(
+            !StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [zoom], enabled: all),
+            "live zoom window keeps session"
+        )
+        expect(
+            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [], enabled: all),
+            "closed call window ends session"
+        )
+        let leftover = StenoWindowSnapshot(
+            windowID: 42,
+            bundleID: "com.apple.Safari",
+            title: "Hacker News",
+            ownerName: "Safari"
+        )
+        expect(
+            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [leftover], enabled: all),
+            "window still open but no longer a call ends session"
+        )
+        let otherCall = StenoWindowSnapshot(
+            windowID: 99,
+            bundleID: "us.zoom.xos",
+            title: "Other meeting",
+            ownerName: "zoom.us"
+        )
+        expect(
+            StenoSessionEnd.shouldStop(sessionWindowID: 42, snapshots: [otherCall], enabled: all),
+            "a different call window does not keep this session"
+        )
+
         exit(failures == 0 ? 0 : 1)
     }
 }

@@ -12,6 +12,11 @@ final class StenoSessionController: ObservableObject {
     private var cancellable: AnyCancellable?
     private var promptedWindowID: UInt32?
     private var sessionProjectURL: URL?
+    private var sessionWindowID: UInt32?
+    private var hangupWatch: Timer?
+    private var hangupTicks = 0
+    private var endingSession = false
+    private var sawCapture = false
 
     private init() {}
 
@@ -58,7 +63,10 @@ final class StenoSessionController: ObservableObject {
             return
         }
         sessionProjectURL = url
+        sessionWindowID = call.windowID
         isSessionActive = true
+        hangupTicks = 0
+        startHangupWatch()
         let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
         do {
             try StenoSidecarIO.write(sidecar, inProject: url)
@@ -82,5 +90,57 @@ final class StenoSessionController: ObservableObject {
         case .telemost: return "Телемост"
         case .bitrixSync: return "Синк"
         }
+    }
+
+    private func startHangupWatch() {
+        hangupWatch?.invalidate()
+        hangupTicks = 0
+        endingSession = false
+        sawCapture = false
+        hangupWatch = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.watchHangup() }
+        }
+    }
+
+    private func watchHangup() {
+        guard isSessionActive, !endingSession else { return }
+        let capturing = KadrEngine.shared.isRecording
+        if capturing { sawCapture = true }
+        if sawCapture, !capturing {
+            clearSession()
+            return
+        }
+        guard let windowID = sessionWindowID else { return }
+        let snaps = StenoWindowProbe.snapshots()
+        if StenoSessionEnd.shouldStop(
+            sessionWindowID: windowID,
+            snapshots: snaps,
+            enabled: StenoSettings.enabledSources
+        ) {
+            hangupTicks += 1
+            if hangupTicks >= 2 {
+                endSessionBecauseCallEnded()
+            }
+        } else {
+            hangupTicks = 0
+        }
+    }
+
+    private func endSessionBecauseCallEnded() {
+        endingSession = true
+        KadrEngine.shared.stopRecording()
+        clearSession()
+    }
+
+    private func clearSession() {
+        hangupWatch?.invalidate()
+        hangupWatch = nil
+        sessionProjectURL = nil
+        sessionWindowID = nil
+        isSessionActive = false
+        promptedWindowID = nil
+        hangupTicks = 0
+        sawCapture = false
+        endingSession = false
     }
 }
