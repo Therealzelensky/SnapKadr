@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SnapEngine.shared.prepare()
         KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()
+        StenoSessionController.shared.start()
 
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()

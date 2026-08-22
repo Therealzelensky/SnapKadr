@@ -1,5 +1,6 @@
 import SwiftUI
 import KadrKit
+import StenoKit
 
 enum SuitePanelAction {
     case snapArea
@@ -24,6 +25,8 @@ struct SuiteControlPanelView: View {
     }
 
     @State private var screen: Screen = .home
+    @ObservedObject private var steno = StenoSessionController.shared
+    @ObservedObject private var stenoDetector = StenoSessionController.shared.detector
 
     private var recentURLs: [URL] {
         AppSettings.recentProjectPaths
@@ -40,6 +43,7 @@ struct SuiteControlPanelView: View {
                 header
                 snapSection
                 kadrSection
+                stenoSection
             case .projects:
                 projectsHeader
                 projectsSection
@@ -50,6 +54,12 @@ struct SuiteControlPanelView: View {
         .frame(width: 320)
         .background(SuiteTheme.background)
         .onChange(of: screen) { _, _ in
+            DispatchQueue.main.async { onLayoutNeeded?() }
+        }
+        .onChange(of: stenoDetector.activeCall) { _, _ in
+            DispatchQueue.main.async { onLayoutNeeded?() }
+        }
+        .onChange(of: steno.isSessionActive) { _, _ in
             DispatchQueue.main.async { onLayoutNeeded?() }
         }
     }
@@ -156,6 +166,55 @@ struct SuiteControlPanelView: View {
             )
             .suiteAppear(delay: 0.12)
         }
+    }
+
+    private var stenoSection: some View {
+        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
+            SuiteSectionHeader(title: L10n.tr("Стено", "Steno"))
+            SuiteCard {
+                HStack(alignment: .center, spacing: 10) {
+                    Image(systemName: steno.isSessionActive ? "record.circle" : "waveform")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(steno.isSessionActive ? SuiteTheme.record : SuiteTheme.accent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(stenoStatusTitle)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(SuiteTheme.textPrimary)
+                            .lineLimit(1)
+                        Text(stenoStatusSubtitle)
+                            .font(.system(size: 11))
+                            .foregroundStyle(SuiteTheme.textTertiary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+            }
+            .suiteAppear(delay: 0.14)
+        }
+    }
+
+    private var stenoStatusTitle: String {
+        if steno.isSessionActive {
+            return L10n.tr("Идёт конспект", "Noting the call")
+        }
+        if let call = stenoDetector.activeCall {
+            let raw = call.title.isEmpty ? call.source.rawValue : call.title
+            if raw.count <= 36 { return raw }
+            return String(raw.prefix(35)) + "…"
+        }
+        return L10n.tr("Нет активного звонка", "No active call")
+    }
+
+    private var stenoStatusSubtitle: String {
+        if steno.isSessionActive {
+            return L10n.tr("Стоп — в панели Кадра", "Stop from the Kadr HUD")
+        }
+        if stenoDetector.activeCall != nil {
+            return L10n.tr("Подтвердите в челке", "Confirm in the notch")
+        }
+        return L10n.tr("Zoom · Meet · Telegram · Телемост · Синк", "Zoom · Meet · Telegram · Telemost · Sync")
     }
 
     private var projectsSection: some View {

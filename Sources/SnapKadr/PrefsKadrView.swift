@@ -25,20 +25,10 @@ struct PrefsKadrView: View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
             folderSection
             recordingSection
-            speechSection
             exportSection
         }
         .suiteAppear()
         .onAppear(perform: reloadDevices)
-    }
-
-    private var speechSection: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            SuiteSectionHeader(title: L10n.tr("Распознавание речи", "Speech recognition"))
-            SuiteCard {
-                SpeechRecognitionSettingsForm()
-            }
-        }
     }
 
     private var folderSection: some View {
