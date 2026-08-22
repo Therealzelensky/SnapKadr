@@ -4,10 +4,11 @@ import KadrKit
 import StenoKit
 
 @MainActor
-final class StenoSessionController {
+final class StenoSessionController: ObservableObject {
     static let shared = StenoSessionController()
 
     let detector = StenoDetector()
+    @Published private(set) var isSessionActive = false
     private var cancellable: AnyCancellable?
     private var promptedWindowID: UInt32?
     private var sessionProjectURL: URL?
@@ -57,6 +58,7 @@ final class StenoSessionController {
             return
         }
         sessionProjectURL = url
+        isSessionActive = true
         let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
         do {
             try StenoSidecarIO.write(sidecar, inProject: url)
