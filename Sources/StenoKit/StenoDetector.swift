@@ -53,6 +53,7 @@ public final class StenoDetector: ObservableObject {
             NSWorkspace.shared.notificationCenter.removeObserver(obs)
         }
         workspaceObservers = []
+        activeCall = nil
     }
 
     public func snooze(windowID: UInt32) {

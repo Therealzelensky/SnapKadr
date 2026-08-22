@@ -21,12 +21,22 @@ final class StenoSessionController: ObservableObject {
     private init() {}
 
     func start() {
-        cancellable = detector.$activeCall
-            .removeDuplicates()
-            .sink { [weak self] call in
-                self?.handle(call)
-            }
-        detector.start()
+        if cancellable == nil {
+            cancellable = detector.$activeCall
+                .removeDuplicates()
+                .sink { [weak self] call in
+                    self?.handle(call)
+                }
+        }
+        applyEnabledFromSettings()
+    }
+
+    func applyEnabledFromSettings() {
+        if StenoSettings.isEnabled {
+            detector.start()
+        } else {
+            detector.stop()
+        }
     }
 
     private func handle(_ call: StenoDetectedCall?) {
