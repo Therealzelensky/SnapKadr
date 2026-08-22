@@ -14,9 +14,18 @@ let package = Package(
         .package(path: "../../NotchHUDKit")
     ],
     targets: [
+        .target(
+            name: "StenoKit",
+            path: "Sources/StenoKit",
+            linkerSettings: [
+                .linkedFramework("AppKit"),
+                .linkedFramework("CoreGraphics")
+            ]
+        ),
         .executableTarget(
             name: "SnapKadr",
             dependencies: [
+                "StenoKit",
                 .product(name: "Sparkle", package: "Sparkle"),
                 .product(name: "SnapKit", package: "Snap"),
                 .product(name: "KadrKit", package: "Kadr"),

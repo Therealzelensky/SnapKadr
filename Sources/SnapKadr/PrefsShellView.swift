@@ -24,6 +24,8 @@ struct PrefsShellView: View {
                             case .general: PrefsGeneralView()
                             case .kadr: PrefsKadrView()
                             case .snap: SnapPrefsContent()
+                            case .steno: PrefsStenoView()
+                            case .speech: PrefsSpeechView()
                             case .hotkeys: PrefsHotkeysView()
                             case .notifications: PrefsNotificationsView()
                             case .version: EmptyView()
