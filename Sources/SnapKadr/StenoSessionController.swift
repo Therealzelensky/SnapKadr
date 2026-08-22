@@ -9,6 +9,7 @@ final class StenoSessionController: ObservableObject {
 
     let detector = StenoDetector()
     @Published private(set) var isSessionActive = false
+    @Published private(set) var lastProjectURL: URL?
     private var cancellable: AnyCancellable?
     private var promptedWindowID: UInt32?
     private var sessionProjectURL: URL?
@@ -20,6 +21,7 @@ final class StenoSessionController: ObservableObject {
     private var endingSession = false
     private var sawCapture = false
     private var sleepObserver: NSObjectProtocol?
+    private var pendingStenoFinish = false
 
     private init() {
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
@@ -28,6 +30,9 @@ final class StenoSessionController: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in self?.stopFromUser() }
+        }
+        KadrEngine.shared.onCaptureFinished = { [weak self] result in
+            Task { @MainActor in self?.handleCaptureFinished(result) }
         }
     }
 
@@ -82,7 +87,10 @@ final class StenoSessionController: ObservableObject {
             options: StenoCapture.windowRecord()
         ) {
         case .success(let url):
+            SuiteNotchHUD.shared.dismissStenoPrompt()
             sessionProjectURL = url
+            lastProjectURL = url
+            pendingStenoFinish = true
             sessionWindowID = call.windowID
             if let snap = StenoWindowProbe.snapshots().first(where: { $0.windowID == call.windowID }) {
                 sessionPID = snap.ownerPID
@@ -105,7 +113,8 @@ final class StenoSessionController: ObservableObject {
                 NSLog("Steno sidecar write failed: \(error.localizedDescription)")
             }
         case .failure(let error):
-            NSLog("Steno start failed: \(error.localizedDescription)")
+            SuiteNotchHUD.shared.dismissStenoPrompt()
+            presentStartFailure(error)
             promptedWindowID = nil
         }
     }
@@ -116,6 +125,56 @@ final class StenoSessionController: ObservableObject {
         SuiteNotchHUD.shared.dismissStenoRecording()
         KadrEngine.shared.stopRecording()
         clearSession()
+    }
+
+    func openLastProject() {
+        guard let url = lastProjectURL else { return }
+        KadrEngine.shared.openProject(at: url)
+    }
+
+    private func presentStartFailure(_ error: Error) {
+        let text = error.localizedDescription
+        let lower = text.lowercased()
+        if lower.contains("screen") || lower.contains("экрана") || lower.contains("запись экрана") {
+            SuiteNotchHUD.shared.showStenoFailure(
+                message: L10n.tr("Нужен доступ к записи экрана", "Screen Recording access needed"),
+                cta: L10n.tr("Настройки", "Settings")
+            ) {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            return
+        }
+        if lower.contains("already") || lower.contains("уже идёт") || lower.contains("already recording") {
+            SuiteNotchHUD.shared.showStenoFailure(
+                message: L10n.tr("Уже идёт запись Кадра", "Kadr is already recording"),
+                cta: L10n.tr("Понятно", "OK"),
+                onCTA: {}
+            )
+            return
+        }
+        SuiteNotchHUD.shared.showStenoFailure(
+            message: text,
+            cta: L10n.tr("Понятно", "OK"),
+            onCTA: {}
+        )
+    }
+
+    private func handleCaptureFinished(_ result: Result<URL, Error>) {
+        guard pendingStenoFinish else { return }
+        pendingStenoFinish = false
+        switch result {
+        case .success(let url):
+            lastProjectURL = url
+            SuiteNotchHUD.shared.dismissStenoRecording()
+            SuiteNotchHUD.shared.showStenoSaved { [weak self] in
+                self?.openLastProject()
+            }
+        case .failure(let error):
+            SuiteNotchHUD.shared.dismissStenoRecording()
+            presentStartFailure(error)
+        }
     }
 
     private func projectName(source: StenoSource) -> String {
@@ -181,6 +240,9 @@ final class StenoSessionController: ObservableObject {
         hangupWatch?.invalidate()
         hangupWatch = nil
         SuiteNotchHUD.shared.dismissStenoRecording()
+        if let url = sessionProjectURL {
+            lastProjectURL = url
+        }
         sessionProjectURL = nil
         sessionWindowID = nil
         sessionPID = 0

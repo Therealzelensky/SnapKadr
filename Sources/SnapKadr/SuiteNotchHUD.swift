@@ -46,10 +46,8 @@ final class SuiteNotchHUD {
         onAccept: @escaping () -> Void,
         onLater: @escaping () -> Void
     ) {
-        promptActions.onAccept = { [weak self] in
-            self?.dismissStenoPrompt {
-                onAccept()
-            }
+        promptActions.onAccept = {
+            onAccept()
         }
         promptActions.onLater = { [weak self] in
             self?.dismissStenoPrompt {
@@ -165,6 +163,98 @@ final class SuiteNotchHUD {
 
     func dismissStenoRecording(completion: (() -> Void)? = nil) {
         recordingShell.dismiss(completion: completion)
+    }
+
+    func showStenoFailure(message: String, cta: String, onCTA: @escaping () -> Void) {
+        promptActions.onAccept = { [weak self] in
+            self?.dismissStenoPrompt {
+                onCTA()
+            }
+        }
+        promptActions.onLater = { [weak self] in
+            self?.dismissStenoPrompt()
+        }
+
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)
+        icon.contentTintColor = NSColor(calibratedRed: 0.937, green: 0.267, blue: 0.267, alpha: 1)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+
+        let label = NSTextField(labelWithString: message)
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = .white
+        label.isBezeled = false
+        label.drawsBackground = false
+        label.maximumNumberOfLines = 2
+        label.preferredMaxLayoutWidth = 240
+
+        let action = NSButton(title: cta, target: promptActions, action: #selector(StenoPromptActions.accept))
+        action.bezelStyle = .rounded
+        action.controlSize = .small
+        action.font = .systemFont(ofSize: 12, weight: .semibold)
+
+        let row = NSStackView(views: [icon, label, action])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 56))
+        row.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
+        ])
+        promptShell.contentView = host
+        promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
+    }
+
+    func showStenoSaved(onOpen: @escaping () -> Void) {
+        promptActions.onAccept = { [weak self] in
+            self?.dismissStenoPrompt {
+                onOpen()
+            }
+        }
+        promptActions.onLater = { [weak self] in
+            self?.dismissStenoPrompt()
+        }
+
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
+        icon.contentTintColor = NSColor(calibratedRed: 0.345, green: 0.80, blue: 0.40, alpha: 1)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+
+        let label = NSTextField(labelWithString: L10n.tr("Конспект сохранён", "Notes saved"))
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = .white
+        label.isBezeled = false
+        label.drawsBackground = false
+
+        let open = NSButton(
+            title: L10n.tr("Открыть", "Open"),
+            target: promptActions,
+            action: #selector(StenoPromptActions.accept)
+        )
+        open.bezelStyle = .rounded
+        open.controlSize = .small
+        open.font = .systemFont(ofSize: 12, weight: .semibold)
+
+        let row = NSStackView(views: [icon, label, open])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 320, height: 56))
+        row.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
+        ])
+        promptShell.contentView = host
+        promptShell.present(size: NSSize(width: 320, height: 56), on: NSScreen.main)
     }
 }
 

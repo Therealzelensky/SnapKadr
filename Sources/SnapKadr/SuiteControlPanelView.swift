@@ -62,6 +62,9 @@ struct SuiteControlPanelView: View {
         .onChange(of: steno.isSessionActive) { _, _ in
             DispatchQueue.main.async { onLayoutNeeded?() }
         }
+        .onChange(of: steno.lastProjectURL) { _, _ in
+            DispatchQueue.main.async { onLayoutNeeded?() }
+        }
     }
 
     private var header: some View {
@@ -194,6 +197,13 @@ struct SuiteControlPanelView: View {
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(SuiteTheme.record)
+                    } else if steno.lastProjectURL != nil {
+                        Button(L10n.tr("Открыть сводку", "Open notes")) {
+                            StenoSessionController.shared.openLastProject()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(SuiteTheme.accent)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -212,6 +222,9 @@ struct SuiteControlPanelView: View {
             if raw.count <= 36 { return raw }
             return String(raw.prefix(35)) + "…"
         }
+        if let url = steno.lastProjectURL {
+            return url.deletingPathExtension().lastPathComponent
+        }
         return L10n.tr("Нет активного звонка", "No active call")
     }
 
@@ -221,6 +234,9 @@ struct SuiteControlPanelView: View {
         }
         if stenoDetector.activeCall != nil {
             return L10n.tr("Подтвердите в челке", "Confirm in the notch")
+        }
+        if steno.lastProjectURL != nil {
+            return L10n.tr("Последний конспект", "Last notes")
         }
         return L10n.tr("Zoom · Meet · Telegram · Телемост · Синк", "Zoom · Meet · Telegram · Telemost · Sync")
     }

@@ -8,7 +8,8 @@ enum StenoCapture {
             recordsInputEvents: false,
             presentsEditor: false,
             capturesVideo: recordVideo,
-            activatesOwnerApp: false
+            activatesOwnerApp: false,
+            presentsAlerts: false
         )
     }
 }
