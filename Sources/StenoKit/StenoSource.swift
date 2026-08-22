@@ -14,9 +14,9 @@ public enum StenoSource: String, CaseIterable, Sendable {
         case .googleMeet:
             return Self.browserBundleIDs
         case .telegram:
-            return ["ru.keepcoder.Telegram"]
+            return ["ru.keepcoder.Telegram", "org.telegram.desktop", "com.tdesktop.Telegram"]
         case .telemost:
-            return Self.browserBundleIDs + ["ru.yandex.telemost"]
+            return Self.browserBundleIDs + ["ru.yandex.telemost", "ru.yandex.desktop.telemost"]
         case .bitrixSync:
             return []
         }
@@ -27,24 +27,43 @@ public enum StenoSource: String, CaseIterable, Sendable {
         case .zoom:
             return []
         case .googleMeet:
-            return ["meet.google", "google meet", "meet -"]
+            // In-call Chrome tab is often "Meet – …" (en dash), not "Meet -".
+            return ["meet.google", "google meet", "meet -", "meet –", "meet—"]
         case .telegram:
-            return ["call", "звонок", "группов"]
+            return ["call", "звонок", "звонки", "группов", "видеозвон"]
         case .telemost:
             return ["телемост", "telemost"]
         case .bitrixSync:
-            return ["bitrix24"]
+            return ["чат и звонки", "chat and calls", "bitrix24"]
         }
     }
 
     static let browserBundleIDs: [String] = [
         "com.google.Chrome",
         "com.google.Chrome.canary",
+        "com.google.Chrome.beta",
+        "com.google.Chrome.dev",
         "com.apple.Safari",
         "org.mozilla.firefox",
+        "org.mozilla.firefoxdeveloperedition",
         "ru.yandex.desktop",
         "ru.yandex.browser",
+        "ru.yandex.desktop.yandex-browser",
+        "ru.cryptopro.chromium-gost",
+        "com.microsoft.edgemac",
+        "com.brave.Browser",
+        "company.thebrowser.Browser",
+        "com.vivaldi.Vivaldi",
+        "com.operasoftware.Opera",
     ]
+
+    public static func isBrowser(_ bundle: String) -> Bool {
+        if browserBundleIDs.contains(bundle) { return true }
+        if bundle.hasPrefix("com.apple.Safari.WebApp.") { return true }
+        if bundle.hasPrefix("com.google.Chrome.app.") { return true }
+        if bundle.hasPrefix("com.microsoft.edgemac") { return true }
+        return false
+    }
 }
 
 public struct StenoWindowSnapshot: Equatable, Sendable {

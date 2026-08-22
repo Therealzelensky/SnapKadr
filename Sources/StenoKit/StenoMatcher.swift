@@ -10,23 +10,25 @@ public enum StenoMatcher {
 
     private static func matches(_ snap: StenoWindowSnapshot, source: StenoSource) -> Bool {
         let bundle = snap.bundleID
-        let title = snap.title.lowercased()
+        let haystack = (snap.title + " " + snap.ownerName).lowercased()
         switch source {
         case .zoom:
-            return source.bundleIDs.contains(bundle)
+            return bundle.hasPrefix("us.zoom.") || source.bundleIDs.contains(bundle)
         case .telegram:
-            return source.bundleIDs.contains(bundle) && containsAny(title, source.titleNeedles)
+            return source.bundleIDs.contains(bundle) && containsAny(haystack, source.titleNeedles)
         case .googleMeet:
-            return StenoSource.browserBundleIDs.contains(bundle) && containsAny(title, source.titleNeedles)
+            return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .telemost:
-            return source.bundleIDs.contains(bundle) && containsAny(title, source.titleNeedles)
+            if bundle.contains("telemost") { return true }
+            return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .bitrixSync:
             if bundle.lowercased().contains("bitrix") { return true }
-            let isBrowser = StenoSource.browserBundleIDs.contains(bundle)
-            let hasBitrix24 = title.contains("bitrix24")
-            let callish = title.contains("звонок") || title.contains("call")
-                || title.contains("синк") || title.contains("sync")
-            return isBrowser && hasBitrix24 && callish
+            guard StenoSource.isBrowser(bundle) else { return false }
+            if containsAny(haystack, ["чат и звонки", "chat and calls"]) { return true }
+            let hasBitrix24 = haystack.contains("bitrix24") || haystack.contains("битрикс24")
+            let callish = haystack.contains("звонок") || haystack.contains("звонки")
+                || haystack.contains("call") || haystack.contains("синк") || haystack.contains("sync")
+            return hasBitrix24 && callish
         }
     }
 
