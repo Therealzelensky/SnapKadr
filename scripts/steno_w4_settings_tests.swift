@@ -29,6 +29,30 @@ enum StenoW4SettingsTests {
         )
         expect(!settings.contains("yandex.accessToken"), "token not in settings UD keys")
 
+        let g = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/PrefsGeneralView.swift"),
+            encoding: .utf8
+        )
+        expect(g.contains("Хранилище проектов") || g.contains("Project storage"), "section")
+        expect(g.contains("Автозагрузка после сессии") || g.contains("Auto-upload after session"), "auto copy")
+        expect(g.contains("WebDAV") && g.contains("S3") && (g.contains("Яндекс") || g.contains("Yandex")), "kinds UI")
+        expect(g.contains("Проверить соединение") || g.contains("Test connection"), "test btn")
+        expect(g.contains("Загрузить сейчас") || g.contains("Upload now"), "flush btn")
+        expect(g.contains("ProjectCloudSettings") || g.contains("remoteKind"), "bindings")
+        expect(!g.contains("recordCallVideo"), "no call video")
+
+        let kadr = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/PrefsKadrView.swift"),
+            encoding: .utf8
+        )
+        expect(!kadr.contains("folderSection") && !kadr.contains("Папка проектов"), "folder moved off Kadr tab")
+
+        let steno = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/PrefsStenoView.swift"),
+            encoding: .utf8
+        )
+        expect(!steno.contains("WebDAV") && !steno.contains("cloud.remoteKind"), "no cloud on Steno")
+
         exit(failures == 0 ? 0 : 1)
     }
 }

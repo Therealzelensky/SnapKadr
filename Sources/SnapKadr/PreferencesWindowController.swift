@@ -19,7 +19,12 @@ final class PreferencesWindowController: NSWindowController {
         window.center()
     }
 
-    func show() {
+    func show(tab: PrefsTab = .general) {
+        model.selectedTab = tab
+        presentWindow()
+    }
+
+    private func presentWindow() {
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
