@@ -126,6 +126,7 @@ struct StenoCloudPrefsSection: View {
     @State private var yandexAccountLabel = StenoCloudSettings.yandexAccountLabel
     @State private var yandexPathPrefix = StenoCloudSettings.yandexPathPrefix
     @State private var yandexOAuthClientID = StenoCloudSettings.yandexOAuthClientID
+    @State private var yandexOAuthClientSecret = ""
     @State private var queueItems: [StenoCloudQueueItem] = []
     @State private var statusMessage = ""
     @State private var isBusy = false
@@ -253,9 +254,19 @@ struct StenoCloudPrefsSection: View {
                 cloudField(L10n.tr("OAuth Client ID", "OAuth Client ID"), $yandexOAuthClientID) {
                     StenoCloudSettings.yandexOAuthClientID = $0
                 }
+                SecureField(L10n.tr("OAuth Client Secret", "OAuth Client Secret"), text: $yandexOAuthClientSecret)
+                    .textFieldStyle(.roundedBorder)
+                    .onChange(of: yandexOAuthClientSecret) { _, v in
+                        let trimmed = v.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        try? StenoCloudKeychain.set(
+                            trimmed,
+                            account: YandexOAuthSession.clientSecretAccount
+                        )
+                    }
                 Text(L10n.tr(
-                    "Создайте приложение на oauth.yandex.ru. Redirect URI: snapkadr://yandex-oauth",
-                    "Create an app at oauth.yandex.ru. Redirect URI: snapkadr://yandex-oauth"
+                    "Redirect URI в кабинете Яндекса: https://oauth.yandex.ru/verification_code — после «Подключить» вставьте код со страницы.",
+                    "Yandex Redirect URI: https://oauth.yandex.ru/verification_code — after Connect, paste the code from that page."
                 ))
                 .font(.system(size: 11))
                 .foregroundStyle(SuiteTheme.textTertiary)

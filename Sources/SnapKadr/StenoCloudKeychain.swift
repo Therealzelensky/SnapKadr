@@ -64,6 +64,7 @@ public enum StenoCloudKeychain {
         case .yandex:
             try delete(account: accountName(destination: .yandex, field: "accessToken"))
             try delete(account: accountName(destination: .yandex, field: "refreshToken"))
+            // Keep yandex.clientSecret so reconnect does not require re-entering the app secret.
         }
     }
 

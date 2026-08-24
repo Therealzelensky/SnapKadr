@@ -20,11 +20,14 @@ enum StenoW4YandexTests {
         let settings = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoCloudSettings.swift"), encoding: .utf8)
         expect(!settings.contains("yandex.accessToken"), "token not in UD")
         let oauth = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/YandexOAuthSession.swift"), encoding: .utf8)
-        expect(oauth.contains("ASWebAuthenticationSession"), "oauth session")
+        expect(oauth.contains("ASWebAuthenticationSession") || oauth.contains("verification_code"), "oauth flow")
         expect(oauth.contains("YandexDiskOAuthClientID"), "client id plist key")
         expect(oauth.contains("StenoCloudSettings.yandexOAuthClientID"), "prefs client id override")
         expect(oauth.contains("missingYandexClientID"), "missing client id error")
         expect(oauth.contains("isUsableClientID"), "rejects placeholder id")
+        expect(oauth.contains("exchangeAuthorizationCode"), "code exchange")
+        expect(oauth.contains("oauth.yandex.ru/verification_code"), "verification redirect")
+        expect(oauth.contains("clientSecret"), "client secret keychain")
         exit(failures == 0 ? 0 : 1)
     }
 }
