@@ -79,8 +79,8 @@ grep -q 'reachGoal' "$ROOT/download.js" || { echo "download.js must fire Metrika
 grep -q 'download_beta' "$ROOT/download.js" || { echo "download.js must use download_beta goal id"; fail=1; }
 
 band_count="$(grep -c 'class="feature-band' "$ROOT/index.html" || true)"
-if [[ "$band_count" -lt 20 ]]; then
-  echo "expected 20+ feature bands, got $band_count"; fail=1
+if [[ "$band_count" -lt 24 ]]; then
+  echo "expected 24+ feature bands, got $band_count"; fail=1
 fi
 
 shot_count="$(grep -c 'assets/shots/' "$ROOT/index.html" || true)"
@@ -105,6 +105,18 @@ grep -q 'application/ld+json' "$ROOT/index.html" || { echo "index missing JSON-L
 grep -q 'og:image' "$ROOT/index.html" || { echo "index missing og:image"; fail=1; }
 grep -q 'id="faq"' "$ROOT/index.html" || { echo "index missing FAQ section"; fail=1; }
 grep -q 'FAQPage' "$ROOT/index.html" || { echo "index missing FAQPage schema"; fail=1; }
+grep -q 'id="steno"' "$ROOT/index.html" || { echo "index missing #steno"; fail=1; }
+grep -q 'Конспект звонка на Mac' "$ROOT/index.html" || { echo "missing Steno wave copy"; fail=1; }
+grep -q 'После стопа — уже текст' "$ROOT/index.html" || { echo "missing Steno digest copy"; fail=1; }
+grep -q 'Копия в облако — по желанию' "$ROOT/index.html" || { echo "missing Steno cloud copy"; fail=1; }
+grep -q 'Нужен ли интернет для Стено' "$ROOT/index.html" || { echo "missing Steno internet FAQ"; fail=1; }
+need "$ROOT/assets/shots/28-steno-hud-html.png"
+need "$ROOT/assets/shots/29-steno-digest-html.png"
+need "$ROOT/assets/shots/30-steno-card-html.png"
+need "$ROOT/assets/shots/31-steno-cloud-html.png"
+for f in 28-steno-hud 29-steno-digest 30-steno-card 31-steno-cloud; do
+  grep -q "${f}-html.png" "$ROOT/index.html" || { echo "landing missing ${f}-html"; fail=1; }
+done
 grep -q 'SoftwareApplication' "$ROOT/index.html" || { echo "index missing SoftwareApplication schema"; fail=1; }
 grep -q 'noindex' "$ROOT/snap/index.html" || { echo "snap should be noindex"; fail=1; }
 grep -q 'noindex' "$ROOT/kadr/index.html" || { echo "kadr should be noindex"; fail=1; }

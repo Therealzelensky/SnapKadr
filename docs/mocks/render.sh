@@ -39,3 +39,7 @@ render 24-snap-bg 1600 1000
 render 25-suite-together 1600 1000
 render 26-suite-prefs 1600 1000
 render 27-updates 1600 1000
+render 28-steno-hud 1600 1000
+render 29-steno-digest 1600 1000
+render 30-steno-card 1600 1000
+render 31-steno-cloud 1600 1000

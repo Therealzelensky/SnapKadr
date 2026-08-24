@@ -144,6 +144,12 @@
   gap: 14px;
   margin-top: 8px;
 }
+.cards3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
 .mini-card {
   background: var(--surface);
   border: 1px solid var(--border);
