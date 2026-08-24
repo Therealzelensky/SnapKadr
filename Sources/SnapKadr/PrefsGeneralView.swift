@@ -265,8 +265,8 @@ struct StenoCloudPrefsSection: View {
                         )
                     }
                 Text(L10n.tr(
-                    "Redirect URI в кабинете Яндекса: https://oauth.yandex.ru/verification_code — после «Подключить» вставьте код со страницы.",
-                    "Yandex Redirect URI: https://oauth.yandex.ru/verification_code — after Connect, paste the code from that page."
+                    "Redirect URI: https://oauth.yandex.ru/verification_code. После «Подключить» вставьте URL страницы или access_token из адресной строки.",
+                    "Redirect URI: https://oauth.yandex.ru/verification_code. After Connect, paste the page URL or access_token from the address bar."
                 ))
                 .font(.system(size: 11))
                 .foregroundStyle(SuiteTheme.textTertiary)
@@ -434,20 +434,42 @@ struct StenoCloudPrefsSection: View {
                     ?? NSApp.mainWindow
                     ?? NSApp.windows.first(where: { $0.isVisible })
                 try await oauth.connect(presenter: presenter)
-                yandexAccountLabel = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
-                StenoCloudSettings.yandexAccountLabel = yandexAccountLabel
-                statusMessage = yandexAccountLabel
+                if StenoCloudSettings.yandexAccountLabel.isEmpty {
+                    StenoCloudSettings.yandexAccountLabel = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
+                }
+                yandexAccountLabel = StenoCloudSettings.yandexAccountLabel
+                statusMessage = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
+                presentConnectAlert(
+                    title: L10n.tr("Готово", "Done"),
+                    text: statusMessage
+                )
             } catch {
-                let detail = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                statusMessage = detail
-                if case StenoCloudError.missingYandexClientID = error {
-                    if let url = URL(string: "https://oauth.yandex.ru/client/new") {
-                        NSWorkspace.shared.open(url)
+                if case StenoCloudError.cancelled = error {
+                    statusMessage = L10n.tr("Отменено", "Cancelled")
+                } else {
+                    let detail = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    statusMessage = detail
+                    presentConnectAlert(
+                        title: L10n.tr("Не удалось подключить", "Connect failed"),
+                        text: detail
+                    )
+                    if case StenoCloudError.missingYandexClientID = error {
+                        if let url = URL(string: "https://oauth.yandex.ru/client/new") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                 }
             }
             isBusy = false
         }
+    }
+
+    private func presentConnectAlert(title: String, text: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     private func disconnectYandex() {

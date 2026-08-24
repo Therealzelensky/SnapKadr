@@ -3,12 +3,15 @@ import Foundation
 
 /// Yandex OAuth for Disk API.
 ///
-/// Default flow matches Yandex console “Redirect URI =
-/// https://oauth.yandex.ru/verification_code”: open the browser, user pastes
-/// the confirmation code, we exchange it for tokens (needs Client Secret).
+/// With Redirect URI `https://oauth.yandex.ru/verification_code` Yandex shows the
+/// result in the browser. For `response_type=token` the page URL contains
+/// `#access_token=…` (see Yandex “obtain a token manually”). The user pastes
+/// that URL or the token itself — no Client Secret required for this path.
 ///
-/// Client id: prefs `cloud.yandex.oauthClientID` → Info.plist → env.
-/// Client secret: Keychain `yandex.clientSecret` (never UserDefaults).
+/// Fallback: short confirmation codes are exchanged via `authorization_code`
+/// (needs Client Secret in Keychain).
+///
+/// Client id: prefs → Info.plist → env.
 public final class YandexOAuthSession: NSObject {
     public static let redirectURI = "https://oauth.yandex.ru/verification_code"
     public static let authorizeURL = URL(string: "https://oauth.yandex.ru/authorize")!
@@ -46,19 +49,10 @@ public final class YandexOAuthSession: NSObject {
         guard !clientID.isEmpty else {
             throw StenoCloudError.missingYandexClientID
         }
-        let secret = (try StenoCloudKeychain.get(account: Self.clientSecretAccount) ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !secret.isEmpty else {
-            throw StenoCloudError.network(
-                Locale.preferredLanguages.first?.hasPrefix("ru") == true
-                    ? "Укажите OAuth Client Secret (поле ниже) — нужен для кода с oauth.yandex.ru/verification_code"
-                    : "Enter OAuth Client Secret below — required for oauth.yandex.ru/verification_code"
-            )
-        }
 
         var components = URLComponents(url: Self.authorizeURL, resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "response_type", value: "code"),
+            URLQueryItem(name: "response_type", value: "token"),
             URLQueryItem(name: "client_id", value: clientID),
             URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
             URLQueryItem(name: "force_confirm", value: "yes")
@@ -68,29 +62,53 @@ public final class YandexOAuthSession: NSObject {
         }
 
         NSWorkspace.shared.open(url)
-        let code = try await Self.promptAuthorizationCode(presenter: presenter)
-        let tokens = try await Self.exchangeAuthorizationCode(
-            code,
-            clientID: clientID,
-            clientSecret: secret
-        )
-        try StenoCloudKeychain.set(
-            tokens.access,
-            account: StenoCloudKeychain.accountName(destination: .yandex, field: "accessToken")
-        )
-        if let refresh = tokens.refresh, !refresh.isEmpty {
-            try StenoCloudKeychain.set(
-                refresh,
-                account: StenoCloudKeychain.accountName(destination: .yandex, field: "refreshToken")
+        let pasted = try await Self.promptPaste(
+            presenter: presenter,
+            title: L10n.tr("Токен Яндекса", "Yandex token"),
+            message: L10n.tr(
+                "После «Разрешить» откроется страница verification_code. Скопируйте адрес из строки браузера (или сам access_token) и вставьте сюда.",
+                "After Allow, the verification_code page opens. Paste the browser URL (or the access_token) here."
             )
+        )
+
+        let token: String
+        if let fromURL = Self.extractAccessToken(fromPasted: pasted) {
+            token = fromURL
+        } else if Self.looksLikeAccessToken(pasted) {
+            token = pasted
+        } else if Self.looksLikeConfirmationCode(pasted) {
+            let secret = (try StenoCloudKeychain.get(account: Self.clientSecretAccount) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !secret.isEmpty else {
+                throw StenoCloudError.network(
+                    L10n.tr(
+                        "Это код подтверждения — нужен Client Secret, либо вставьте URL/#access_token со страницы.",
+                        "That’s a confirmation code — enter Client Secret, or paste the page URL/#access_token instead."
+                    )
+                )
+            }
+            let tokens = try await Self.exchangeAuthorizationCode(
+                pasted,
+                clientID: clientID,
+                clientSecret: secret
+            )
+            token = tokens.access
+            if let refresh = tokens.refresh, !refresh.isEmpty {
+                try StenoCloudKeychain.set(
+                    refresh,
+                    account: StenoCloudKeychain.accountName(destination: .yandex, field: "refreshToken")
+                )
+            }
         } else {
-            try? StenoCloudKeychain.delete(
-                account: StenoCloudKeychain.accountName(destination: .yandex, field: "refreshToken")
+            throw StenoCloudError.network(
+                L10n.tr(
+                    "Не похоже на токен или код. Вставьте URL страницы verification_code целиком.",
+                    "Doesn’t look like a token or code. Paste the full verification_code page URL."
+                )
             )
         }
-        if StenoCloudSettings.yandexAccountLabel.isEmpty {
-            StenoCloudSettings.yandexAccountLabel = "Яндекс Диск"
-        }
+
+        try Self.storeAccessToken(token)
     }
 
     public func disconnect() throws {
@@ -112,37 +130,73 @@ public final class YandexOAuthSession: NSObject {
         throw StenoCloudError.authRequired
     }
 
+    static func storeAccessToken(_ token: String) throws {
+        try StenoCloudKeychain.set(
+            token,
+            account: StenoCloudKeychain.accountName(destination: .yandex, field: "accessToken")
+        )
+        if StenoCloudSettings.yandexAccountLabel.isEmpty {
+            StenoCloudSettings.yandexAccountLabel = "Яндекс Диск"
+        }
+    }
+
+    static func extractAccessToken(fromPasted pasted: String) -> String? {
+        let trimmed = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed), let token = try? parseAccessToken(from: url) {
+            return token
+        }
+        // Browser may copy "…verification_code#access_token=…&expires_in=…"
+        if trimmed.contains("access_token=") {
+            let fake = URL(string: "https://oauth.yandex.ru/verification_code?\(trimmed.replacingOccurrences(of: "#", with: "&"))")
+                ?? URL(string: "https://oauth.yandex.ru/verification_code#\(trimmed)")
+            if let fake, let token = try? parseAccessToken(from: fake) {
+                return token
+            }
+            // Parse fragment-style blob without a full URL.
+            if let token = parseTokenBlob(trimmed) {
+                return token
+            }
+        }
+        return nil
+    }
+
+    static func looksLikeAccessToken(_ value: String) -> Bool {
+        let v = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Yandex tokens are long opaque strings; confirmation codes are short.
+        return v.count >= 20 && !v.contains(" ") && !v.contains("=") && !v.contains("://")
+    }
+
+    static func looksLikeConfirmationCode(_ value: String) -> Bool {
+        let v = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (6...12).contains(v.count) && v.allSatisfy(\.isNumber)
+    }
+
     @MainActor
-    static func promptAuthorizationCode(presenter: NSWindow?) async throws -> String {
+    static func promptPaste(presenter: NSWindow?, title: String, message: String) async throws -> String {
         let alert = NSAlert()
-        alert.messageText = L10n.tr(
-            "Код подтверждения Яндекса",
-            "Yandex confirmation code"
-        )
-        alert.informativeText = L10n.tr(
-            "Скопируйте код со страницы oauth.yandex.ru/verification_code и вставьте сюда.",
-            "Copy the code from oauth.yandex.ru/verification_code and paste it here."
-        )
+        alert.messageText = title
+        alert.informativeText = message
         alert.addButton(withTitle: L10n.tr("Подключить", "Connect"))
         alert.addButton(withTitle: L10n.tr("Отмена", "Cancel"))
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
-        field.placeholderString = "code"
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 360, height: 24))
+        field.placeholderString = "https://oauth.yandex.ru/verification_code#access_token=…"
         alert.accessoryView = field
+        alert.window.initialFirstResponder = field
 
-        let response: NSApplication.ModalResponse
-        if let presenter {
-            response = await withCheckedContinuation { cont in
-                alert.beginSheetModal(for: presenter) { cont.resume(returning: $0) }
-            }
-        } else {
-            response = alert.runModal()
-        }
+        // Prefer app-modal so sheet attachment quirks on prefs panels don’t swallow the result.
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        field.window?.makeFirstResponder(nil)
         guard response == .alertFirstButtonReturn else {
             throw StenoCloudError.cancelled
         }
-        let code = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !code.isEmpty else { throw StenoCloudError.authRequired }
-        return code
+        let value = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else {
+            throw StenoCloudError.network(
+                L10n.tr("Пустое поле — вставьте URL или токен со страницы.", "Empty — paste the page URL or token.")
+            )
+        }
+        return value
     }
 
     static func exchangeAuthorizationCode(
@@ -153,21 +207,27 @@ public final class YandexOAuthSession: NSObject {
         var request = URLRequest(url: tokenURL)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        let body: [URLQueryItem] = [
+        var components = URLComponents()
+        components.queryItems = [
             URLQueryItem(name: "grant_type", value: "authorization_code"),
             URLQueryItem(name: "code", value: code),
             URLQueryItem(name: "client_id", value: clientID),
-            URLQueryItem(name: "client_secret", value: clientSecret)
+            URLQueryItem(name: "client_secret", value: clientSecret),
+            URLQueryItem(name: "redirect_uri", value: redirectURI)
         ]
-        var components = URLComponents()
-        components.queryItems = body
         request.httpBody = Data((components.percentEncodedQuery ?? "").utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+        let body = String(data: data, encoding: .utf8) ?? ""
         guard (200..<300).contains(status) else {
-            let msg = String(data: data, encoding: .utf8) ?? "token exchange failed"
-            throw StenoCloudError.server(status: status, message: msg)
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let err = json["error"] as? String
+            {
+                let desc = json["error_description"] as? String ?? body
+                throw StenoCloudError.server(status: status, message: "\(err): \(desc)")
+            }
+            throw StenoCloudError.server(status: status, message: body.isEmpty ? "token exchange failed" : body)
         }
         guard
             let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -179,23 +239,22 @@ public final class YandexOAuthSession: NSObject {
         return (access, json["refresh_token"] as? String)
     }
 
-    /// Parses implicit-flow callback URLs (kept for tests / future custom scheme).
     static func parseAccessToken(from url: URL) throws -> String {
-        let fragment = url.fragment ?? ""
-        let query = url.query ?? ""
-        let blob = fragment.isEmpty ? query : fragment
+        if let token = parseTokenBlob(url.fragment ?? "") { return token }
+        if let token = parseTokenBlob(url.query ?? "") { return token }
+        throw StenoCloudError.authRequired
+    }
+
+    private static func parseTokenBlob(_ blob: String) -> String? {
+        guard !blob.isEmpty else { return nil }
         var values: [String: String] = [:]
         for pair in blob.split(separator: "&") {
             let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
             guard parts.count == 2 else { continue }
             values[parts[0]] = parts[1].removingPercentEncoding ?? parts[1]
         }
-        if let err = values["error"] {
-            throw StenoCloudError.network(err)
-        }
-        guard let token = values["access_token"], !token.isEmpty else {
-            throw StenoCloudError.authRequired
-        }
-        return token
+        if values["error"] != nil { return nil }
+        if let token = values["access_token"], !token.isEmpty { return token }
+        return nil
     }
 }
