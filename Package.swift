@@ -34,6 +34,19 @@ let package = Package(
                 .product(name: "NotchHUDKit", package: "NotchHUDKit")
             ],
             path: "Sources/SnapKadr",
+            exclude: [
+                // Guard against stale parallel-agent drafts that conflict with ProjectCloud* W4.
+                "StenoCloudClient.swift",
+                "StenoCloudHUDPresenter.swift",
+                "StenoCloudKeychain.swift",
+                "StenoCloudSettings.swift",
+                "StenoCloudSync.swift",
+                "StenoCloudUploadQueue.swift",
+                "S3CompatibleClient.swift",
+                "WebDAVClient.swift",
+                "YandexDiskClient.swift",
+                "YandexOAuthSession.swift"
+            ],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("SwiftUI"),

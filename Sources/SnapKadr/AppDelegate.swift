@@ -37,7 +37,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.showPreferences(tab: .general)
+            Task { @MainActor in
+                self?.showPreferences(tab: .general)
+            }
         }
     }
 
