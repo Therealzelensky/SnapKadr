@@ -161,8 +161,19 @@ public final class ProjectCloudStore: @unchecked Sendable {
     }
 
     private static func makeS3Adapter() -> ProjectCloudAdapter? {
-        // Wired in Task 5
-        nil
+        let raw = ProjectCloudSettings.s3Endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let endpoint = URL(string: raw), !raw.isEmpty else { return nil }
+        let secret = (try? ProjectCloudKeychain.get(
+            account: ProjectCloudKeychain.accountName(kind: .s3, field: "secretAccessKey")
+        )) ?? ""
+        return S3CloudAdapter(
+            endpoint: endpoint,
+            region: ProjectCloudSettings.s3Region,
+            bucket: ProjectCloudSettings.s3Bucket,
+            accessKeyId: ProjectCloudSettings.s3AccessKeyId,
+            secretAccessKey: secret,
+            pathPrefix: ProjectCloudSettings.s3PathPrefix
+        )
     }
 
     private static func makeYandexAdapter() -> ProjectCloudAdapter? {
