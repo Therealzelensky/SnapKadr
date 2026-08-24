@@ -1,5 +1,6 @@
 import ApplicationServices
 import CoreGraphics
+import Darwin
 import Foundation
 import Vision
 
