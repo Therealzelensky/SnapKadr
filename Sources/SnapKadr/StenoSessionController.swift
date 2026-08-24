@@ -27,6 +27,9 @@ final class StenoSessionController: ObservableObject {
     private var sessionSource: StenoSource?
     private var shareStarted = false
     private var shareFailed = false
+    private var pipelineWindowID: UInt32?
+    private var pipelinePID: pid_t = 0
+    private var postSessionTask: Task<Void, Never>?
 
     private init() {
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
@@ -169,6 +172,8 @@ final class StenoSessionController: ObservableObject {
     func stopFromUser() {
         guard isSessionActive, !endingSession else { return }
         endingSession = true
+        pipelineWindowID = sessionWindowID
+        pipelinePID = sessionPID
         SuiteNotchHUD.shared.dismissStenoRecording()
         StenoOverlayPanel.shared.hide()
         KadrEngine.shared.stopRecording()
@@ -221,12 +226,120 @@ final class StenoSessionController: ObservableObject {
             lastProjectURL = url
             SuiteNotchHUD.shared.dismissStenoRecording()
             revealProjectInFinder(url)
-            SuiteNotchHUD.shared.showStenoSaved { [weak self] in
-                self?.openLastProject()
+            let windowID = pipelineWindowID
+            let pid = pipelinePID
+            pipelineWindowID = nil
+            pipelinePID = 0
+            postSessionTask?.cancel()
+            postSessionTask = Task { [weak self] in
+                await self?.runPostSession(projectURL: url, windowID: windowID, pid: pid)
             }
         case .failure(let error):
             SuiteNotchHUD.shared.dismissStenoRecording()
+            pipelineWindowID = nil
+            pipelinePID = 0
             presentStartFailure(error)
+        }
+    }
+
+    private func runPostSession(projectURL: URL, windowID: UInt32?, pid: pid_t) async {
+        let pipeline = StenoPostSessionPipeline()
+        pipeline.onStage = { stage in
+            Task { @MainActor in
+                if stage == .done {
+                    SuiteNotchHUD.shared.dismissStenoPostSessionProgress()
+                } else {
+                    SuiteNotchHUD.shared.showStenoPostSessionProgress(
+                        stageTitle: Self.postSessionStageTitle(stage)
+                    )
+                }
+            }
+        }
+
+        let notesClient = StenoFoundationModelsClient()
+        let deps = StenoPipelineDeps(
+            ax: StenoLiveAXNameReader(),
+            ocr: StenoLiveOCRNameReader(),
+            speech: { url in
+                try await Task { @MainActor in
+                    let cues = try await KadrEngine.shared.transcribeStenoCallTrack(projectURL: url)
+                    return cues.map {
+                        StenoCueDraft(
+                            startMs: $0.startMs,
+                            endMs: $0.endMs,
+                            text: $0.text,
+                            speakerId: $0.speakerId
+                        )
+                    }
+                }.value
+            },
+            notes: notesClient,
+            writeSidecar: { sidecar in
+                try StenoSidecarIO.write(sidecar, inProject: projectURL)
+            },
+            writeDigest: { digest in
+                try StenoDigestIO.write(digest, inProject: projectURL)
+            },
+            writeTranscript: { drafts in
+                let cues = drafts.map {
+                    StenoTranscriptCueDTO(
+                        startMs: $0.startMs,
+                        endMs: $0.endMs,
+                        text: $0.text,
+                        speakerId: $0.speakerId
+                    )
+                }
+                try KadrEngine.shared.persistStenoTranscript(projectURL: projectURL, cues: cues)
+            },
+            loadSidecar: {
+                let data = try Data(contentsOf: StenoSidecarIO.jsonURL(inProject: projectURL))
+                return try StenoSidecarIO.decode(data)
+            }
+        )
+
+        let finalStage = await pipeline.run(
+            input: StenoPipelineInput(
+                projectURL: projectURL,
+                windowID: windowID,
+                pid: pid,
+                namesEnabled: StenoSettings.namesFromCallWindow,
+                separateSpeakers: StenoSettings.separateSpeakers
+            ),
+            deps: deps
+        )
+
+        await MainActor.run {
+            SuiteNotchHUD.shared.dismissStenoPostSessionProgress()
+            if finalStage == .speech {
+                SuiteNotchHUD.shared.showStenoFailure(
+                    message: L10n.tr(
+                        "Распознавание речи не удалось",
+                        "Speech recognition failed"
+                    ),
+                    cta: L10n.tr("Понятно", "OK"),
+                    onCTA: {}
+                )
+            }
+            KadrEngine.shared.openStenoTranscriptEditor(projectURL: projectURL)
+        }
+    }
+
+    private static func postSessionStageTitle(_ stage: StenoPipelineStage) -> String {
+        switch stage {
+        case .ax:
+            return L10n.tr("Имена (AX)…", "Names (AX)…")
+        case .ocr:
+            return L10n.tr("Имена (OCR)…", "Names (OCR)…")
+        case .speech:
+            return L10n.tr("Распознавание речи…", "Recognizing speech…")
+        case .diarization:
+            return L10n.tr("Разделение голосов…", "Separating speakers…")
+        case .map:
+            return L10n.tr("Сопоставление имён…", "Matching names…")
+        case .digest:
+            return L10n.tr("Сводка…", "Summarizing…")
+        case .done:
+            return L10n.tr("Готово", "Done")
         }
     }
 
@@ -355,6 +468,8 @@ final class StenoSessionController: ObservableObject {
 
     private func endSessionBecauseCallEnded() {
         endingSession = true
+        pipelineWindowID = sessionWindowID
+        pipelinePID = sessionPID
         StenoOverlayPanel.shared.hide()
         KadrEngine.shared.stopRecording()
         clearSession()

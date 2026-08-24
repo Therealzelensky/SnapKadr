@@ -22,12 +22,25 @@ enum StenoSessionUITests {
         expect(session.contains("startAdditionalWindowRecording"), "session starts share track")
         expect(session.contains("StenoSettings.showCard"), "respects showCard pref")
         expect(session.contains("StenoSettings.recordShare"), "respects recordShare pref")
+        expect(session.contains("StenoPostSessionPipeline"), "session kicks pipeline")
+        expect(session.contains("showStenoPostSessionProgress"), "progress UI")
+        expect(session.contains("pipelineWindowID"), "stashes window for pipeline")
+        expect(!session.contains("StenoNotesEngine.makeDigest"), "FM not in session hot path")
+        expect(!session.contains("StenoDiarizer"), "no diarizer in session file")
+
+        let card = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoCardView.swift"),
+            encoding: .utf8
+        )
+        expect(!card.contains("SpeechBackend") && !card.contains("StenoNotesEngine"), "card stays dumb")
+        expect(card.contains("—") || card.contains("sessionStub"), "stubs stay")
 
         let hud = try! String(
             contentsOf: root.appendingPathComponent("Sources/SnapKadr/SuiteNotchHUD.swift"),
             encoding: .utf8
         )
         expect(hud.contains("showStenoRecording"), "notch rec chrome")
+        expect(hud.contains("showStenoPostSessionProgress"), "post-session progress")
         expect(hud.contains("Не сейчас") || hud.contains("Not now"), "later copy")
         expect(hud.contains("keyEquivalent"), "escape later")
 

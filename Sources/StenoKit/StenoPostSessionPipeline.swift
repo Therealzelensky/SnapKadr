@@ -114,10 +114,12 @@ public final class StenoPostSessionPipeline: @unchecked Sendable {
         }
 
         do {
-            try deps.writeTranscript(cues)
-            var sidecar = try deps.loadSidecar()
-            sidecar.participants = participants
-            try deps.writeSidecar(sidecar)
+            try await MainActor.run {
+                try deps.writeTranscript(cues)
+                var sidecar = try deps.loadSidecar()
+                sidecar.participants = participants
+                try deps.writeSidecar(sidecar)
+            }
         } catch {
             return .digest
         }

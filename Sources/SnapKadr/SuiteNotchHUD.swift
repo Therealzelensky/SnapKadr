@@ -8,6 +8,7 @@ final class SuiteNotchHUD {
     private let shell = NotchHUDShell()
     private let promptShell = NotchHUDShell(height: 56, ignoresMouseEvents: false)
     private let recordingShell = NotchHUDShell(height: 56, ignoresMouseEvents: false)
+    private let progressShell = NotchHUDShell(height: 56, ignoresMouseEvents: true)
     private let promptActions = StenoPromptActions()
     private let recordingActions = StenoRecordingActions()
 
@@ -236,6 +237,41 @@ final class SuiteNotchHUD {
 
     func dismissStenoRecording(completion: (() -> Void)? = nil) {
         recordingShell.dismiss(completion: completion)
+    }
+
+    func showStenoPostSessionProgress(stageTitle: String) {
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "waveform.badge.magnifyingglass", accessibilityDescription: nil)
+        icon.contentTintColor = NSColor(calibratedRed: 0.753, green: 0.149, blue: 0.827, alpha: 1)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+
+        let label = NSTextField(labelWithString: stageTitle)
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = .white
+        label.isBezeled = false
+        label.drawsBackground = false
+
+        let row = NSStackView(views: [icon, label])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 56))
+        row.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
+        ])
+
+        progressShell.contentView = host
+        progressShell.present(size: NSSize(width: 360, height: 56), on: NSScreen.main)
+    }
+
+    func dismissStenoPostSessionProgress(completion: (() -> Void)? = nil) {
+        progressShell.dismiss(completion: completion)
     }
 
     func showStenoFailure(message: String, cta: String, onCTA: @escaping () -> Void) {
