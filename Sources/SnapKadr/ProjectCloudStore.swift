@@ -177,8 +177,7 @@ public final class ProjectCloudStore: @unchecked Sendable {
     }
 
     private static func makeYandexAdapter() -> ProjectCloudAdapter? {
-        // Wired in Task 6
-        nil
+        YandexDiskCloudAdapter(pathPrefix: ProjectCloudSettings.yandexPathPrefix)
     }
 }
 

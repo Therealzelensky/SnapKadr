@@ -22,6 +22,8 @@ fi
 # Monotonic build from env or timestamp
 MARKETING_VERSION="${SNAPKADR_VERSION:-0.1.0}"
 BUILD_NUMBER="${SNAPKADR_BUILD:-$(date +%Y%m%d%H%M)}"
+# Yandex Disk OAuth — set SNAPKADR_YANDEX_OAUTH_CLIENT_ID to a real app client id.
+YANDEX_OAUTH_CLIENT_ID="${SNAPKADR_YANDEX_OAUTH_CLIENT_ID:-YOUR_YANDEX_OAUTH_CLIENT_ID}"
 
 if [[ "$VARIANT" == "beta" ]]; then
   APP_NAME="SnapKadrBeta"
@@ -158,6 +160,19 @@ ${SU_KEY_XML}	<key>CFBundleDocumentTypes</key>
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.snapkadr.yandex-oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>snapkadr</string>
+			</array>
+		</dict>
+	</array>
+	<key>YandexDiskOAuthClientID</key>
+	<string>${YANDEX_OAUTH_CLIENT_ID}</string>
 </dict>
 </plist>
 EOF

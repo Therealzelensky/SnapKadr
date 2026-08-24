@@ -39,7 +39,9 @@ let package = Package(
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("ServiceManagement"),
                 .linkedFramework("Carbon"),
-                .linkedFramework("AVFoundation")
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("AuthenticationServices"),
+                .linkedFramework("Security")
             ]
         )
     ]
