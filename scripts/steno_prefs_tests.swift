@@ -21,6 +21,10 @@ enum StenoPrefsTests {
         expect(prefs.contains("StenoSettings.showCard"), "prefs card")
         expect(prefs.contains("Писать шару") || prefs.contains("Record screen share"), "share copy")
         expect(prefs.contains("Показывать карточку") || prefs.contains("Show floating card"), "card copy")
+        expect(
+            prefs.contains("Яндекс Мессенджер") || prefs.contains("Yandex Messenger"),
+            "prefs yandex messenger source"
+        )
 
         let det = try! String(
             contentsOf: root.appendingPathComponent("Sources/StenoKit/StenoDetector.swift"),
@@ -34,6 +38,10 @@ enum StenoPrefsTests {
         )
         expect(session.contains("func applyEnabledFromSettings()"), "session applies master switch")
         expect(session.contains("StenoSettings.isEnabled"), "session checks master")
+        expect(
+            session.contains("case .yandexMessenger:") && session.contains("Мессенджер"),
+            "session project label for yandex messenger"
+        )
 
         exit(failures == 0 ? 0 : 1)
     }

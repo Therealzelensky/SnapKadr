@@ -244,6 +244,7 @@ final class StenoSessionController: ObservableObject {
         case .telegram: return "Telegram"
         case .telemost: return "Телемост"
         case .bitrixSync: return "Синк"
+        case .yandexMessenger: return "Мессенджер"
         }
     }
 

@@ -10,7 +10,10 @@ public enum StenoMatcher {
 
     private static func matches(_ snap: StenoWindowSnapshot, source: StenoSource) -> Bool {
         let bundle = snap.bundleID
-        let haystack = (snap.title + " " + snap.ownerName).lowercased()
+        // Yandex UI titles often use NBSP between words.
+        let haystack = (snap.title + " " + snap.ownerName)
+            .lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
         switch source {
         case .zoom:
             let isZoom = bundle.hasPrefix("us.zoom.") || source.bundleIDs.contains(bundle)
@@ -30,7 +33,23 @@ public enum StenoMatcher {
             if bundle.lowercased().contains("bitrix") { return true }
             guard StenoSource.isBrowser(bundle) else { return false }
             return haystack.contains("bitrix24") || haystack.contains("битрикс24")
+        case .yandexMessenger:
+            // Native Electron: window title stays «Яндекс Мессенджер» — require in-call AX.
+            if bundle == "ru.yandex.yamb" || bundle.hasSuffix(".yamb") {
+                return StenoYandexMessengerCallState.isInCall(pid: snap.ownerPID)
+            }
+            guard StenoSource.isBrowser(bundle) else { return false }
+            guard messengerContext(haystack) else { return false }
+            return containsAny(haystack, source.titleNeedles)
         }
+    }
+
+    private static func messengerContext(_ haystack: String) -> Bool {
+        haystack.contains("яндекс мессенджер")
+            || haystack.contains("yandex messenger")
+            || haystack.contains("yandex.ru/chat")
+            || haystack.contains("messenger.yandex")
+            || haystack.contains("messenger.360")
     }
 
     private static func containsAny(_ title: String, _ needles: [String]) -> Bool {

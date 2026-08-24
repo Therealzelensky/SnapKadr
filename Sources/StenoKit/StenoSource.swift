@@ -6,6 +6,7 @@ public enum StenoSource: String, CaseIterable, Sendable {
     case telegram
     case telemost
     case bitrixSync
+    case yandexMessenger
 
     public var bundleIDs: [String] {
         switch self {
@@ -19,6 +20,9 @@ public enum StenoSource: String, CaseIterable, Sendable {
             return Self.browserBundleIDs + ["ru.yandex.telemost", "ru.yandex.desktop.telemost"]
         case .bitrixSync:
             return []
+        case .yandexMessenger:
+            // Desktop Electron app; web = yandex.ru/chat in browsers.
+            return Self.browserBundleIDs + ["ru.yandex.yamb"]
         }
     }
 
@@ -35,6 +39,14 @@ public enum StenoSource: String, CaseIterable, Sendable {
             return ["телемост", "telemost"]
         case .bitrixSync:
             return ["видеозвонок", "video call", "идёт звонок", "идет звонок", "incoming call", "исходящ"]
+        case .yandexMessenger:
+            // Browser tabs only — native app uses AX (chat title stays «Яндекс Мессенджер»).
+            return [
+                "входящий звонок", "исходящий звонок",
+                "входящий видеозвонок", "входящий аудиозвонок",
+                "групповой звонок", "видеозвонок",
+                "incoming call", "video call", "voice call", "group call",
+            ]
         }
     }
 

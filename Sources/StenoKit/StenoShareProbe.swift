@@ -34,7 +34,7 @@ public enum StenoShareProbe {
         switch source {
         case .zoom:
             return ["sharing", "screen share", "демонстрац", "you are sharing"]
-        case .googleMeet, .telemost, .bitrixSync:
+        case .googleMeet, .telemost, .bitrixSync, .yandexMessenger:
             return ["presenting", "you are presenting", "демонстрац", "sharing screen", "sharing"]
         case .telegram:
             return []

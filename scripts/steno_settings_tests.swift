@@ -21,8 +21,9 @@ enum StenoSettingsTests {
 
         StenoSettings.setEnabled(.telegram, false)
         expect(!StenoSettings.isEnabled(.telegram), "telegram off")
-        expect(StenoSettings.enabledSources.count == 4, "four remain")
+        expect(StenoSettings.enabledSources.count == StenoSource.allCases.count - 1, "all but one remain")
         expect(StenoSettings.isEnabled(.zoom), "zoom still on")
+        expect(StenoSettings.isEnabled(.yandexMessenger), "yandex messenger on by default")
 
         StenoSettings.enabledSources = []
         expect(StenoSettings.enabledSources.isEmpty, "empty array all off")

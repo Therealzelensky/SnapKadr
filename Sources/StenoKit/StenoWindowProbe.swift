@@ -66,6 +66,9 @@ public enum StenoWindowProbe {
             case .bitrixSync:
                 if bundle.lowercased().contains("bitrix") { return true }
                 if StenoSource.isBrowser(bundle) { return true }
+            case .yandexMessenger:
+                if bundle == "ru.yandex.yamb" || bundle.hasSuffix(".yamb") { return true }
+                if StenoSource.isBrowser(bundle) { return true }
             }
         }
         return false

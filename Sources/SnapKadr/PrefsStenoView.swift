@@ -91,6 +91,7 @@ struct PrefsStenoView: View {
         case .telegram: return "Telegram"
         case .telemost: return L10n.tr("Телемост", "Telemost")
         case .bitrixSync: return L10n.tr("Битрикс24 Синк", "Bitrix24 Sync")
+        case .yandexMessenger: return L10n.tr("Яндекс Мессенджер", "Yandex Messenger")
         }
     }
 }
