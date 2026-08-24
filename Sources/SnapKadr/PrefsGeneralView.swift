@@ -2,10 +2,6 @@ import AppKit
 import KadrKit
 import SwiftUI
 
-extension Notification.Name {
-    static let showPrefsGeneralTab = Notification.Name("showPrefsGeneralTab")
-}
-
 struct PrefsGeneralView: View {
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var showSplash = SuiteSharedSettings.showSplash
@@ -13,36 +9,14 @@ struct PrefsGeneralView: View {
     @State private var urlScheme = SuiteSharedSettings.urlSchemeEnabled
     @State private var diagnostics = SuiteSharedSettings.allowDiagnostics
 
-    @State private var folderPath = SuiteKadrSettings.projectsFolderURL.path
-    @State private var remoteKind = ProjectCloudSettings.remoteKind
-    @State private var autoUpload = ProjectCloudSettings.autoUploadAfterSession
-    @State private var webdavURL = ProjectCloudSettings.webdavBaseURL
-    @State private var webdavUser = ProjectCloudSettings.webdavUsername
-    @State private var webdavPassword = ""
-    @State private var webdavPrefix = ProjectCloudSettings.webdavPathPrefix
-    @State private var s3Endpoint = ProjectCloudSettings.s3Endpoint
-    @State private var s3Region = ProjectCloudSettings.s3Region
-    @State private var s3Bucket = ProjectCloudSettings.s3Bucket
-    @State private var s3AccessKey = ProjectCloudSettings.s3AccessKeyId
-    @State private var s3Secret = ""
-    @State private var s3Prefix = ProjectCloudSettings.s3PathPrefix
-    @State private var yandexLabel = ProjectCloudSettings.yandexAccountLabel
-    @State private var yandexPrefix = ProjectCloudSettings.yandexPathPrefix
-    @State private var pendingCount = ProjectCloudStore.shared.pendingCount()
-    @State private var statusMessage = ""
-
     var body: some View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
+            StenoCloudPrefsSection()
             systemSection
-            storageSection
             permissionsSection
             extrasSection
         }
         .suiteAppear()
-        .onAppear(perform: reloadStorage)
-        .onReceive(NotificationCenter.default.publisher(for: ProjectCloudUploadQueue.didChangeNotification)) { _ in
-            pendingCount = ProjectCloudStore.shared.pendingCount()
-        }
     }
 
     private var systemSection: some View {
@@ -60,167 +34,6 @@ struct PrefsGeneralView: View {
                         $showSplash
                     ) { SuiteSharedSettings.showSplash = $0 }
                 }
-            }
-        }
-    }
-
-    private var storageSection: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            SuiteSectionHeader(title: L10n.tr("Хранилище проектов", "Project storage"))
-            SuiteCard {
-                VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
-                    Text(folderPath)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(SuiteTheme.textSecondary)
-                        .lineLimit(2)
-                    Button(L10n.tr("Выбрать…", "Choose…")) { chooseFolder() }
-                        .controlSize(.small)
-
-                    Picker(
-                        L10n.tr("Удалённое хранилище", "Remote storage"),
-                        selection: $remoteKind
-                    ) {
-                        Text(L10n.tr("Выкл", "Off")).tag(ProjectCloudRemoteKind.none)
-                        Text("WebDAV").tag(ProjectCloudRemoteKind.webdav)
-                        Text("S3").tag(ProjectCloudRemoteKind.s3)
-                        Text(L10n.tr("Яндекс Диск", "Yandex Disk")).tag(ProjectCloudRemoteKind.yandex)
-                    }
-                    .onChange(of: remoteKind) { _, kind in
-                        ProjectCloudSettings.setRemoteKind(kind, clearingPreviousSecrets: true)
-                        webdavPassword = ""
-                        s3Secret = ""
-                        reloadStorage()
-                    }
-
-                    if remoteKind == .webdav {
-                        webdavFields
-                    } else if remoteKind == .s3 {
-                        s3Fields
-                    } else if remoteKind == .yandex {
-                        yandexFields
-                    }
-
-                    if remoteKind != .none {
-                        prefsToggle(
-                            L10n.tr("Автозагрузка после сессии", "Auto-upload after session"),
-                            $autoUpload
-                        ) { ProjectCloudSettings.autoUploadAfterSession = $0 }
-
-                        HStack(spacing: 8) {
-                            Button(L10n.tr("Проверить соединение", "Test connection")) {
-                                testConnection()
-                            }
-                            .controlSize(.small)
-
-                            Button(L10n.tr("Загрузить сейчас", "Upload now")) {
-                                flushQueue()
-                            }
-                            .controlSize(.small)
-                        }
-
-                        Text(L10n.tr(
-                            "В очереди: \(pendingCount)",
-                            "Queued: \(pendingCount)"
-                        ))
-                        .font(.system(size: 12))
-                        .foregroundStyle(SuiteTheme.textSecondary)
-
-                        if pendingCount > 0 {
-                            Text(L10n.tr(
-                                "Очередь уйдёт в выбранное сейчас хранилище.",
-                                "Pending items upload to the currently selected remote."
-                            ))
-                            .font(.system(size: 11))
-                            .foregroundStyle(SuiteTheme.textSecondary)
-                        }
-                    }
-
-                    if !statusMessage.isEmpty {
-                        Text(statusMessage)
-                            .font(.system(size: 12))
-                            .foregroundStyle(SuiteTheme.textSecondary)
-                    }
-                }
-            }
-        }
-    }
-
-    private var webdavFields: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            field(L10n.tr("URL", "URL"), $webdavURL) {
-                ProjectCloudSettings.webdavBaseURL = $0
-            }
-            field(L10n.tr("Имя пользователя", "Username"), $webdavUser) {
-                ProjectCloudSettings.webdavUsername = $0
-            }
-            SecureField(L10n.tr("Пароль", "Password"), text: $webdavPassword)
-                .textFieldStyle(.roundedBorder)
-                .onChange(of: webdavPassword) { _, value in
-                    guard !value.isEmpty else { return }
-                    try? ProjectCloudKeychain.set(
-                        value,
-                        account: ProjectCloudKeychain.accountName(kind: .webdav, field: "password")
-                    )
-                }
-            field(L10n.tr("Префикс пути", "Path prefix"), $webdavPrefix) {
-                ProjectCloudSettings.webdavPathPrefix = $0
-            }
-        }
-    }
-
-    private var s3Fields: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            field(L10n.tr("Endpoint", "Endpoint"), $s3Endpoint) {
-                ProjectCloudSettings.s3Endpoint = $0
-            }
-            field(L10n.tr("Регион", "Region"), $s3Region) {
-                ProjectCloudSettings.s3Region = $0
-            }
-            field(L10n.tr("Bucket", "Bucket"), $s3Bucket) {
-                ProjectCloudSettings.s3Bucket = $0
-            }
-            field(L10n.tr("Access Key ID", "Access Key ID"), $s3AccessKey) {
-                ProjectCloudSettings.s3AccessKeyId = $0
-            }
-            SecureField(L10n.tr("Secret Access Key", "Secret Access Key"), text: $s3Secret)
-                .textFieldStyle(.roundedBorder)
-                .onChange(of: s3Secret) { _, value in
-                    guard !value.isEmpty else { return }
-                    try? ProjectCloudKeychain.set(
-                        value,
-                        account: ProjectCloudKeychain.accountName(kind: .s3, field: "secretAccessKey")
-                    )
-                }
-            field(L10n.tr("Префикс пути", "Path prefix"), $s3Prefix) {
-                ProjectCloudSettings.s3PathPrefix = $0
-            }
-        }
-    }
-
-    private var yandexFields: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            if yandexLabel.isEmpty {
-                Text(L10n.tr("Не подключено", "Not connected"))
-                    .font(.system(size: 12))
-                    .foregroundStyle(SuiteTheme.textSecondary)
-            } else {
-                Text(yandexLabel)
-                    .font(.system(size: 12))
-                    .foregroundStyle(SuiteTheme.textSecondary)
-            }
-            HStack(spacing: 8) {
-                Button(L10n.tr("Подключить", "Connect")) {
-                    connectYandex()
-                }
-                .controlSize(.small)
-                Button(L10n.tr("Отключить", "Disconnect")) {
-                    disconnectYandex()
-                }
-                .controlSize(.small)
-                .disabled(yandexLabel.isEmpty)
-            }
-            field(L10n.tr("Префикс пути", "Path prefix"), $yandexPrefix) {
-                ProjectCloudSettings.yandexPathPrefix = $0
             }
         }
     }
@@ -271,17 +84,6 @@ struct PrefsGeneralView: View {
         }
     }
 
-    private func field(_ title: String, _ binding: Binding<String>, onSet: @escaping (String) -> Void) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 11))
-                .foregroundStyle(SuiteTheme.textSecondary)
-            TextField(title, text: binding)
-                .textFieldStyle(.roundedBorder)
-                .onChange(of: binding.wrappedValue) { _, v in onSet(v) }
-        }
-    }
-
     private func prefsToggle(_ title: String, _ binding: Binding<Bool>, onSet: @escaping (Bool) -> Void) -> some View {
         Toggle(isOn: Binding(
             get: { binding.wrappedValue },
@@ -303,24 +105,230 @@ struct PrefsGeneralView: View {
         .buttonStyle(.bordered)
         .controlSize(.small)
     }
+}
 
-    private func reloadStorage() {
-        folderPath = SuiteKadrSettings.projectsFolderURL.path
-        remoteKind = ProjectCloudSettings.remoteKind
-        autoUpload = ProjectCloudSettings.autoUploadAfterSession
-        webdavURL = ProjectCloudSettings.webdavBaseURL
-        webdavUser = ProjectCloudSettings.webdavUsername
-        webdavPrefix = ProjectCloudSettings.webdavPathPrefix
-        s3Endpoint = ProjectCloudSettings.s3Endpoint
-        s3Region = ProjectCloudSettings.s3Region
-        s3Bucket = ProjectCloudSettings.s3Bucket
-        s3AccessKey = ProjectCloudSettings.s3AccessKeyId
-        s3Prefix = ProjectCloudSettings.s3PathPrefix
-        yandexLabel = ProjectCloudSettings.yandexAccountLabel
-        yandexPrefix = ProjectCloudSettings.yandexPathPrefix
-        pendingCount = ProjectCloudStore.shared.pendingCount()
-        webdavPassword = ""
-        s3Secret = ""
+struct StenoCloudPrefsSection: View {
+    @State private var folderPath = SuiteKadrSettings.projectsFolderURL.path
+    @State private var autoUpload = StenoCloudSettings.autoUploadAfterSession
+    @State private var webdavEnabled = StenoCloudSettings.webdavEnabled
+    @State private var webdavBaseURL = StenoCloudSettings.webdavBaseURL
+    @State private var webdavUsername = StenoCloudSettings.webdavUsername
+    @State private var webdavPassword = ""
+    @State private var webdavPathPrefix = StenoCloudSettings.webdavPathPrefix
+    @State private var s3Enabled = StenoCloudSettings.s3Enabled
+    @State private var s3Endpoint = StenoCloudSettings.s3Endpoint
+    @State private var s3Region = StenoCloudSettings.s3Region
+    @State private var s3Bucket = StenoCloudSettings.s3Bucket
+    @State private var s3AccessKeyId = StenoCloudSettings.s3AccessKeyId
+    @State private var s3Secret = ""
+    @State private var s3PathPrefix = StenoCloudSettings.s3PathPrefix
+    @State private var yandexEnabled = StenoCloudSettings.yandexEnabled
+    @State private var yandexAccountLabel = StenoCloudSettings.yandexAccountLabel
+    @State private var yandexPathPrefix = StenoCloudSettings.yandexPathPrefix
+    @State private var queueItems: [StenoCloudQueueItem] = []
+    @State private var statusMessage = ""
+    @State private var isBusy = false
+
+    private let oauth = YandexOAuthSession()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
+            SuiteSectionHeader(title: L10n.tr("Хранилище проектов", "Project storage"))
+            SuiteCard {
+                VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
+                    localFolderBlock
+                    Divider().opacity(0.35)
+                    webdavBlock
+                    Divider().opacity(0.35)
+                    s3Block
+                    Divider().opacity(0.35)
+                    yandexBlock
+                    Divider().opacity(0.35)
+                    cloudToggle(
+                        L10n.tr("Автозагрузка после сессии", "Auto-upload after session"),
+                        $autoUpload
+                    ) { StenoCloudSettings.autoUploadAfterSession = $0 }
+                    queueBlock
+                    if !statusMessage.isEmpty {
+                        Text(statusMessage)
+                            .font(.system(size: 11))
+                            .foregroundStyle(SuiteTheme.textSecondary)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            reloadQueue()
+            loadSecrets()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stenoCloudQueueDidChange)) { _ in
+            reloadQueue()
+        }
+    }
+
+    private var localFolderBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.tr("Локальная папка", "Local folder"))
+                .font(.system(size: 12, weight: .semibold))
+            Text(folderPath)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(SuiteTheme.textSecondary)
+                .lineLimit(2)
+            Button(L10n.tr("Выбрать…", "Choose…")) { chooseFolder() }
+                .controlSize(.small)
+        }
+    }
+
+    private var webdavBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            cloudToggle(L10n.tr("WebDAV", "WebDAV"), $webdavEnabled) {
+                StenoCloudSettings.webdavEnabled = $0
+            }
+            if webdavEnabled {
+                cloudField(L10n.tr("URL сервера", "Server URL"), $webdavBaseURL) {
+                    StenoCloudSettings.webdavBaseURL = $0
+                }
+                cloudField(L10n.tr("Имя пользователя", "Username"), $webdavUsername) {
+                    StenoCloudSettings.webdavUsername = $0
+                }
+                SecureField(L10n.tr("Пароль", "Password"), text: $webdavPassword)
+                    .textFieldStyle(.roundedBorder)
+                    .onChange(of: webdavPassword) { _, v in
+                        guard !v.isEmpty else { return }
+                        try? StenoCloudKeychain.set(
+                            v,
+                            account: StenoCloudKeychain.accountName(destination: .webdav, field: "password")
+                        )
+                    }
+                cloudField(L10n.tr("Путь на сервере", "Remote path prefix"), $webdavPathPrefix) {
+                    StenoCloudSettings.webdavPathPrefix = $0
+                }
+                testButton(.webdav)
+            }
+        }
+    }
+
+    private var s3Block: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            cloudToggle(L10n.tr("S3-совместимое", "S3-compatible"), $s3Enabled) {
+                StenoCloudSettings.s3Enabled = $0
+            }
+            if s3Enabled {
+                cloudField(L10n.tr("Endpoint", "Endpoint"), $s3Endpoint) {
+                    StenoCloudSettings.s3Endpoint = $0
+                }
+                cloudField(L10n.tr("Region", "Region"), $s3Region) {
+                    StenoCloudSettings.s3Region = $0
+                }
+                cloudField(L10n.tr("Bucket", "Bucket"), $s3Bucket) {
+                    StenoCloudSettings.s3Bucket = $0
+                }
+                cloudField(L10n.tr("Access Key ID", "Access Key ID"), $s3AccessKeyId) {
+                    StenoCloudSettings.s3AccessKeyId = $0
+                }
+                SecureField(L10n.tr("Secret Access Key", "Secret Access Key"), text: $s3Secret)
+                    .textFieldStyle(.roundedBorder)
+                    .onChange(of: s3Secret) { _, v in
+                        guard !v.isEmpty else { return }
+                        try? StenoCloudKeychain.set(
+                            v,
+                            account: StenoCloudKeychain.accountName(destination: .s3, field: "secretAccessKey")
+                        )
+                    }
+                cloudField(L10n.tr("Префикс", "Prefix"), $s3PathPrefix) {
+                    StenoCloudSettings.s3PathPrefix = $0
+                }
+                testButton(.s3)
+            }
+        }
+    }
+
+    private var yandexBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            cloudToggle(L10n.tr("Яндекс Диск", "Yandex Disk"), $yandexEnabled) {
+                StenoCloudSettings.yandexEnabled = $0
+            }
+            if yandexEnabled {
+                HStack(spacing: 8) {
+                    if yandexAccountLabel.isEmpty {
+                        Button(L10n.tr("Подключить", "Connect")) { connectYandex() }
+                            .controlSize(.small)
+                    } else {
+                        Text(yandexAccountLabel)
+                            .font(.system(size: 12))
+                            .foregroundStyle(SuiteTheme.textSecondary)
+                        Button(L10n.tr("Отключить", "Disconnect")) { disconnectYandex() }
+                            .controlSize(.small)
+                    }
+                }
+                cloudField(L10n.tr("Папка на Диске", "Disk folder path"), $yandexPathPrefix) {
+                    StenoCloudSettings.yandexPathPrefix = $0
+                }
+                testButton(.yandex)
+            }
+        }
+    }
+
+    private var queueBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.tr("Очередь загрузок", "Upload queue"))
+                .font(.system(size: 12, weight: .semibold))
+            if queueItems.isEmpty {
+                Text(L10n.tr("Нет отложенных загрузок", "No pending uploads"))
+                    .font(.system(size: 12))
+                    .foregroundStyle(SuiteTheme.textSecondary)
+            } else {
+                ForEach(StenoCloudSync.shared.pendingSummary(), id: \.destination) { row in
+                    Text("\(row.destination.rawValue): \(row.count)")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(SuiteTheme.textSecondary)
+                }
+                ForEach(queueItems.prefix(6), id: \.projectPath) { item in
+                    HStack {
+                        Text(item.displayName)
+                            .font(.system(size: 11, design: .monospaced))
+                        Spacer()
+                        Text(item.destination.rawValue)
+                            .font(.system(size: 11))
+                            .foregroundStyle(SuiteTheme.textSecondary)
+                        Button(L10n.tr("Повторить", "Retry")) { retryItem(item) }
+                            .controlSize(.mini)
+                    }
+                }
+            }
+            Button(L10n.tr("Загрузить сейчас", "Upload now")) { flushQueue() }
+                .controlSize(.small)
+                .disabled(isBusy || queueItems.isEmpty)
+        }
+    }
+
+    private func cloudToggle(_ title: String, _ binding: Binding<Bool>, onSet: @escaping (Bool) -> Void) -> some View {
+        Toggle(isOn: Binding(
+            get: { binding.wrappedValue },
+            set: { binding.wrappedValue = $0; onSet($0) }
+        )) {
+            Text(title).foregroundStyle(SuiteTheme.textPrimary)
+        }
+        .toggleStyle(.switch)
+        .controlSize(.small)
+    }
+
+    private func cloudField(_ title: String, _ binding: Binding<String>, onSet: @escaping (String) -> Void) -> some View {
+        HStack {
+            Text(title)
+                .frame(width: 130, alignment: .leading)
+            TextField("", text: binding)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: binding.wrappedValue) { _, v in onSet(v) }
+        }
+    }
+
+    private func testButton(_ destination: StenoCloudDestination) -> some View {
+        Button(L10n.tr("Проверить соединение", "Test connection")) {
+            testConnection(destination)
+        }
+        .controlSize(.small)
+        .disabled(isBusy)
     }
 
     private func chooseFolder() {
@@ -334,51 +342,80 @@ struct PrefsGeneralView: View {
         folderPath = url.path
     }
 
-    private func testConnection() {
+    private func loadSecrets() {
+        webdavPassword = (try? StenoCloudKeychain.get(
+            account: StenoCloudKeychain.accountName(destination: .webdav, field: "password")
+        )) ?? ""
+        s3Secret = (try? StenoCloudKeychain.get(
+            account: StenoCloudKeychain.accountName(destination: .s3, field: "secretAccessKey")
+        )) ?? ""
+    }
+
+    private func reloadQueue() {
+        queueItems = StenoCloudSync.shared.queue.items()
+    }
+
+    private func testConnection(_ destination: StenoCloudDestination) {
+        isBusy = true
         statusMessage = L10n.tr("Проверка…", "Testing…")
         Task {
             do {
-                try await ProjectCloudStore.shared.testActiveConnection()
+                try await StenoCloudSync.shared.testConnection(for: destination)
                 await MainActor.run {
-                    statusMessage = L10n.tr("Соединение успешно", "Connection OK")
+                    statusMessage = L10n.tr("Соединение успешно", "Connection succeeded")
+                    isBusy = false
                 }
             } catch {
                 await MainActor.run {
                     statusMessage = L10n.tr("Ошибка соединения", "Connection failed")
+                    isBusy = false
                 }
             }
         }
     }
 
     private func flushQueue() {
+        isBusy = true
         statusMessage = L10n.tr("Загрузка…", "Uploading…")
         Task {
-            await ProjectCloudStore.shared.flushQueue()
+            await StenoCloudSync.shared.flushQueue()
             await MainActor.run {
-                pendingCount = ProjectCloudStore.shared.pendingCount()
-                statusMessage = pendingCount == 0
+                reloadQueue()
+                isBusy = false
+                statusMessage = queueItems.isEmpty
                     ? L10n.tr("Очередь пуста", "Queue empty")
-                    : L10n.tr("Осталось в очереди: \(pendingCount)", "Still queued: \(pendingCount)")
+                    : L10n.tr("Осталось в очереди", "Still queued")
             }
+        }
+    }
+
+    private func retryItem(_ item: StenoCloudQueueItem) {
+        let url = URL(fileURLWithPath: item.projectPath, isDirectory: true)
+        Task {
+            await StenoCloudSync.shared.retry(projectURL: url, destination: item.destination)
+            await MainActor.run { reloadQueue() }
         }
     }
 
     private func connectYandex() {
+        isBusy = true
         statusMessage = L10n.tr("Вход…", "Signing in…")
         Task { @MainActor in
             do {
-                try await YandexOAuthClient().connect(presenter: NSApp.keyWindow)
-                yandexLabel = ProjectCloudSettings.yandexAccountLabel
-                statusMessage = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
+                try await oauth.connect(presenter: NSApp.keyWindow)
+                yandexAccountLabel = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
+                StenoCloudSettings.yandexAccountLabel = yandexAccountLabel
+                statusMessage = yandexAccountLabel
             } catch {
-                statusMessage = L10n.tr("Не удалось войти", "Sign-in failed")
+                statusMessage = L10n.tr("Не удалось подключить", "Connect failed")
             }
+            isBusy = false
         }
     }
 
     private func disconnectYandex() {
-        try? YandexOAuthClient().disconnect()
-        yandexLabel = ""
+        try? oauth.disconnect()
+        yandexAccountLabel = ""
         statusMessage = L10n.tr("Отключено", "Disconnected")
     }
 }
