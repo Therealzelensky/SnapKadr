@@ -1,8 +1,5 @@
-// swiftc -parse-as-library \
-//   Sources/SnapKadr/ProjectCloudAdapter.swift \
-//   Sources/SnapKadr/S3CloudAdapter.swift \
-//   scripts/steno_w4_s3_tests.swift \
-//   -o /tmp/steno_w4_s3 && /tmp/steno_w4_s3
+// swiftc -parse-as-library Sources/SnapKadr/StenoCloudSettings.swift Sources/SnapKadr/StenoCloudClient.swift \
+//   Sources/SnapKadr/S3CompatibleClient.swift scripts/steno_w4_s3_tests.swift -o /tmp/steno_w4_s3 && /tmp/steno_w4_s3
 import Foundation
 import CryptoKit
 
