@@ -22,6 +22,9 @@ enum StenoW4YandexTests {
         let oauth = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/YandexOAuthSession.swift"), encoding: .utf8)
         expect(oauth.contains("ASWebAuthenticationSession"), "oauth session")
         expect(oauth.contains("YandexDiskOAuthClientID"), "client id plist key")
+        expect(oauth.contains("StenoCloudSettings.yandexOAuthClientID"), "prefs client id override")
+        expect(oauth.contains("missingYandexClientID"), "missing client id error")
+        expect(oauth.contains("isUsableClientID"), "rejects placeholder id")
         exit(failures == 0 ? 0 : 1)
     }
 }

@@ -125,6 +125,7 @@ struct StenoCloudPrefsSection: View {
     @State private var yandexEnabled = StenoCloudSettings.yandexEnabled
     @State private var yandexAccountLabel = StenoCloudSettings.yandexAccountLabel
     @State private var yandexPathPrefix = StenoCloudSettings.yandexPathPrefix
+    @State private var yandexOAuthClientID = StenoCloudSettings.yandexOAuthClientID
     @State private var queueItems: [StenoCloudQueueItem] = []
     @State private var statusMessage = ""
     @State private var isBusy = false
@@ -249,10 +250,26 @@ struct StenoCloudPrefsSection: View {
                 StenoCloudSettings.yandexEnabled = $0
             }
             if yandexEnabled {
+                cloudField(L10n.tr("OAuth Client ID", "OAuth Client ID"), $yandexOAuthClientID) {
+                    StenoCloudSettings.yandexOAuthClientID = $0
+                }
+                Text(L10n.tr(
+                    "Создайте приложение на oauth.yandex.ru. Redirect URI: snapkadr://yandex-oauth",
+                    "Create an app at oauth.yandex.ru. Redirect URI: snapkadr://yandex-oauth"
+                ))
+                .font(.system(size: 11))
+                .foregroundStyle(SuiteTheme.textTertiary)
                 HStack(spacing: 8) {
+                    Button(L10n.tr("Создать приложение", "Create app")) {
+                        if let url = URL(string: "https://oauth.yandex.ru/client/new") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .controlSize(.small)
                     if yandexAccountLabel.isEmpty {
                         Button(L10n.tr("Подключить", "Connect")) { connectYandex() }
                             .controlSize(.small)
+                            .disabled(isBusy)
                     } else {
                         Text(yandexAccountLabel)
                             .font(.system(size: 12))
@@ -402,12 +419,21 @@ struct StenoCloudPrefsSection: View {
         statusMessage = L10n.tr("Вход…", "Signing in…")
         Task { @MainActor in
             do {
-                try await oauth.connect(presenter: NSApp.keyWindow)
+                let presenter = NSApp.keyWindow
+                    ?? NSApp.mainWindow
+                    ?? NSApp.windows.first(where: { $0.isVisible })
+                try await oauth.connect(presenter: presenter)
                 yandexAccountLabel = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
                 StenoCloudSettings.yandexAccountLabel = yandexAccountLabel
                 statusMessage = yandexAccountLabel
             } catch {
-                statusMessage = L10n.tr("Не удалось подключить", "Connect failed")
+                let detail = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                statusMessage = detail
+                if case StenoCloudError.missingYandexClientID = error {
+                    if let url = URL(string: "https://oauth.yandex.ru/client/new") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
             }
             isBusy = false
         }

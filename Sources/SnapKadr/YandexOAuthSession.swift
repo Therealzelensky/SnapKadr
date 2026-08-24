@@ -12,13 +12,21 @@ public final class YandexOAuthSession: NSObject {
     public static let tokenURL = URL(string: "https://oauth.yandex.ru/token")!
 
     public static var clientID: String {
-        if let id = Bundle.main.object(forInfoDictionaryKey: "YandexDiskOAuthClientID") as? String,
-           !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           id != "YOUR_YANDEX_OAUTH_CLIENT_ID"
-        {
-            return id.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefs = StenoCloudSettings.yandexOAuthClientID.trimmingCharacters(in: .whitespacesAndNewlines)
+        if Self.isUsableClientID(prefs) { return prefs }
+        if let id = Bundle.main.object(forInfoDictionaryKey: "YandexDiskOAuthClientID") as? String {
+            let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
+            if Self.isUsableClientID(trimmed) { return trimmed }
+        }
+        if let env = ProcessInfo.processInfo.environment["SNAPKADR_YANDEX_OAUTH_CLIENT_ID"] {
+            let trimmed = env.trimmingCharacters(in: .whitespacesAndNewlines)
+            if Self.isUsableClientID(trimmed) { return trimmed }
         }
         return ""
+    }
+
+    public static func isUsableClientID(_ id: String) -> Bool {
+        !id.isEmpty && id != "YOUR_YANDEX_OAUTH_CLIENT_ID"
     }
 
     private var session: ASWebAuthenticationSession?
@@ -32,9 +40,7 @@ public final class YandexOAuthSession: NSObject {
     public func connect(presenter: NSWindow?) async throws {
         let clientID = Self.clientID
         guard !clientID.isEmpty else {
-            throw StenoCloudError.network(
-                "Yandex OAuth client id missing — set Info.plist YandexDiskOAuthClientID"
-            )
+            throw StenoCloudError.missingYandexClientID
         }
 
         var components = URLComponents(url: Self.authorizeURL, resolvingAgainstBaseURL: false)!
@@ -129,9 +135,21 @@ private final class YandexOAuthPresentation: NSObject, ASWebAuthenticationPresen
     weak var anchorWindow: NSWindow?
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        if let anchorWindow { return anchorWindow }
-        if let key = NSApp.keyWindow { return key }
-        if let first = NSApp.windows.first { return first }
-        return NSWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+        if let anchorWindow, anchorWindow.isVisible { return anchorWindow }
+        if let key = NSApp.keyWindow, key.isVisible { return key }
+        if let main = NSApp.mainWindow, main.isVisible { return main }
+        if let visible = NSApp.windows.first(where: { $0.isVisible && $0.frame.width > 1 }) {
+            return visible
+        }
+        // Last resort: a real on-screen window so ASWebAuthenticationSession can present.
+        let fallback = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        fallback.isReleasedWhenClosed = false
+        fallback.orderFrontRegardless()
+        return fallback
     }
 }

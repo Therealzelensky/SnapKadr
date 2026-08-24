@@ -24,6 +24,8 @@ public enum StenoCloudSettings {
         static let yandexEnabled = "cloud.yandex.enabled"
         static let yandexAccountLabel = "cloud.yandex.accountLabel"
         static let yandexPathPrefix = "cloud.yandex.pathPrefix"
+        /// Public OAuth client id (not a secret). Overrides Info.plist placeholder for local/beta builds.
+        static let yandexOAuthClientID = "cloud.yandex.oauthClientID"
     }
 
     public static var autoUploadAfterSession: Bool {
@@ -94,6 +96,11 @@ public enum StenoCloudSettings {
     public static var yandexPathPrefix: String {
         get { d.string(forKey: Key.yandexPathPrefix) ?? "" }
         set { d.set(newValue, forKey: Key.yandexPathPrefix) }
+    }
+
+    public static var yandexOAuthClientID: String {
+        get { d.string(forKey: Key.yandexOAuthClientID) ?? "" }
+        set { d.set(newValue, forKey: Key.yandexOAuthClientID) }
     }
 
     public static func enabledDestinations() -> [StenoCloudDestination] {
