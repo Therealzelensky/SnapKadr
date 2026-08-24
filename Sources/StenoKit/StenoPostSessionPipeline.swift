@@ -33,7 +33,7 @@ public struct StenoPipelineDeps: Sendable {
     public var notes: StenoLanguageModelClient
     public var writeSidecar: @Sendable (StenoSidecar) throws -> Void
     public var writeDigest: @Sendable (StenoDigest) throws -> Void
-    public var writeTranscript: @Sendable ([StenoCueDraft]) throws -> Void
+    public var writeTranscript: @Sendable ([StenoCueDraft]) async throws -> Void
     public var loadSidecar: @Sendable () throws -> StenoSidecar
 
     public init(
@@ -43,7 +43,7 @@ public struct StenoPipelineDeps: Sendable {
         notes: StenoLanguageModelClient,
         writeSidecar: @escaping @Sendable (StenoSidecar) throws -> Void,
         writeDigest: @escaping @Sendable (StenoDigest) throws -> Void,
-        writeTranscript: @escaping @Sendable ([StenoCueDraft]) throws -> Void,
+        writeTranscript: @escaping @Sendable ([StenoCueDraft]) async throws -> Void,
         loadSidecar: @escaping @Sendable () throws -> StenoSidecar
     ) {
         self.ax = ax
@@ -114,12 +114,12 @@ public final class StenoPostSessionPipeline: @unchecked Sendable {
         }
 
         do {
-            try await MainActor.run {
-                try deps.writeTranscript(cues)
-                var sidecar = try deps.loadSidecar()
-                sidecar.participants = participants
-                try deps.writeSidecar(sidecar)
-            }
+            let cuesToWrite = cues
+            let participantsToWrite = participants
+            try await deps.writeTranscript(cuesToWrite)
+            var sidecar = try deps.loadSidecar()
+            sidecar.participants = participantsToWrite
+            try deps.writeSidecar(sidecar)
         } catch {
             return .digest
         }

@@ -289,7 +289,7 @@ final class StenoSessionController: ObservableObject {
                         speakerId: $0.speakerId
                     )
                 }
-                try KadrEngine.shared.persistStenoTranscript(projectURL: projectURL, cues: cues)
+                try StenoTranscriptPersistence.save(projectURL: projectURL, cues: cues)
             },
             loadSidecar: {
                 let data = try Data(contentsOf: StenoSidecarIO.jsonURL(inProject: projectURL))
