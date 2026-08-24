@@ -50,6 +50,15 @@ enum StenoSettingsTests {
         StenoSettings.defaults = ud
         expect(StenoSettings.recordShare && StenoSettings.showCard, "missing keys → on")
 
+        expect(StenoSettings.namesFromCallWindow, "names from window on by default")
+        expect(StenoSettings.separateSpeakers, "separate speakers on by default")
+        StenoSettings.namesFromCallWindow = false
+        StenoSettings.separateSpeakers = false
+        expect(!StenoSettings.namesFromCallWindow && !StenoSettings.separateSpeakers, "names/speakers prefs persist")
+        ud.removePersistentDomain(forName: suite)
+        StenoSettings.defaults = ud
+        expect(StenoSettings.namesFromCallWindow && StenoSettings.separateSpeakers, "missing names/speakers keys → on")
+
         ud.removePersistentDomain(forName: suite)
         exit(failures == 0 ? 0 : 1)
     }

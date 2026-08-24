@@ -43,6 +43,24 @@ enum StenoPrefsTests {
             "session project label for yandex messenger"
         )
 
+        let speech = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/PrefsSpeechView.swift"),
+            encoding: .utf8
+        )
+        expect(speech.contains("StenoSettings.namesFromCallWindow"), "speech prefs names binding")
+        expect(speech.contains("StenoSettings.separateSpeakers"), "speech prefs speakers binding")
+        expect(
+            speech.contains("Имена из окна звонка") || speech.contains("Names from call window"),
+            "names copy"
+        )
+        expect(
+            speech.contains("Разделять голоса") || speech.contains("Separate speakers"),
+            "speakers copy"
+        )
+        expect(!speech.contains("stenoOCR"), "no OCR toggle key")
+        expect(!speech.contains("cloudLLM") && !speech.contains("Cloud LLM"), "no cloud LLM UI")
+        expect(!speech.contains("recordCallVideo"), "speech prefs no call video")
+
         exit(failures == 0 ? 0 : 1)
     }
 }
