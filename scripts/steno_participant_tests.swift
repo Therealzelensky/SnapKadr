@@ -27,6 +27,46 @@ enum StenoParticipantTests {
         expect(mapped[2].speakerId == nil, "extra name unbound")
         expect(StenoParticipantResolver.voiceLabel(speakerId: "1") == "Голос 1", "label")
 
+        struct FakeAX: StenoAXNameReading {
+            var hits: [StenoNameHit]
+            func readNames(windowID: UInt32, pid: pid_t) -> [StenoNameHit] { hits }
+        }
+        final class FakeOCR: StenoOCRNameReading {
+            var hits: [StenoNameHit]
+            private(set) var callCount = 0
+            init(hits: [StenoNameHit]) { self.hits = hits }
+            func readNames(windowID: UInt32) -> [StenoNameHit] {
+                callCount += 1
+                return hits
+            }
+        }
+
+        expect(
+            StenoParticipantResolver.resolveNames(
+                namesEnabled: false, windowID: 1, pid: 1,
+                ax: FakeAX(hits: [StenoNameHit(displayName: "X", source: .ax)]),
+                ocr: FakeOCR(hits: [StenoNameHit(displayName: "Y", source: .ocr)])
+            ).isEmpty,
+            "names pref off → skip"
+        )
+
+        let ocrFake = FakeOCR(hits: [StenoNameHit(displayName: "Y", source: .ocr)])
+        let axHits = [StenoNameHit(displayName: "X", source: .ax)]
+        let result = StenoParticipantResolver.resolveNames(
+            namesEnabled: true, windowID: 42, pid: 7,
+            ax: FakeAX(hits: axHits), ocr: ocrFake
+        )
+        expect(ocrFake.callCount == 1, "OCR always when names on")
+        expect(result.map(\.displayName).sorted() == ["X", "Y"].sorted(), "merged")
+
+        let noWindowOCR = FakeOCR(hits: [])
+        let noWindow = StenoParticipantResolver.resolveNames(
+            namesEnabled: true, windowID: nil, pid: 0,
+            ax: FakeAX(hits: axHits), ocr: noWindowOCR
+        )
+        expect(noWindow.isEmpty, "missing window → empty (readers not useful)")
+        expect(noWindowOCR.callCount == 0, "missing window → no OCR call")
+
         exit(failures == 0 ? 0 : 1)
     }
 }
