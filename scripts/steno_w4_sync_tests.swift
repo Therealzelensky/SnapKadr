@@ -1,4 +1,5 @@
 // swiftc -parse-as-library \
+//   scripts/steno_w4_l10n_stub.swift \
 //   Sources/SnapKadr/StenoCloudSettings.swift \
 //   Sources/SnapKadr/StenoCloudKeychain.swift \
 //   Sources/SnapKadr/StenoCloudClient.swift \

@@ -38,6 +38,8 @@ enum StenoW4SettingsTests {
         expect(g.contains("Автозагрузка после сессии") || g.contains("Auto-upload after session"), "auto")
         expect(g.contains("Проверить соединение") || g.contains("Test connection"), "test")
         expect(g.contains("Загрузить сейчас") || g.contains("Upload now"), "flush")
+        expect(!g.contains("id: \\.projectPath"), "queue ForEach not keyed by path alone")
+        expect(g.contains("\\.identity") || g.contains("id: \\.identity"), "queue ForEach uses identity")
         expect(g.contains("StenoCloudSync") || g.contains("flushQueue"), "flush wiring")
         expect(!g.contains("recordCallVideo"), "no call video")
 

@@ -1,4 +1,5 @@
-// swiftc -parse-as-library Sources/SnapKadr/StenoCloudSettings.swift Sources/SnapKadr/StenoCloudKeychain.swift \
+// swiftc -parse-as-library scripts/steno_w4_l10n_stub.swift \
+//   Sources/SnapKadr/StenoCloudSettings.swift Sources/SnapKadr/StenoCloudKeychain.swift \
 //   Sources/SnapKadr/StenoCloudClient.swift Sources/SnapKadr/YandexOAuthSession.swift \
 //   Sources/SnapKadr/YandexDiskClient.swift scripts/steno_w4_yandex_tests.swift \
 //   -framework Security -framework AuthenticationServices -framework AppKit \
@@ -34,6 +35,18 @@ enum StenoW4YandexTests {
         expect(oauth.contains("oauth.yandex.ru/verification_code"), "verification redirect")
         expect(oauth.contains("response_type") && oauth.contains("token"), "implicit token on verification page")
         expect(oauth.contains("extractAccessToken"), "paste URL/token parse")
+
+        let hrefJSON = Data(#"{"href":"https://cloud-api.yandex.net/v1/disk/operations/abc","method":"GET"}"#.utf8)
+        expect(
+            YandexDiskOperation.href(statusCode: 202, data: hrefJSON)?.absoluteString
+                == "https://cloud-api.yandex.net/v1/disk/operations/abc",
+            "202 yields operation href"
+        )
+        expect(YandexDiskOperation.href(statusCode: 201, data: hrefJSON) == nil, "201 is sync, no poll")
+        expect(YandexDiskOperation.isFinished(Data(#"{"status":"success"}"#.utf8)) == true, "success finished")
+        expect(YandexDiskOperation.isFinished(Data(#"{"status":"in-progress"}"#.utf8)) == nil, "in-progress keeps polling")
+        expect(YandexDiskOperation.isFinished(Data(#"{"status":"failed"}"#.utf8)) == false, "failed finished")
+        expect(client.contains("waitForOperation"), "upload waits 202")
         exit(failures == 0 ? 0 : 1)
     }
 }

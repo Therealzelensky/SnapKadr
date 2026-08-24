@@ -1,5 +1,27 @@
 import Foundation
 
+enum YandexDiskOperation {
+    static func href(statusCode: Int, data: Data) -> URL? {
+        guard statusCode == 202 else { return nil }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let href = json["href"] as? String
+        else { return nil }
+        return URL(string: href)
+    }
+
+    /// `true` success, `false` failed, `nil` still running / unknown.
+    static func isFinished(_ data: Data) -> Bool? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let status = json["status"] as? String
+        else { return nil }
+        switch status {
+        case "success": return true
+        case "failed": return false
+        default: return nil
+        }
+    }
+}
+
 enum YandexDiskPath {
     static let appFolderName = "SnapKadr"
     static let appRoot = "disk:/SnapKadr"
@@ -98,8 +120,7 @@ public final class YandexDiskClient: StenoCloudClient {
         while let item = enumerator.nextObject() as? URL {
             if cancelled { throw StenoCloudError.cancelled }
             let vals = try item.resourceValues(forKeys: [.isDirectoryKey])
-            let rel = item.path.replacingOccurrences(of: localProjectURL.path, with: "")
-                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let rel = StenoCloudPackage.relativePath(of: item, inside: localProjectURL)
             guard !rel.isEmpty else { continue }
             let remotePath = tempRoot + "/" + rel
             if vals.isDirectory == true {
@@ -180,11 +201,13 @@ public final class YandexDiskClient: StenoCloudClient {
         var req = URLRequest(url: components.url!)
         req.httpMethod = "DELETE"
         req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
-        let (_, response) = try await session.data(for: req)
-        if let http = response as? HTTPURLResponse,
-           http.statusCode == 204 || http.statusCode == 202 || http.statusCode == 404
-        {
-            return
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse {
+            if http.statusCode == 204 || http.statusCode == 404 { return }
+            if http.statusCode == 202 {
+                try await waitForOperation(data: data, token: token)
+                return
+            }
         }
         try throwIfNeeded(response)
     }
@@ -199,8 +222,33 @@ public final class YandexDiskClient: StenoCloudClient {
         var req = URLRequest(url: components.url!)
         req.httpMethod = "POST"
         req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
-        let (_, response) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode == 202 {
+            try await waitForOperation(data: data, token: token)
+            return
+        }
         try throwIfNeeded(response)
+    }
+
+    private func waitForOperation(data: Data, token: String) async throws {
+        guard let url = YandexDiskOperation.href(statusCode: 202, data: data) else { return }
+        let deadline = Date().addingTimeInterval(30)
+        while Date() < deadline {
+            if cancelled { throw StenoCloudError.cancelled }
+            var req = URLRequest(url: url)
+            req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
+            let (body, response) = try await session.data(for: req)
+            try throwIfNeeded(response)
+            switch YandexDiskOperation.isFinished(body) {
+            case true:
+                return
+            case false:
+                throw StenoCloudError.network("Yandex Disk operation failed")
+            case nil:
+                try await Task.sleep(nanoseconds: 400_000_000)
+            }
+        }
+        throw StenoCloudError.network("Yandex Disk operation timed out")
     }
 
     private func throwIfNeeded(_ response: URLResponse) throws {

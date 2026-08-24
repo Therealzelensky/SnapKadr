@@ -172,8 +172,7 @@ public final class S3CompatibleClient: StenoCloudClient {
                 if cancelled { throw StenoCloudError.cancelled }
                 let vals = try item.resourceValues(forKeys: [.isDirectoryKey])
                 if vals.isDirectory == true { continue }
-                let rel = item.path.replacingOccurrences(of: localProjectURL.path, with: "")
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                let rel = StenoCloudPackage.relativePath(of: item, inside: localProjectURL)
                 guard !rel.isEmpty else { continue }
                 let key = S3ObjectKey.join(prefix: pathPrefix, project: projectName, relative: rel)
                 try await putObject(local: item, key: key)

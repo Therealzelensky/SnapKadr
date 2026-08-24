@@ -18,6 +18,8 @@ enum StenoW4QueueTests {
         expect(!q.enqueue(projectURL: a, destination: .webdav), "dedupe same pair")
         expect(q.enqueue(projectURL: a, destination: .s3), "same project different dest OK")
         expect(q.pendingCount() == 2, "count 2")
+        let identities = Set(q.items().map(\.identity))
+        expect(identities.count == 2, "identity unique per destination")
         expect(q.pendingCount(for: .webdav) == 1, "per-dest count")
         let now = Date(timeIntervalSince1970: 1_700_000_000)
         q.markFailure(projectURL: a, destination: .webdav, now: now)

@@ -18,6 +18,11 @@ enum WebDAVPath {
     static func tempName(forFinal finalName: String) -> String {
         "\(finalName).uploading"
     }
+
+    static func connectionProbeURL(base: URL, prefix: String) -> URL {
+        _ = prefix
+        return base
+    }
 }
 
 public final class WebDAVClient: StenoCloudClient {
@@ -46,7 +51,7 @@ public final class WebDAVClient: StenoCloudClient {
 
     public func testConnection() async throws {
         try ensureCredentials()
-        let url = WebDAVPath.join(baseURL, prefix: pathPrefix)
+        let url = WebDAVPath.connectionProbeURL(base: baseURL, prefix: pathPrefix)
         var req = URLRequest(url: url)
         req.httpMethod = "PROPFIND"
         req.setValue("0", forHTTPHeaderField: "Depth")
@@ -86,8 +91,7 @@ public final class WebDAVClient: StenoCloudClient {
 
         while let item = enumerator.nextObject() as? URL {
             if cancelled { throw StenoCloudError.cancelled }
-            let rel = item.path.replacingOccurrences(of: localProjectURL.path, with: "")
-                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let rel = StenoCloudPackage.relativePath(of: item, inside: localProjectURL)
             guard !rel.isEmpty else { continue }
             let remote = appendRelative(tempRoot, relative: rel)
             let vals = try item.resourceValues(forKeys: [.isDirectoryKey])

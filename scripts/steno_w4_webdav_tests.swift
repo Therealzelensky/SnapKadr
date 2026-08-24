@@ -15,6 +15,26 @@ enum StenoW4WebDAVTests {
         expect(u.absoluteString.contains("Kadr"), "prefix")
         expect(u.lastPathComponent == "Demo.kadr", "name")
         expect(WebDAVPath.tempName(forFinal: "Demo.kadr") == "Demo.kadr.uploading", "temp")
+        expect(
+            WebDAVPath.connectionProbeURL(base: base, prefix: "Kadr") == base,
+            "test connection probes base, not missing prefix"
+        )
+
+        let fm = FileManager.default
+        let pkg = fm.temporaryDirectory.appendingPathComponent("QA-W4-rel.kadr", isDirectory: true)
+        try? fm.removeItem(at: pkg)
+        try! fm.createDirectory(at: pkg, withIntermediateDirectories: true)
+        let file = pkg.appendingPathComponent("steno-digest.json")
+        try! "x".write(to: file, atomically: true, encoding: .utf8)
+        defer { try? fm.removeItem(at: pkg) }
+        let nested = try! fm.contentsOfDirectory(
+            at: pkg,
+            includingPropertiesForKeys: nil
+        ).first { $0.lastPathComponent == "steno-digest.json" }!
+        expect(
+            StenoCloudPackage.relativePath(of: nested, inside: pkg) == "steno-digest.json",
+            "relative path survives /var → /private/var"
+        )
         exit(failures == 0 ? 0 : 1)
     }
 }

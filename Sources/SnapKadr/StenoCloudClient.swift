@@ -37,6 +37,18 @@ extension StenoCloudError: LocalizedError {
     }
 }
 
+enum StenoCloudPackage {
+    /// Relative path of `item` inside a `.kadr` folder.
+    /// Resolves `/var` → `/private/var` so temp-directory packages keep real names.
+    static func relativePath(of item: URL, inside root: URL) -> String {
+        let rootPath = root.resolvingSymlinksInPath().standardizedFileURL.path
+        let itemPath = item.resolvingSymlinksInPath().standardizedFileURL.path
+        guard itemPath == rootPath || itemPath.hasPrefix(rootPath + "/") else { return "" }
+        return String(itemPath.dropFirst(rootPath.count))
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+}
+
 public protocol StenoCloudClient: AnyObject {
     var destination: StenoCloudDestination { get }
     func testConnection() async throws

@@ -8,6 +8,8 @@ public struct StenoCloudQueueItem: Codable, Equatable, Sendable {
     public var attemptCount: Int
     public var displayName: String
 
+    public var identity: String { "\(destination.rawValue)|\(projectPath)" }
+
     public init(
         projectPath: String,
         destination: StenoCloudDestination,

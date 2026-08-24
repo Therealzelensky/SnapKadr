@@ -322,7 +322,7 @@ struct StenoCloudPrefsSection: View {
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(SuiteTheme.textSecondary)
                 }
-                ForEach(queueItems.prefix(6), id: \.projectPath) { item in
+                ForEach(queueItems.prefix(6), id: \.identity) { item in
                     HStack {
                         Text(item.displayName)
                             .font(.system(size: 11, design: .monospaced))
