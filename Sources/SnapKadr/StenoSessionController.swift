@@ -322,6 +322,10 @@ final class StenoSessionController: ObservableObject {
             }
             KadrEngine.shared.openStenoTranscriptEditor(projectURL: projectURL)
         }
+
+        Task.detached(priority: .utility) {
+            await ProjectCloudStore.shared.handlePostSession(projectURL: projectURL)
+        }
     }
 
     private static func postSessionStageTitle(_ stage: StenoPipelineStage) -> String {

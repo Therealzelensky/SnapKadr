@@ -16,6 +16,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()
         StenoSessionController.shared.start()
+        ProjectCloudStore.shared.presenter = SuiteNotchHUD.shared
+        Task.detached(priority: .utility) {
+            await ProjectCloudStore.shared.retryPendingOnLaunch()
+        }
 
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
@@ -27,6 +31,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.terminate(nil)
             }
         )
+
+        NotificationCenter.default.addObserver(
+            forName: .showPrefsGeneralTab,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.showPreferences(tab: .general)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -78,11 +90,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return ["m4a", "mp3", "wav", "caf", "aiff", "aac", "mp4", "mov", "m4v"].contains(ext)
     }
 
-    private func showPreferences() {
+    private func showPreferences(tab: PrefsTab = .general) {
         if prefs == nil {
             prefs = PreferencesWindowController()
         }
-        prefs?.show()
+        prefs?.show(tab: tab)
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
     }
