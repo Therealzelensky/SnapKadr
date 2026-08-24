@@ -1,7 +1,5 @@
-// swiftc -parse-as-library \
-//   Sources/SnapKadr/WebDAVCloudAdapter.swift \
-//   scripts/steno_w4_webdav_tests.swift \
-//   -o /tmp/steno_w4_webdav && /tmp/steno_w4_webdav
+// swiftc -parse-as-library Sources/SnapKadr/StenoCloudSettings.swift Sources/SnapKadr/StenoCloudClient.swift \
+//   Sources/SnapKadr/WebDAVClient.swift scripts/steno_w4_webdav_tests.swift -o /tmp/steno_w4_webdav && /tmp/steno_w4_webdav
 import Foundation
 
 private var failures = 0
