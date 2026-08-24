@@ -289,8 +289,19 @@ struct StenoCloudPrefsSection: View {
                             .controlSize(.small)
                     }
                 }
-                cloudField(L10n.tr("Папка на Диске", "Disk folder path"), $yandexPathPrefix) {
-                    StenoCloudSettings.yandexPathPrefix = $0
+                Text(L10n.tr(
+                    "Проекты сохраняются в папку disk:/SnapKadr на Диске (создаётся при подключении).",
+                    "Projects go to disk:/SnapKadr on Disk (created on connect)."
+                ))
+                .font(.system(size: 11))
+                .foregroundStyle(SuiteTheme.textTertiary)
+                HStack {
+                    Text(L10n.tr("Папка на Диске", "Disk folder path"))
+                        .frame(width: 130, alignment: .leading)
+                    Text("disk:/SnapKadr")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(SuiteTheme.textSecondary)
+                    Spacer(minLength: 0)
                 }
                 testButton(.yandex)
             }
@@ -438,7 +449,11 @@ struct StenoCloudPrefsSection: View {
                     StenoCloudSettings.yandexAccountLabel = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
                 }
                 yandexAccountLabel = StenoCloudSettings.yandexAccountLabel
-                statusMessage = L10n.tr("Яндекс Диск подключён", "Yandex Disk connected")
+                statusMessage = L10n.tr(
+                    "Яндекс Диск подключён · папка SnapKadr",
+                    "Yandex Disk connected · SnapKadr folder"
+                )
+                yandexPathPrefix = StenoCloudSettings.yandexPathPrefix
                 presentConnectAlert(
                     title: L10n.tr("Готово", "Done"),
                     text: statusMessage

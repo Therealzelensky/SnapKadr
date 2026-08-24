@@ -1,12 +1,18 @@
 import Foundation
 
 enum YandexDiskPath {
+    static let appFolderName = "SnapKadr"
+    static let appRoot = "disk:/SnapKadr"
+
     static func join(prefix: String, project: String) -> String {
         remoteFolder(prefix: prefix, project: project)
     }
 
     static func remoteFolder(prefix: String, project: String) -> String {
-        let parts = [prefix, project]
+        let effectivePrefix = prefix.trimmingCharacters(in: CharacterSet(charactersIn: "/")).isEmpty
+            ? appFolderName
+            : prefix
+        let parts = [effectivePrefix, project]
             .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
             .filter { !$0.isEmpty }
         return "disk:/" + parts.joined(separator: "/")
@@ -48,11 +54,25 @@ public final class YandexDiskClient: StenoCloudClient {
         req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
         let (_, response) = try await session.data(for: req)
         try throwIfNeeded(response)
+        try await ensureAppRootFolder(token: token)
+    }
+
+    /// Creates `disk:/SnapKadr` (idempotent) and pins uploads to that prefix.
+    public func ensureAppRootFolder(token: String? = nil) async throws {
+        let access: String
+        if let token {
+            access = token
+        } else {
+            access = try await oauth.validAccessToken()
+        }
+        StenoCloudSettings.yandexPathPrefix = YandexDiskPath.appFolderName
+        try await ensureFolder(path: YandexDiskPath.appRoot, token: access, recursive: true)
     }
 
     public func uploadPackage(localProjectURL: URL) async throws {
         let token = try await oauth.validAccessToken()
         guard !cancelled else { throw StenoCloudError.cancelled }
+        try await ensureAppRootFolder(token: token)
 
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: localProjectURL.path, isDirectory: &isDir),
@@ -60,7 +80,8 @@ public final class YandexDiskClient: StenoCloudClient {
         else { throw StenoCloudError.notAPackage }
 
         let projectName = localProjectURL.lastPathComponent
-        let finalRoot = YandexDiskPath.remoteFolder(prefix: pathPrefix, project: projectName)
+        let prefix = YandexDiskPath.appFolderName
+        let finalRoot = YandexDiskPath.remoteFolder(prefix: prefix, project: projectName)
         let tempRoot = YandexDiskPath.tempPath(forFinal: finalRoot)
 
         try await ensureFolder(path: tempRoot, token: token, recursive: true)

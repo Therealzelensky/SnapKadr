@@ -109,6 +109,7 @@ public final class YandexOAuthSession: NSObject {
         }
 
         try Self.storeAccessToken(token)
+        try await YandexDiskClient(oauth: self).ensureAppRootFolder(token: token)
     }
 
     public func disconnect() throws {

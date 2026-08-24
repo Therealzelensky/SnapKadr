@@ -14,12 +14,17 @@ private func expect(_ c: @autoclosure () -> Bool, _ m: String) {
 enum StenoW4YandexTests {
     static func main() {
         expect(YandexDiskPath.remoteFolder(prefix: "Kadr", project: "A.kadr") == "disk:/Kadr/A.kadr", "path form")
-        expect(YandexDiskPath.join(prefix: "", project: "A.kadr") == "disk:/A.kadr", "path no prefix")
+        expect(YandexDiskPath.join(prefix: "", project: "A.kadr") == "disk:/SnapKadr/A.kadr", "empty prefix → SnapKadr")
+        expect(YandexDiskPath.appRoot == "disk:/SnapKadr", "app root")
         expect(YandexDiskPath.filePath(prefix: "Kadr", project: "A.kadr", relative: "steno.json") == "disk:/Kadr/A.kadr/steno.json", "file path")
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let settings = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoCloudSettings.swift"), encoding: .utf8)
         expect(!settings.contains("yandex.accessToken"), "token not in UD")
+        expect(settings.contains("SnapKadr"), "default folder name in settings")
+        let client = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/YandexDiskClient.swift"), encoding: .utf8)
+        expect(client.contains("ensureAppRootFolder"), "ensure app folder API")
         let oauth = try! String(contentsOf: root.appendingPathComponent("Sources/SnapKadr/YandexOAuthSession.swift"), encoding: .utf8)
+        expect(oauth.contains("ensureAppRootFolder"), "connect creates folder")
         expect(oauth.contains("verification_code"), "oauth flow")
         expect(oauth.contains("YandexDiskOAuthClientID"), "client id plist key")
         expect(oauth.contains("StenoCloudSettings.yandexOAuthClientID"), "prefs client id override")

@@ -94,8 +94,15 @@ public enum StenoCloudSettings {
     }
 
     public static var yandexPathPrefix: String {
-        get { d.string(forKey: Key.yandexPathPrefix) ?? "" }
-        set { d.set(newValue, forKey: Key.yandexPathPrefix) }
+        get {
+            let raw = d.string(forKey: Key.yandexPathPrefix) ?? ""
+            let trimmed = raw.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return trimmed.isEmpty ? "SnapKadr" : trimmed
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            d.set(trimmed.isEmpty ? "SnapKadr" : trimmed, forKey: Key.yandexPathPrefix)
+        }
     }
 
     public static var yandexOAuthClientID: String {
