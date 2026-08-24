@@ -3,7 +3,7 @@ import NotchHUDKit
 
 /// Thin NotchHUDKit wrapper for suite notification tests (not a Snap NotchHUD copy).
 @MainActor
-final class SuiteNotchHUD {
+final class SuiteNotchHUD: ProjectCloudStorePresenting {
     static let shared = SuiteNotchHUD()
     private let shell = NotchHUDShell()
     private let promptShell = NotchHUDShell(height: 56, ignoresMouseEvents: false)
@@ -364,6 +364,32 @@ final class SuiteNotchHUD {
         ])
         promptShell.contentView = host
         promptShell.present(size: NSSize(width: 320, height: 56), on: NSScreen.main)
+    }
+
+    func showCloudUploadDeferred() {
+        showStenoFailure(
+            message: L10n.tr("загрузить позже", "upload later"),
+            cta: L10n.tr("Понятно", "OK"),
+            onCTA: {}
+        )
+    }
+
+    func showCloudAuthRequired() {
+        showStenoFailure(
+            message: L10n.tr("Нужно снова войти в облако", "Cloud sign-in required"),
+            cta: L10n.tr("Открыть Общие", "Open General"),
+            onCTA: {
+                NotificationCenter.default.post(name: .showPrefsGeneralTab, object: nil)
+            }
+        )
+    }
+
+    func presentDeferredUploadToast() {
+        showCloudUploadDeferred()
+    }
+
+    func presentAuthRequiredToast() {
+        showCloudAuthRequired()
     }
 }
 
