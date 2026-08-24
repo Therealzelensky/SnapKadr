@@ -4,7 +4,6 @@ import KadrKit
 import SwiftUI
 
 struct PrefsKadrView: View {
-    @State private var folderPath = SuiteKadrSettings.projectsFolderURL.path
     @State private var countdownMs = SuiteKadrSettings.recordingCountdownMs
     @State private var autoZoom = SuiteKadrSettings.createAutomaticZooms
     @State private var recordMic = SuiteKadrSettings.recordMicrophone
@@ -23,28 +22,11 @@ struct PrefsKadrView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SuiteTheme.spaceL) {
-            folderSection
             recordingSection
             exportSection
         }
         .suiteAppear()
         .onAppear(perform: reloadDevices)
-    }
-
-    private var folderSection: some View {
-        VStack(alignment: .leading, spacing: SuiteTheme.spaceS) {
-            SuiteSectionHeader(title: L10n.tr("Папка проектов", "Projects folder"))
-            SuiteCard {
-                VStack(alignment: .leading, spacing: SuiteTheme.spaceM) {
-                    Text(folderPath)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(SuiteTheme.textSecondary)
-                        .lineLimit(2)
-                    Button(L10n.tr("Выбрать…", "Choose…")) { chooseFolder() }
-                        .controlSize(.small)
-                }
-            }
-        }
     }
 
     private var recordingSection: some View {
@@ -157,7 +139,6 @@ struct PrefsKadrView: View {
     }
 
     private func reloadDevices() {
-        folderPath = SuiteKadrSettings.projectsFolderURL.path
         countdownMs = SuiteKadrSettings.recordingCountdownMs
         autoZoom = SuiteKadrSettings.createAutomaticZooms
         recordMic = SuiteKadrSettings.recordMicrophone
@@ -192,14 +173,4 @@ struct PrefsKadrView: View {
         exportFPSIndex = SuiteKadrSettings.exportFPS == 60 ? 1 : 0
     }
 
-    private func chooseFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = SuiteKadrSettings.projectsFolderURL
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        SuiteKadrSettings.projectsFolderURL = url
-        folderPath = url.path
-    }
 }

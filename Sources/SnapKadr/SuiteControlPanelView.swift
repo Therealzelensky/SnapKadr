@@ -62,6 +62,9 @@ struct SuiteControlPanelView: View {
         .onChange(of: steno.isSessionActive) { _, _ in
             DispatchQueue.main.async { onLayoutNeeded?() }
         }
+        .onChange(of: steno.lastProjectURL) { _, _ in
+            DispatchQueue.main.async { onLayoutNeeded?() }
+        }
     }
 
     private var header: some View {
@@ -187,6 +190,21 @@ struct SuiteControlPanelView: View {
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
+                    if steno.isSessionActive {
+                        Button(L10n.tr("Стоп", "Stop")) {
+                            StenoSessionController.shared.stopFromUser()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(SuiteTheme.record)
+                    } else if steno.lastProjectURL != nil {
+                        Button(L10n.tr("В Finder", "In Finder")) {
+                            StenoSessionController.shared.openLastProject()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(SuiteTheme.accent)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -204,15 +222,21 @@ struct SuiteControlPanelView: View {
             if raw.count <= 36 { return raw }
             return String(raw.prefix(35)) + "…"
         }
+        if let url = steno.lastProjectURL {
+            return url.deletingPathExtension().lastPathComponent
+        }
         return L10n.tr("Нет активного звонка", "No active call")
     }
 
     private var stenoStatusSubtitle: String {
         if steno.isSessionActive {
-            return L10n.tr("Стоп — в панели Кадра", "Stop from the Kadr HUD")
+            return L10n.tr("Стоп в челке или здесь", "Stop in the notch or here")
         }
         if stenoDetector.activeCall != nil {
             return L10n.tr("Подтвердите в челке", "Confirm in the notch")
+        }
+        if steno.lastProjectURL != nil {
+            return L10n.tr("Последний конспект", "Last notes")
         }
         return L10n.tr("Zoom · Meet · Telegram · Телемост · Синк", "Zoom · Meet · Telegram · Telemost · Sync")
     }

@@ -26,23 +26,53 @@ enum StenoMatcherTests {
         let tm = StenoWindowSnapshot(windowID: 6, bundleID: "com.apple.Safari", title: "Планерка — Телемост", ownerName: "Safari")
         expect(StenoMatcher.match(tm, enabled: all) == .telemost, "telemost safari")
 
-        let tmApp = StenoWindowSnapshot(
+        let tmAppLobby = StenoWindowSnapshot(
             windowID: 11,
             bundleID: "ru.yandex.desktop.telemost",
             title: "Яндекс Телемост",
-            ownerName: "Яндекс Телемост"
+            ownerName: "Яндекс Телемост",
+            ownerPID: 1
         )
-        expect(StenoMatcher.match(tmApp, enabled: all) == .telemost, "telemost desktop app")
+        // Without live AX call chrome (or with lobby), open app is not a call.
+        expect(StenoMatcher.match(tmAppLobby, enabled: all) == nil, "telemost desktop lobby ignored")
         let tmAppBlank = StenoWindowSnapshot(
             windowID: 12,
             bundleID: "ru.yandex.desktop.telemost",
             title: "",
-            ownerName: "Яндекс Телемост"
+            ownerName: "Яндекс Телемост",
+            ownerPID: 1
         )
-        expect(StenoMatcher.match(tmAppBlank, enabled: all) == .telemost, "telemost desktop empty title")
+        expect(StenoMatcher.match(tmAppBlank, enabled: all) == nil, "telemost desktop empty title ignored")
+
+        expect(
+            !StenoTelemostCallState.isInCall(axLabels: [
+                "Новая видеовстреча", "Подключиться", "Запланировать", "Яндекс Телемост"
+            ]),
+            "ax lobby labels are not in-call"
+        )
+        expect(
+            StenoTelemostCallState.isInCall(axLabels: [
+                "Демонстрация", "Участники", "Чат", "Яндекс Телемост"
+            ]),
+            "ax in-call chrome"
+        )
+        expect(
+            !StenoTelemostCallState.isInCall(axLabels: [
+                "Новая видеовстреча", "Демонстрация"
+            ]),
+            "lobby wins over mixed labels"
+        )
 
         let b24 = StenoWindowSnapshot(windowID: 7, bundleID: "com.bitrixsoft.Bitrix24", title: "Видеозвонок", ownerName: "Bitrix24")
-        expect(StenoMatcher.match(b24, enabled: all) == .bitrixSync, "bitrix desktop")
+        expect(StenoMatcher.match(b24, enabled: all) == .bitrixSync, "bitrix desktop in-call")
+
+        let b24BrowserCall = StenoWindowSnapshot(
+            windowID: 28,
+            bundleID: "com.apple.Safari",
+            title: "Гекса — Видеозвонок — Bitrix24",
+            ownerName: "Safari"
+        )
+        expect(StenoMatcher.match(b24BrowserCall, enabled: all) == .bitrixSync, "bitrix safari in-call")
 
         let safariSync = StenoWindowSnapshot(
             windowID: 8,
@@ -50,7 +80,7 @@ enum StenoMatcherTests {
             title: "Гекса — (16) Чат и звонки",
             ownerName: "Safari"
         )
-        expect(StenoMatcher.match(safariSync, enabled: all) == .bitrixSync, "bitrix safari chat-and-calls")
+        expect(StenoMatcher.match(safariSync, enabled: all) == nil, "bitrix chat tab is not a live call")
         expect(StenoMatcher.match(safariSync, enabled: [.zoom]) == nil, "bitrix safari disabled")
 
         let safariCRM = StenoWindowSnapshot(
@@ -67,12 +97,14 @@ enum StenoMatcherTests {
             title: "Acme — (3) Chat and Calls",
             ownerName: "Chrome"
         )
-        expect(StenoMatcher.match(chromeEN, enabled: all) == .bitrixSync, "bitrix chrome english im")
+        expect(StenoMatcher.match(chromeEN, enabled: all) == nil, "bitrix chrome english im is not a live call")
 
         let zoomBlank = StenoWindowSnapshot(windowID: 13, bundleID: "us.zoom.xos", title: "", ownerName: "zoom.us")
-        expect(StenoMatcher.match(zoomBlank, enabled: all) == .zoom, "zoom empty title")
+        expect(StenoMatcher.match(zoomBlank, enabled: all) == nil, "zoom empty title is not a call")
+        let zoomMain = StenoWindowSnapshot(windowID: 27, bundleID: "us.zoom.xos", title: "Zoom", ownerName: "zoom.us")
+        expect(StenoMatcher.match(zoomMain, enabled: all) == nil, "zoom main window ignored")
         let zoomClips = StenoWindowSnapshot(windowID: 14, bundleID: "us.zoom.ZoomPresence", title: "", ownerName: "Zoom")
-        expect(StenoMatcher.match(zoomClips, enabled: all) == .zoom, "zoom presence empty title")
+        expect(StenoMatcher.match(zoomClips, enabled: all) == nil, "zoom presence empty title")
 
         let tgVideo = StenoWindowSnapshot(
             windowID: 15,
@@ -139,21 +171,21 @@ enum StenoMatcherTests {
             title: "Б24 Гекса — (16) Чат и звонки",
             ownerName: "Б24 Гекса [ prod ]"
         )
-        expect(StenoMatcher.match(b24WebApp, enabled: all) == .bitrixSync, "bitrix safari web app")
+        expect(StenoMatcher.match(b24WebApp, enabled: all) == nil, "bitrix safari web app chat is not a live call")
         let b24Gost = StenoWindowSnapshot(
             windowID: 24,
             bundleID: "ru.cryptopro.chromium-gost",
             title: "ГорСтрой — (6) Чат и звонки",
             ownerName: "Chromium-Gost"
         )
-        expect(StenoMatcher.match(b24Gost, enabled: all) == .bitrixSync, "bitrix chromium-gost")
+        expect(StenoMatcher.match(b24Gost, enabled: all) == nil, "bitrix chromium-gost chat is not a live call")
         let b24DesktopBlank = StenoWindowSnapshot(
             windowID: 25,
             bundleID: "com.bitrixsoft.Bitrix24",
             title: "",
             ownerName: "Bitrix24"
         )
-        expect(StenoMatcher.match(b24DesktopBlank, enabled: all) == .bitrixSync, "bitrix desktop empty title")
+        expect(StenoMatcher.match(b24DesktopBlank, enabled: all) == nil, "bitrix desktop empty title is not a call")
         let b24WebAppCRM = StenoWindowSnapshot(
             windowID: 26,
             bundleID: "com.apple.Safari.WebApp.927C1839-8229-476C-99F6-6AEB5FEAC285",
@@ -161,6 +193,71 @@ enum StenoMatcherTests {
             ownerName: "Б24 Гекса [ prod ]"
         )
         expect(StenoMatcher.match(b24WebAppCRM, enabled: all) == nil, "bitrix web app crm not a call")
+
+        // Yandex Messenger (ru.yandex.yamb): open chat is not a call — need in-call AX chrome.
+        let ymChat = StenoWindowSnapshot(
+            windowID: 30,
+            bundleID: "ru.yandex.yamb",
+            title: "Яндекс Мессенджер",
+            ownerName: "Yandex Messenger",
+            ownerPID: 1
+        )
+        expect(StenoMatcher.match(ymChat, enabled: all) == nil, "yandex messenger chat ignored")
+        let ymBlank = StenoWindowSnapshot(
+            windowID: 31,
+            bundleID: "ru.yandex.yamb",
+            title: "",
+            ownerName: "Yandex Messenger",
+            ownerPID: 1
+        )
+        expect(StenoMatcher.match(ymBlank, enabled: all) == nil, "yandex messenger empty title ignored")
+        expect(
+            !StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Яндекс Мессенджер", "Чаты", "Поиск", "Yandex Messenger"
+            ]),
+            "ym chat ax labels are not in-call"
+        )
+        expect(
+            StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Завершить звонок", "Микрофон", "Яндекс Мессенджер"
+            ]),
+            "ym ax end-call chrome"
+        )
+        expect(
+            StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Демонстрация", "Участники", "Чат"
+            ]),
+            "ym ax telemost-in-messenger chrome"
+        )
+        expect(
+            !StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Video call", "Voice call", "Яндекс Мессенджер"
+            ]),
+            "ym menu call actions alone are not in-call"
+        )
+
+        let ymBrowserCall = StenoWindowSnapshot(
+            windowID: 32,
+            bundleID: "com.google.Chrome",
+            title: "Входящий видеозвонок — Яндекс Мессенджер",
+            ownerName: "Google Chrome"
+        )
+        expect(StenoMatcher.match(ymBrowserCall, enabled: all) == .yandexMessenger, "ym chrome in-call title")
+        let ymBrowserChat = StenoWindowSnapshot(
+            windowID: 33,
+            bundleID: "com.apple.Safari",
+            title: "Яндекс Мессенджер",
+            ownerName: "Safari"
+        )
+        expect(StenoMatcher.match(ymBrowserChat, enabled: all) == nil, "ym safari chat tab ignored")
+        let ymBrowserURL = StenoWindowSnapshot(
+            windowID: 34,
+            bundleID: "ru.yandex.desktop.yandex-browser",
+            title: "Групповой звонок — yandex.ru/chat",
+            ownerName: "Yandex"
+        )
+        expect(StenoMatcher.match(ymBrowserURL, enabled: all) == .yandexMessenger, "ym yandex browser group call")
+        expect(StenoMatcher.match(ymChat, enabled: [.zoom]) == nil, "ym disabled")
 
         exit(failures == 0 ? 0 : 1)
     }

@@ -21,8 +21,9 @@ enum StenoSettingsTests {
 
         StenoSettings.setEnabled(.telegram, false)
         expect(!StenoSettings.isEnabled(.telegram), "telegram off")
-        expect(StenoSettings.enabledSources.count == 4, "four remain")
+        expect(StenoSettings.enabledSources.count == StenoSource.allCases.count - 1, "all but one remain")
         expect(StenoSettings.isEnabled(.zoom), "zoom still on")
+        expect(StenoSettings.isEnabled(.yandexMessenger), "yandex messenger on by default")
 
         StenoSettings.enabledSources = []
         expect(StenoSettings.enabledSources.isEmpty, "empty array all off")
@@ -30,6 +31,33 @@ enum StenoSettingsTests {
 
         ud.set(["zoom", "not-a-source", "telegram"], forKey: "steno.enabledSources")
         expect(StenoSettings.enabledSources == [.zoom, .telegram], "unknown raw ignored")
+
+        expect(StenoSettings.isEnabled, "master on by default")
+
+        StenoSettings.isEnabled = false
+        expect(!StenoSettings.isEnabled, "master off persists")
+
+        ud.removePersistentDomain(forName: suite)
+        StenoSettings.defaults = ud
+        expect(StenoSettings.isEnabled, "missing master key → on")
+
+        expect(StenoSettings.recordShare, "record share on by default")
+        expect(StenoSettings.showCard, "show card on by default")
+        StenoSettings.recordShare = false
+        StenoSettings.showCard = false
+        expect(!StenoSettings.recordShare && !StenoSettings.showCard, "share/card prefs persist")
+        ud.removePersistentDomain(forName: suite)
+        StenoSettings.defaults = ud
+        expect(StenoSettings.recordShare && StenoSettings.showCard, "missing keys → on")
+
+        expect(StenoSettings.namesFromCallWindow, "names from window on by default")
+        expect(StenoSettings.separateSpeakers, "separate speakers on by default")
+        StenoSettings.namesFromCallWindow = false
+        StenoSettings.separateSpeakers = false
+        expect(!StenoSettings.namesFromCallWindow && !StenoSettings.separateSpeakers, "names/speakers prefs persist")
+        ud.removePersistentDomain(forName: suite)
+        StenoSettings.defaults = ud
+        expect(StenoSettings.namesFromCallWindow && StenoSettings.separateSpeakers, "missing names/speakers keys → on")
 
         ud.removePersistentDomain(forName: suite)
         exit(failures == 0 ? 0 : 1)

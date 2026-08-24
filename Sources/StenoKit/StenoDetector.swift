@@ -23,7 +23,9 @@ public final class StenoDetector: ObservableObject {
     private var timer: Timer?
     private var workspaceObservers: [NSObjectProtocol] = []
 
-    public init(probe: @escaping () -> [StenoWindowSnapshot] = StenoWindowProbe.snapshots) {
+    public init(probe: @escaping () -> [StenoWindowSnapshot] = {
+        StenoWindowProbe.snapshots(matchingPIDs: StenoWindowProbe.sourcePIDs())
+    }) {
         self.probe = probe
     }
 
@@ -53,6 +55,7 @@ public final class StenoDetector: ObservableObject {
             NSWorkspace.shared.notificationCenter.removeObserver(obs)
         }
         workspaceObservers = []
+        activeCall = nil
     }
 
     public func snooze(windowID: UInt32) {

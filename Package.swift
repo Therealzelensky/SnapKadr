@@ -19,7 +19,9 @@ let package = Package(
             path: "Sources/StenoKit",
             linkerSettings: [
                 .linkedFramework("AppKit"),
-                .linkedFramework("CoreGraphics")
+                .linkedFramework("CoreGraphics"),
+                .linkedFramework("ApplicationServices"),
+                .linkedFramework("Vision")
             ]
         ),
         .executableTarget(
@@ -37,7 +39,9 @@ let package = Package(
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("ServiceManagement"),
                 .linkedFramework("Carbon"),
-                .linkedFramework("AVFoundation")
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("AuthenticationServices"),
+                .linkedFramework("Security")
             ]
         )
     ]
