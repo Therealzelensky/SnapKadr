@@ -147,8 +147,17 @@ public final class ProjectCloudStore: @unchecked Sendable {
 
     // Soft stubs until adapters exist; return nil so missing adapter → enqueue.
     private static func makeWebDAVAdapter() -> ProjectCloudAdapter? {
-        // Wired in Task 4
-        nil
+        let raw = ProjectCloudSettings.webdavBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let base = URL(string: raw), !raw.isEmpty else { return nil }
+        let password = (try? ProjectCloudKeychain.get(
+            account: ProjectCloudKeychain.accountName(kind: .webdav, field: "password")
+        )) ?? ""
+        return WebDAVCloudAdapter(
+            baseURL: base,
+            username: ProjectCloudSettings.webdavUsername,
+            password: password,
+            pathPrefix: ProjectCloudSettings.webdavPathPrefix
+        )
     }
 
     private static func makeS3Adapter() -> ProjectCloudAdapter? {
