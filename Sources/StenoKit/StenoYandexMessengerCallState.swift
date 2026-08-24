@@ -7,6 +7,8 @@ public enum StenoYandexMessengerCallState {
     private static let inCallNeedles = [
         "завершить звонок",
         "end call",
+        "открыть экран звонка",
+        "звонок в яндекс телемосте",
         "демонстрация",
         "участники",
         "participants",
@@ -29,12 +31,24 @@ public enum StenoYandexMessengerCallState {
     private static func collectLabels(pid: pid_t) -> [String] {
         let app = AXUIElementCreateApplication(pid)
         var labels: [String] = []
-        collect(from: app, depth: 0, maxDepth: 8, into: &labels)
+        // Walk windows, not the application: the menu bar is huge and the
+        // Electron call chrome lives ~12 levels down inside AXWebArea.
+        if let windows = copyAttr(app, kAXWindowsAttribute as String) as? [AXUIElement], !windows.isEmpty {
+            for window in windows {
+                collect(from: window, depth: 0, maxDepth: 20, into: &labels)
+            }
+            return labels
+        }
+        collect(from: app, depth: 0, maxDepth: 20, into: &labels)
         return labels
     }
 
     private static func collect(from el: AXUIElement, depth: Int, maxDepth: Int, into labels: inout [String]) {
         if depth > maxDepth { return }
+        if let role = stringAttr(el, kAXRoleAttribute as String),
+           role == (kAXMenuBarRole as String) || role == (kAXMenuBarItemRole as String) || role == (kAXMenuRole as String) {
+            return
+        }
         if let title = stringAttr(el, kAXTitleAttribute as String), !title.isEmpty {
             labels.append(title)
         }
@@ -45,7 +59,7 @@ public enum StenoYandexMessengerCallState {
             labels.append(value)
         }
         guard let kids = copyAttr(el, kAXChildrenAttribute as String) as? [AXUIElement] else { return }
-        for kid in kids.prefix(50) {
+        for kid in kids.prefix(120) {
             collect(from: kid, depth: depth + 1, maxDepth: maxDepth, into: &labels)
         }
     }

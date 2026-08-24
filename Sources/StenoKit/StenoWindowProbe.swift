@@ -11,31 +11,54 @@ public enum StenoWindowProbe {
         }
         var result: [StenoWindowSnapshot] = []
         for entry in info {
-            let layer = entry[kCGWindowLayer as String] as? Int ?? 0
-            if layer != 0 { continue }
-            guard let number = entry[kCGWindowNumber as String] as? UInt32 else { continue }
-            let owner = entry[kCGWindowOwnerName as String] as? String ?? ""
-            if owner.isEmpty { continue }
-            let title = entry[kCGWindowName as String] as? String ?? ""
-            let pid = entry[kCGWindowOwnerPID as String] as? pid_t
             if let matchingPIDs {
+                let pid = entry[kCGWindowOwnerPID as String] as? pid_t
                 guard let pid, matchingPIDs.contains(pid) else { continue }
             }
-            let bundle: String
-            if let pid, let app = NSRunningApplication(processIdentifier: pid) {
-                bundle = app.bundleIdentifier ?? ""
-            } else {
-                bundle = ""
+            if let snap = makeSnapshot(entry) {
+                result.append(snap)
             }
-            result.append(StenoWindowSnapshot(
-                windowID: number,
-                bundleID: bundle,
-                title: title,
-                ownerName: owner,
-                ownerPID: pid ?? 0
-            ))
         }
         return result
+    }
+
+    /// Session hangup must see the captured window even if the editor covers it.
+    public static func snapshot(windowID: UInt32) -> StenoWindowSnapshot? {
+        guard let info = CGWindowListCopyWindowInfo(.optionIncludingWindow, windowID) as? [[String: Any]] else {
+            return nil
+        }
+        return info.compactMap(makeSnapshot).first { $0.windowID == windowID }
+    }
+
+    public static func pinSession(_ snapshots: [StenoWindowSnapshot], windowID: UInt32) -> [StenoWindowSnapshot] {
+        if snapshots.contains(where: { $0.windowID == windowID }) { return snapshots }
+        if let pinned = snapshot(windowID: windowID) {
+            return [pinned] + snapshots
+        }
+        return snapshots
+    }
+
+    private static func makeSnapshot(_ entry: [String: Any]) -> StenoWindowSnapshot? {
+        let layer = entry[kCGWindowLayer as String] as? Int ?? 0
+        if layer != 0 { return nil }
+        guard let number = entry[kCGWindowNumber as String] as? UInt32 else { return nil }
+        let owner = entry[kCGWindowOwnerName as String] as? String ?? ""
+        if owner.isEmpty { return nil }
+        let title = entry[kCGWindowName as String] as? String ?? ""
+        let pid = entry[kCGWindowOwnerPID as String] as? pid_t
+        let bundle: String
+        if let pid, let app = NSRunningApplication(processIdentifier: pid) {
+            bundle = app.bundleIdentifier ?? ""
+        } else {
+            bundle = ""
+        }
+        return StenoWindowSnapshot(
+            windowID: number,
+            bundleID: bundle,
+            title: title,
+            ownerName: owner,
+            ownerPID: pid ?? 0
+        )
     }
 
     public static func sourcePIDs(enabled: Set<StenoSource> = StenoSettings.enabledSources) -> Set<pid_t> {

@@ -11,6 +11,14 @@ final class SuiteNotchHUD {
     private let progressShell = NotchHUDShell(height: 56, ignoresMouseEvents: true)
     private let promptActions = StenoPromptActions()
     private let recordingActions = StenoRecordingActions()
+    private var recordingDetailLabel: NSTextField?
+
+    static func shareStatusLine(active: Bool, failed: Bool, recordShare: Bool) -> String {
+        guard recordShare else { return "" }
+        if failed { return L10n.tr("Шару не записали", "Share not recorded") }
+        if active { return L10n.tr("Шара пишется", "Share recording") }
+        return L10n.tr("Шары нет", "No share")
+    }
 
     func showTest() {
         let row = NSStackView()
@@ -192,12 +200,11 @@ final class SuiteNotchHUD {
         promptShell.dismiss(completion: completion)
     }
 
-    func showStenoRecording(title: String, onStop: @escaping () -> Void) {
-        recordingActions.onStop = { [weak self] in
-            self?.dismissStenoRecording {
-                onStop()
-            }
+    func showStenoRecording(title: String, detail: String = "", onStop: @escaping () -> Void) {
+        recordingActions.onStop = {
+            onStop()
         }
+        recordingActions.onContinue = {}
 
         let icon = NSImageView()
         icon.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
@@ -211,18 +218,31 @@ final class SuiteNotchHUD {
         label.isBezeled = false
         label.drawsBackground = false
 
+        let detailLabel = NSTextField(labelWithString: detail)
+        detailLabel.font = .systemFont(ofSize: 11, weight: .regular)
+        detailLabel.textColor = NSColor.white.withAlphaComponent(0.55)
+        detailLabel.isBezeled = false
+        detailLabel.drawsBackground = false
+        detailLabel.isHidden = detail.isEmpty
+        recordingDetailLabel = detailLabel
+
+        let textCol = NSStackView(views: [label, detailLabel])
+        textCol.orientation = .vertical
+        textCol.alignment = .leading
+        textCol.spacing = 1
+
         let stop = NSButton(title: L10n.tr("Стоп", "Stop"), target: recordingActions, action: #selector(StenoRecordingActions.stop))
         stop.bezelStyle = .rounded
         stop.controlSize = .small
         stop.font = .systemFont(ofSize: 12, weight: .semibold)
 
-        let row = NSStackView(views: [icon, label, stop])
+        let row = NSStackView(views: [icon, textCol, stop])
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 10
         row.setHuggingPriority(.defaultHigh, for: .horizontal)
 
-        let host = NSView(frame: NSRect(x: 0, y: 0, width: 320, height: 56))
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 56))
         row.translatesAutoresizingMaskIntoConstraints = false
         host.addSubview(row)
         NSLayoutConstraint.activate([
@@ -232,10 +252,102 @@ final class SuiteNotchHUD {
         ])
 
         recordingShell.contentView = host
-        recordingShell.present(size: NSSize(width: 320, height: 56), on: NSScreen.main)
+        recordingShell.present(size: NSSize(width: 360, height: 56), on: NSScreen.main)
+    }
+
+    func showStenoStopConfirm(
+        hangup: Bool,
+        onConfirm: @escaping () -> Void,
+        onContinue: @escaping () -> Void
+    ) {
+        recordingDetailLabel = nil
+        recordingActions.onStop = {
+            onConfirm()
+        }
+        recordingActions.onContinue = {
+            onContinue()
+        }
+
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: hangup ? "phone.down.fill" : "stop.circle", accessibilityDescription: nil)
+        icon.contentTintColor = NSColor(calibratedRed: 0.937, green: 0.267, blue: 0.267, alpha: 1)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+
+        let title = NSTextField(labelWithString: L10n.tr("Остановить конспект?", "Stop noting?"))
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        title.textColor = .white
+        title.isBezeled = false
+        title.drawsBackground = false
+
+        let subtitle = NSTextField(labelWithString: hangup
+            ? L10n.tr("Похоже, звонок закончился", "Looks like the call ended")
+            : L10n.tr("Запись ещё идёт", "Recording is still running"))
+        subtitle.font = .systemFont(ofSize: 11, weight: .regular)
+        subtitle.textColor = NSColor.white.withAlphaComponent(0.55)
+        subtitle.isBezeled = false
+        subtitle.drawsBackground = false
+
+        let textCol = NSStackView(views: [title, subtitle])
+        textCol.orientation = .vertical
+        textCol.alignment = .leading
+        textCol.spacing = 1
+
+        let keepGoing = NSButton(
+            title: L10n.tr("Продолжить", "Keep going"),
+            target: recordingActions,
+            action: #selector(StenoRecordingActions.keepGoing)
+        )
+        keepGoing.bezelStyle = .rounded
+        keepGoing.controlSize = .small
+        keepGoing.font = .systemFont(ofSize: 12)
+        keepGoing.keyEquivalent = "\u{1b}"
+
+        let stop = NSButton(
+            title: L10n.tr("Остановить", "Stop"),
+            target: recordingActions,
+            action: #selector(StenoRecordingActions.stop)
+        )
+        stop.bezelStyle = .rounded
+        stop.controlSize = .small
+        stop.font = .systemFont(ofSize: 12, weight: .semibold)
+        if hangup {
+            keepGoing.keyEquivalent = "\r"
+        } else {
+            stop.keyEquivalent = "\r"
+        }
+
+        let row = NSStackView(views: [icon, textCol, keepGoing, stop])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+        row.setHuggingPriority(.defaultHigh, for: .horizontal)
+
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 56))
+        row.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
+        ])
+
+        recordingShell.contentView = host
+        recordingShell.present(size: NSSize(width: 440, height: 56), on: NSScreen.main)
+    }
+
+    func updateStenoRecording(detail: String) {
+        guard let recordingDetailLabel else { return }
+        if recordingDetailLabel.stringValue == detail,
+           recordingDetailLabel.isHidden == detail.isEmpty {
+            return
+        }
+        recordingDetailLabel.stringValue = detail
+        recordingDetailLabel.isHidden = detail.isEmpty
     }
 
     func dismissStenoRecording(completion: (() -> Void)? = nil) {
+        recordingDetailLabel = nil
         recordingShell.dismiss(completion: completion)
     }
 
@@ -405,6 +517,8 @@ private final class StenoPromptActions: NSObject {
 @MainActor
 private final class StenoRecordingActions: NSObject {
     var onStop: () -> Void = {}
+    var onContinue: () -> Void = {}
 
     @objc func stop() { onStop() }
+    @objc func keepGoing() { onContinue() }
 }

@@ -42,13 +42,11 @@ enum StenoSettingsTests {
         expect(StenoSettings.isEnabled, "missing master key → on")
 
         expect(StenoSettings.recordShare, "record share on by default")
-        expect(StenoSettings.showCard, "show card on by default")
         StenoSettings.recordShare = false
-        StenoSettings.showCard = false
-        expect(!StenoSettings.recordShare && !StenoSettings.showCard, "share/card prefs persist")
+        expect(!StenoSettings.recordShare, "share pref persists")
         ud.removePersistentDomain(forName: suite)
         StenoSettings.defaults = ud
-        expect(StenoSettings.recordShare && StenoSettings.showCard, "missing keys → on")
+        expect(StenoSettings.recordShare, "missing share key → on")
 
         expect(StenoSettings.namesFromCallWindow, "names from window on by default")
         expect(StenoSettings.separateSpeakers, "separate speakers on by default")

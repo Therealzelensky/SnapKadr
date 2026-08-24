@@ -5,7 +5,6 @@ public enum StenoSettings {
     private static let key = "steno.enabledSources"
     private static let enabledKey = "steno.isEnabled"
     private static let recordShareKey = "steno.recordShare"
-    private static let showCardKey = "steno.showCard"
     private static let namesFromCallWindowKey = "speech.stenoNamesFromCallWindow"
     private static let separateSpeakersKey = "speech.stenoSeparateSpeakers"
 
@@ -23,14 +22,6 @@ public enum StenoSettings {
             return defaults.bool(forKey: recordShareKey)
         }
         set { defaults.set(newValue, forKey: recordShareKey) }
-    }
-
-    public static var showCard: Bool {
-        get {
-            if defaults.object(forKey: showCardKey) == nil { return true }
-            return defaults.bool(forKey: showCardKey)
-        }
-        set { defaults.set(newValue, forKey: showCardKey) }
     }
 
     public static var namesFromCallWindow: Bool {

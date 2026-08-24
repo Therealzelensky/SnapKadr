@@ -18,9 +18,9 @@ enum StenoPrefsTests {
         expect(!prefs.contains("Писать видео окна звонка") && !prefs.contains("Record call window video"), "prefs copy has no video toggle")
         expect(prefs.contains("applyEnabledFromSettings"), "prefs stops detector")
         expect(prefs.contains("StenoSettings.recordShare"), "prefs share")
-        expect(prefs.contains("StenoSettings.showCard"), "prefs card")
+        expect(!prefs.contains("StenoSettings.showCard"), "prefs has no floating card toggle")
         expect(prefs.contains("Писать шару") || prefs.contains("Record screen share"), "share copy")
-        expect(prefs.contains("Показывать карточку") || prefs.contains("Show floating card"), "card copy")
+        expect(!prefs.contains("Показывать карточку") && !prefs.contains("Show floating card"), "no card copy")
         expect(
             prefs.contains("Яндекс Мессенджер") || prefs.contains("Yandex Messenger"),
             "prefs yandex messenger source"

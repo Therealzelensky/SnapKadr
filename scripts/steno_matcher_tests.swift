@@ -83,6 +83,39 @@ enum StenoMatcherTests {
         expect(StenoMatcher.match(safariSync, enabled: all) == nil, "bitrix chat tab is not a live call")
         expect(StenoMatcher.match(safariSync, enabled: [.zoom]) == nil, "bitrix safari disabled")
 
+        expect(
+            StenoBitrixCallState.isInCall(axLabels: [
+                "ВЕРНУТЬСЯ В ЗВОНОК", "BitrixGPT Follow-Up", "Ортобум — (23) Чат и звонки"
+            ]),
+            "bitrix ax return-to-call is in-call"
+        )
+        expect(
+            StenoBitrixCallState.isInCall(axLabels: [
+                "Return to call", "Mute", "Chat and Calls"
+            ]),
+            "bitrix ax english return-to-call"
+        )
+        expect(
+            !StenoBitrixCallState.isInCall(axLabels: [
+                "Звонок завершён (37 сек)", "Начат звонок №183", "Чат и звонки", "Микрофон"
+            ]),
+            "bitrix chat history is not in-call"
+        )
+        expect(
+            StenoBitrixCallState.pickWindowIndex(
+                want: "Ортобум — (23) Чат и звонки",
+                axTitles: ["Гекса — (16) Чат и звонки", "Ортобум — (24) Чат и звонки"]
+            ) == 1,
+            "bitrix ax pins the session portal, not the first chat tab"
+        )
+        expect(
+            StenoBitrixCallState.pickWindowIndex(
+                want: "Ортобум — (23) Чат и звонки",
+                axTitles: ["Гекса — (16) Чат и звонки", "ГорСтрой — прототипы"]
+            ) == nil,
+            "bitrix ax does not fall back to an unrelated chat tab"
+        )
+
         let safariCRM = StenoWindowSnapshot(
             windowID: 9,
             bundleID: "com.apple.Safari",
@@ -234,6 +267,24 @@ enum StenoMatcherTests {
                 "Video call", "Voice call", "Яндекс Мессенджер"
             ]),
             "ym menu call actions alone are not in-call"
+        )
+        expect(
+            !StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Завершить сеанс Дмитрий Зеленский", "Видеоповтор iPhone.app", "Яндекс Мессенджер"
+            ]),
+            "ym menubar recents are not in-call"
+        )
+        expect(
+            StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Открыть экран звонка", "Мальцева Елизавета Михайловна", "2 участника"
+            ]),
+            "ym ax open-call-screen banner"
+        )
+        expect(
+            StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Звонок в Яндекс Телемосте", "Яндекс Мессенджер"
+            ]),
+            "ym ax nested telemost webarea"
         )
 
         let ymBrowserCall = StenoWindowSnapshot(

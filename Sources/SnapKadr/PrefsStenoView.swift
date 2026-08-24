@@ -43,19 +43,6 @@ struct PrefsStenoView: View {
                         }
                         .toggleStyle(.switch)
                         .controlSize(.small)
-
-                        Toggle(isOn: Binding(
-                            get: { _ = revision; return StenoSettings.showCard },
-                            set: {
-                                StenoSettings.showCard = $0
-                                revision += 1
-                            }
-                        )) {
-                            Text(L10n.tr("Показывать карточку", "Show floating card"))
-                                .foregroundStyle(SuiteTheme.textPrimary)
-                        }
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
                     }
                 }
             }

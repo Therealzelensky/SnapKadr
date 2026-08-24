@@ -9,30 +9,32 @@ private func expect(_ c: @autoclosure () -> Bool, _ m: String) {
 enum StenoCardTests {
     static func main() {
         let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        let card = try! String(
-            contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoCardView.swift"),
-            encoding: .utf8
+        expect(
+            !FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("Sources/SnapKadr/StenoOverlayPanel.swift").path
+            ),
+            "floating overlay panel removed"
         )
-        expect(card.contains("struct StenoCardModel"), "card model")
-        expect(card.contains("struct StenoCardView"), "card view")
-        expect(card.contains("isRecording"), "rec flag")
-        expect(card.contains("shareActive"), "share flag")
-        expect(card.contains("shareFailed"), "share failed")
-        expect(card.contains("onStop"), "stop callback")
-        expect(card.contains("Идёт конспект") || card.contains("Noting the call"), "rec copy")
-        expect(card.contains("Шару не записали") || card.contains("Share not recorded"), "share fail copy")
+        expect(
+            !FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("Sources/SnapKadr/StenoCardView.swift").path
+            ),
+            "floating card view removed"
+        )
 
-        let panel = try! String(
-            contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoOverlayPanel.swift"),
+        let hud = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/SuiteNotchHUD.swift"),
             encoding: .utf8
         )
-        expect(panel.contains("final class StenoOverlayPanel"), "overlay panel")
-        expect(panel.contains("func show("), "show")
-        expect(panel.contains("func update("), "update")
-        expect(panel.contains("func reposition("), "reposition")
-        expect(panel.contains("func hide()"), "hide")
-        expect(panel.contains("sharingType = .none"), "private from framebuffer")
-        expect(panel.contains("anchorWindowID"), "anchor window")
+        expect(hud.contains("shareStatusLine"), "share copy lives on live activity")
+        expect(hud.contains("Шару не записали") || hud.contains("Share not recorded"), "share fail copy")
+        expect(hud.contains("updateStenoRecording"), "live activity updates share line")
+
+        let session = try! String(
+            contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoSessionController.swift"),
+            encoding: .utf8
+        )
+        expect(session.contains("Идёт конспект") || session.contains("Noting the call"), "rec copy")
 
         exit(failures == 0 ? 0 : 1)
     }

@@ -16,10 +16,12 @@ final class StenoSessionController: ObservableObject {
     private var sessionWindowID: UInt32?
     private var sessionPID: pid_t = 0
     private var sessionBundleID = ""
+    private var sessionTitle = ""
     private var hangupWatch: Timer?
     private var hangupTicks = 0
     private var hangupArmedAt: Date?
     private var endingSession = false
+    private var stopConfirmVisible = false
     private var sawCapture = false
     private var sleepObserver: NSObjectProtocol?
     private var pendingStenoFinish = false
@@ -43,7 +45,7 @@ final class StenoSessionController: ObservableObject {
                     self.clearPendingAccept(resetPrompted: true)
                     return
                 }
-                self.stopFromUser()
+                self.commitStop()
             }
         }
         KadrEngine.shared.onCaptureFinished = { [weak self] result in
@@ -122,6 +124,7 @@ final class StenoSessionController: ObservableObject {
             lastProjectURL = url
             pendingStenoFinish = true
             sessionWindowID = call.windowID
+            sessionTitle = call.title
             sessionSource = call.source
             shareStarted = false
             shareFailed = false
@@ -135,17 +138,7 @@ final class StenoSessionController: ObservableObject {
             isSessionActive = true
             hangupTicks = 0
             startHangupWatch()
-            SuiteNotchHUD.shared.showStenoRecording(
-                title: L10n.tr("Идёт конспект", "Noting the call"),
-                onStop: { [weak self] in self?.stopFromUser() }
-            )
-            if StenoSettings.showCard {
-                StenoOverlayPanel.shared.show(
-                    model: .sessionStub,
-                    anchorWindowID: call.windowID,
-                    onStop: { [weak self] in self?.stopFromUser() }
-                )
-            }
+            presentRecordingHUD()
             let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
             do {
                 try StenoSidecarIO.write(sidecar, inProject: url)
@@ -170,14 +163,49 @@ final class StenoSessionController: ObservableObject {
     }
 
     func stopFromUser() {
+        requestStopConfirm(hangup: false)
+    }
+
+    private func requestStopConfirm(hangup: Bool) {
+        guard isSessionActive, !endingSession else { return }
+        if stopConfirmVisible { return }
+        stopConfirmVisible = true
+        SuiteNotchHUD.shared.showStenoStopConfirm(
+            hangup: hangup,
+            onConfirm: { [weak self] in self?.commitStop() },
+            onContinue: { [weak self] in self?.cancelStopConfirm() }
+        )
+    }
+
+    private func cancelStopConfirm() {
+        guard isSessionActive, !endingSession else { return }
+        stopConfirmVisible = false
+        hangupTicks = 0
+        hangupArmedAt = Date().addingTimeInterval(20)
+        presentRecordingHUD()
+    }
+
+    private func commitStop() {
         guard isSessionActive, !endingSession else { return }
         endingSession = true
+        stopConfirmVisible = false
         pipelineWindowID = sessionWindowID
         pipelinePID = sessionPID
         SuiteNotchHUD.shared.dismissStenoRecording()
-        StenoOverlayPanel.shared.hide()
         KadrEngine.shared.stopRecording()
         clearSession()
+    }
+
+    private func presentRecordingHUD() {
+        SuiteNotchHUD.shared.showStenoRecording(
+            title: L10n.tr("Идёт конспект", "Noting the call"),
+            detail: SuiteNotchHUD.shareStatusLine(
+                active: shareStarted && !shareFailed,
+                failed: shareFailed,
+                recordShare: StenoSettings.recordShare
+            ),
+            onStop: { [weak self] in self?.stopFromUser() }
+        )
     }
 
     func openLastProject() {
@@ -385,17 +413,20 @@ final class StenoSessionController: ObservableObject {
             clearSession()
             return
         }
+        if stopConfirmVisible { return }
         pollShareAndCard()
         if let armed = hangupArmedAt, Date() < armed { return }
         guard let windowID = sessionWindowID else { return }
-        let snaps = StenoWindowProbe.snapshots()
+        let snaps = StenoWindowProbe.pinSession(StenoWindowProbe.snapshots(), windowID: windowID)
         let enabled = StenoSettings.enabledSources
         if let replacement = StenoSessionEnd.replacementWindowID(
             sessionWindowID: windowID,
             sessionPID: sessionPID,
             sessionBundleID: sessionBundleID,
             snapshots: snaps,
-            enabled: enabled
+            enabled: enabled,
+            sessionTitle: sessionTitle,
+            sessionSource: sessionSource
         ) {
             sessionWindowID = replacement
             hangupTicks = 0
@@ -406,11 +437,13 @@ final class StenoSessionController: ObservableObject {
             sessionPID: sessionPID,
             sessionBundleID: sessionBundleID,
             snapshots: snaps,
-            enabled: enabled
+            enabled: enabled,
+            sessionTitle: sessionTitle,
+            sessionSource: sessionSource
         ) {
             hangupTicks += 1
             if hangupTicks >= 3 {
-                endSessionBecauseCallEnded()
+                requestStopConfirm(hangup: true)
             }
         } else {
             hangupTicks = 0
@@ -419,9 +452,6 @@ final class StenoSessionController: ObservableObject {
 
     private func pollShareAndCard() {
         guard let windowID = sessionWindowID else { return }
-        if StenoSettings.showCard {
-            StenoOverlayPanel.shared.reposition(anchorWindowID: windowID)
-        }
         if StenoSettings.recordShare,
            !shareStarted,
            !shareFailed,
@@ -451,39 +481,28 @@ final class StenoSessionController: ObservableObject {
                     case .failure:
                         self.shareFailed = true
                     }
-                    self.refreshCard()
+                    self.refreshLiveActivity()
                 }
             }
         }
-        refreshCard()
+        refreshLiveActivity()
     }
 
-    private func refreshCard() {
-        guard StenoSettings.showCard, isSessionActive else { return }
-        let model = StenoCardModel(
-            isRecording: true,
-            shareActive: shareStarted && !shareFailed,
-            shareFailed: shareFailed,
-            speakerLabel: "—",
-            thesisPreview: ""
+    private func refreshLiveActivity() {
+        guard isSessionActive, !stopConfirmVisible else { return }
+        SuiteNotchHUD.shared.updateStenoRecording(
+            detail: SuiteNotchHUD.shareStatusLine(
+                active: shareStarted && !shareFailed,
+                failed: shareFailed,
+                recordShare: StenoSettings.recordShare
+            )
         )
-        StenoOverlayPanel.shared.update(model: model)
-    }
-
-    private func endSessionBecauseCallEnded() {
-        endingSession = true
-        pipelineWindowID = sessionWindowID
-        pipelinePID = sessionPID
-        StenoOverlayPanel.shared.hide()
-        KadrEngine.shared.stopRecording()
-        clearSession()
     }
 
     private func clearSession() {
         hangupWatch?.invalidate()
         hangupWatch = nil
         SuiteNotchHUD.shared.dismissStenoRecording()
-        StenoOverlayPanel.shared.hide()
         if let url = sessionProjectURL {
             lastProjectURL = url
         }
@@ -491,6 +510,7 @@ final class StenoSessionController: ObservableObject {
         sessionWindowID = nil
         sessionPID = 0
         sessionBundleID = ""
+        sessionTitle = ""
         sessionSource = nil
         shareStarted = false
         shareFailed = false
@@ -499,6 +519,7 @@ final class StenoSessionController: ObservableObject {
         hangupTicks = 0
         sawCapture = false
         endingSession = false
+        stopConfirmVisible = false
         hangupArmedAt = nil
     }
 }

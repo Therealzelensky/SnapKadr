@@ -14,6 +14,9 @@ enum StenoProbeTests {
             encoding: .utf8
         )
         expect(probe.contains("matchingPIDs"), "pid filter")
+        expect(probe.contains("optionIncludingWindow"), "can pin a window off-screen")
+        expect(probe.contains("func snapshot(windowID"), "lookup by session window id")
+        expect(probe.contains("func pinSession"), "merge session window into hangup snapshots")
 
         let det = try! String(
             contentsOf: root.appendingPathComponent("Sources/StenoKit/StenoDetector.swift"),

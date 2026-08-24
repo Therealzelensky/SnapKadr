@@ -29,10 +29,15 @@ public enum StenoMatcher {
             }
             return StenoSource.isBrowser(bundle) && containsAny(haystack, source.titleNeedles)
         case .bitrixSync:
-            guard containsAny(haystack, source.titleNeedles) else { return false }
-            if bundle.lowercased().contains("bitrix") { return true }
-            guard StenoSource.isBrowser(bundle) else { return false }
-            return haystack.contains("bitrix24") || haystack.contains("битрикс24")
+            let looksLikeBitrix = bundle.lowercased().contains("bitrix")
+                || haystack.contains("bitrix24")
+                || haystack.contains("битрикс24")
+                || haystack.contains("чат и звонки")
+                || haystack.contains("chat and calls")
+            guard looksLikeBitrix else { return false }
+            if containsAny(haystack, source.titleNeedles) { return true }
+            // Live Sync keeps the IM tab title; in-call chrome is in AX of that window.
+            return StenoBitrixCallState.isInCall(pid: snap.ownerPID, windowTitle: snap.title)
         case .yandexMessenger:
             // Native Electron: window title stays «Яндекс Мессенджер» — require in-call AX.
             if bundle == "ru.yandex.yamb" || bundle.hasSuffix(".yamb") {
