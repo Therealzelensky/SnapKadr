@@ -16,9 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         KadrEngine.shared.prepare()
         SuiteHotkeyMonitor.shared.start()
         StenoSessionController.shared.start()
-        ProjectCloudStore.shared.presenter = SuiteNotchHUD.shared
+        StenoCloudSync.shared.presenter = StenoCloudHUDPresenter.shared
         Task.detached(priority: .utility) {
-            await ProjectCloudStore.shared.retryPendingOnLaunch()
+            await StenoCloudSync.shared.retryPendingOnLaunch()
         }
 
         NSApp.servicesProvider = self

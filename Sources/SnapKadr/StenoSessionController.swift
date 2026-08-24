@@ -324,7 +324,7 @@ final class StenoSessionController: ObservableObject {
         }
 
         Task.detached(priority: .utility) {
-            await ProjectCloudStore.shared.handlePostSession(projectURL: projectURL)
+            await StenoCloudSync.shared.handlePostSession(projectURL: projectURL)
         }
     }
 

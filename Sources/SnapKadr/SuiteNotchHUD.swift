@@ -3,7 +3,7 @@ import NotchHUDKit
 
 /// Thin NotchHUDKit wrapper for suite notification tests (not a Snap NotchHUD copy).
 @MainActor
-final class SuiteNotchHUD: ProjectCloudStorePresenting {
+final class SuiteNotchHUD {
     static let shared = SuiteNotchHUD()
     private let shell = NotchHUDShell()
     private let promptShell = NotchHUDShell(height: 56, ignoresMouseEvents: false)
