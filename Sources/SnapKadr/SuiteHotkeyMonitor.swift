@@ -113,7 +113,17 @@ final class SuiteHotkeyMonitor: ObservableObject {
             else { return }
             Task { @MainActor in self?.refreshCoexistence() }
         }
-        workspaceObs = [launch, terminate]
+        // Carbon RegisterEventHotKey often stops delivering after sleep until re-registered.
+        let wake = nc.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshCoexistence()
+            }
+        }
+        workspaceObs = [launch, terminate, wake]
     }
 
     private static func dispatch(_ action: HotkeyMonitor.Action) {
