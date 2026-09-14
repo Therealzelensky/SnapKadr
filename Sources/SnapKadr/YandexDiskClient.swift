@@ -22,6 +22,19 @@ enum YandexDiskOperation {
     }
 }
 
+/// Pure rules for resume / async op waits (unit-tested).
+enum YandexDiskUploadPolicy {
+    /// Large package MOVE/DELETE often exceeds 30s on Disk.
+    static let operationTimeout: TimeInterval = 600
+    static let operationPollNanos: UInt64 = 800_000_000
+
+    /// Skip PUT when a complete remote object already matches local bytes.
+    static func shouldSkipUpload(localSize: Int64, remoteSize: Int64?) -> Bool {
+        guard let remoteSize, remoteSize >= 0 else { return false }
+        return remoteSize == localSize && localSize > 0
+    }
+}
+
 enum YandexDiskPath {
     static let appFolderName = "SnapKadr"
     static let appRoot = "disk:/SnapKadr"
@@ -106,32 +119,54 @@ public final class YandexDiskClient: StenoCloudClient {
         let finalRoot = YandexDiskPath.remoteFolder(prefix: prefix, project: projectName)
         let tempRoot = YandexDiskPath.tempPath(forFinal: finalRoot)
 
+        StenoCloudLog.log("Yandex upload start \(projectName) → \(tempRoot)")
+
         try await ensureFolder(path: tempRoot, token: token, recursive: true)
 
         let fm = FileManager.default
         guard let enumerator = fm.enumerator(
             at: localProjectURL,
-            includingPropertiesForKeys: [.isDirectoryKey],
+            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
             options: [.skipsHiddenFiles]
         ) else {
             throw StenoCloudError.network("cannot enumerate package")
         }
 
+        var uploaded = 0
+        var skipped = 0
+        var bytes: Int64 = 0
+
         while let item = enumerator.nextObject() as? URL {
             if cancelled { throw StenoCloudError.cancelled }
-            let vals = try item.resourceValues(forKeys: [.isDirectoryKey])
+            let vals = try item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
             let rel = StenoCloudPackage.relativePath(of: item, inside: localProjectURL)
             guard !rel.isEmpty else { continue }
             let remotePath = tempRoot + "/" + rel
             if vals.isDirectory == true {
                 try await ensureFolder(path: remotePath, token: token, recursive: false)
             } else {
+                let localSize = Int64(vals.fileSize ?? 0)
+                let remoteSize = try await remoteFileSize(path: remotePath, token: token)
+                if YandexDiskUploadPolicy.shouldSkipUpload(localSize: localSize, remoteSize: remoteSize) {
+                    skipped += 1
+                    bytes += localSize
+                    StenoCloudLog.log("Yandex skip \(rel) (\(localSize) B, already on Disk)")
+                    continue
+                }
+                StenoCloudLog.log("Yandex PUT \(rel) (\(localSize) B)")
                 try await uploadFile(local: item, remotePath: remotePath, token: token)
+                uploaded += 1
+                bytes += localSize
             }
         }
 
+        StenoCloudLog.log(
+            "Yandex files done \(projectName) uploaded=\(uploaded) skipped=\(skipped) bytes=\(bytes); MOVE → \(finalRoot)"
+        )
+
         try? await deletePath(finalRoot, token: token)
         try await movePath(from: tempRoot, to: finalRoot, token: token)
+        StenoCloudLog.log("Yandex upload OK \(projectName)")
     }
 
     public func cancel() {
@@ -167,6 +202,32 @@ public final class YandexDiskClient: StenoCloudClient {
         }
     }
 
+    /// `nil` if missing / not a file.
+    private func remoteFileSize(path: String, token: String) async throws -> Int64? {
+        var components = URLComponents(string: "https://cloud-api.yandex.net/v1/disk/resources")!
+        components.queryItems = [
+            URLQueryItem(name: "path", value: path),
+            URLQueryItem(name: "fields", value: "type,size")
+        ]
+        var req = URLRequest(url: components.url!)
+        req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse {
+            if http.statusCode == 404 { return nil }
+            if http.statusCode == 401 || http.statusCode == 403 {
+                throw StenoCloudError.authRequired
+            }
+            guard (200..<300).contains(http.statusCode) else { return nil }
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              (json["type"] as? String) == "file"
+        else { return nil }
+        if let n = json["size"] as? Int64 { return n }
+        if let n = json["size"] as? Int { return Int64(n) }
+        if let n = json["size"] as? NSNumber { return n.int64Value }
+        return nil
+    }
+
     private func uploadFile(local: URL, remotePath: String, token: String) async throws {
         var components = URLComponents(string: "https://cloud-api.yandex.net/v1/disk/resources/upload")!
         components.queryItems = [
@@ -183,12 +244,11 @@ public final class YandexDiskClient: StenoCloudClient {
         else {
             throw StenoCloudError.network("missing upload href")
         }
-        let body = try Data(contentsOf: local)
+        // Stream from disk — packages often include 40–300 MB media.
         var put = URLRequest(url: uploadURL)
         put.httpMethod = "PUT"
-        put.httpBody = body
         put.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        let (_, putResp) = try await session.data(for: put)
+        let (_, putResp) = try await session.upload(for: put, fromFile: local)
         try throwIfNeeded(putResp)
     }
 
@@ -205,7 +265,7 @@ public final class YandexDiskClient: StenoCloudClient {
         if let http = response as? HTTPURLResponse {
             if http.statusCode == 204 || http.statusCode == 404 { return }
             if http.statusCode == 202 {
-                try await waitForOperation(data: data, token: token)
+                try await waitForOperation(data: data, token: token, label: "DELETE \(path)")
                 return
             }
         }
@@ -223,16 +283,23 @@ public final class YandexDiskClient: StenoCloudClient {
         req.httpMethod = "POST"
         req.setValue("OAuth \(token)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode == 201 {
+            return
+        }
         if let http = response as? HTTPURLResponse, http.statusCode == 202 {
-            try await waitForOperation(data: data, token: token)
+            try await waitForOperation(data: data, token: token, label: "MOVE \(from) → \(to)")
             return
         }
         try throwIfNeeded(response)
     }
 
-    private func waitForOperation(data: Data, token: String) async throws {
-        guard let url = YandexDiskOperation.href(statusCode: 202, data: data) else { return }
-        let deadline = Date().addingTimeInterval(30)
+    private func waitForOperation(data: Data, token: String, label: String) async throws {
+        guard let url = YandexDiskOperation.href(statusCode: 202, data: data) else {
+            StenoCloudLog.log("Yandex \(label): 202 without href — treating as done")
+            return
+        }
+        let deadline = Date().addingTimeInterval(YandexDiskUploadPolicy.operationTimeout)
+        StenoCloudLog.log("Yandex wait \(label) up to \(Int(YandexDiskUploadPolicy.operationTimeout))s")
         while Date() < deadline {
             if cancelled { throw StenoCloudError.cancelled }
             var req = URLRequest(url: url)
@@ -241,13 +308,16 @@ public final class YandexDiskClient: StenoCloudClient {
             try throwIfNeeded(response)
             switch YandexDiskOperation.isFinished(body) {
             case true:
+                StenoCloudLog.log("Yandex \(label) finished")
                 return
             case false:
+                StenoCloudLog.log("Yandex \(label) failed on Disk")
                 throw StenoCloudError.network("Yandex Disk operation failed")
             case nil:
-                try await Task.sleep(nanoseconds: 400_000_000)
+                try await Task.sleep(nanoseconds: YandexDiskUploadPolicy.operationPollNanos)
             }
         }
+        StenoCloudLog.log("Yandex \(label) timed out after \(Int(YandexDiskUploadPolicy.operationTimeout))s")
         throw StenoCloudError.network("Yandex Disk operation timed out")
     }
 
@@ -259,6 +329,7 @@ public final class YandexDiskClient: StenoCloudClient {
             throw StenoCloudError.authRequired
         }
         guard (200..<300).contains(http.statusCode) else {
+            StenoCloudLog.log("Yandex HTTP \(http.statusCode)")
             throw StenoCloudError.server(status: http.statusCode, message: "Yandex Disk")
         }
     }

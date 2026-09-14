@@ -1,6 +1,7 @@
 // swiftc -parse-as-library scripts/steno_w4_l10n_stub.swift \
 //   Sources/SnapKadr/StenoCloudSettings.swift Sources/SnapKadr/StenoCloudKeychain.swift \
-//   Sources/SnapKadr/StenoCloudClient.swift Sources/SnapKadr/YandexOAuthSession.swift \
+//   Sources/SnapKadr/StenoCloudClient.swift Sources/SnapKadr/StenoCloudLog.swift \
+//   Sources/SnapKadr/YandexOAuthSession.swift \
 //   Sources/SnapKadr/YandexDiskClient.swift scripts/steno_w4_yandex_tests.swift \
 //   -framework Security -framework AuthenticationServices -framework AppKit \
 //   -o /tmp/steno_w4_yandex && /tmp/steno_w4_yandex
@@ -47,6 +48,21 @@ enum StenoW4YandexTests {
         expect(YandexDiskOperation.isFinished(Data(#"{"status":"in-progress"}"#.utf8)) == nil, "in-progress keeps polling")
         expect(YandexDiskOperation.isFinished(Data(#"{"status":"failed"}"#.utf8)) == false, "failed finished")
         expect(client.contains("waitForOperation"), "upload waits 202")
+        expect(client.contains("YandexDiskUploadPolicy"), "timeout/resume policy")
+        expect(client.contains("upload(for:"), "streams upload from file")
+        expect(YandexDiskUploadPolicy.operationTimeout >= 120, "MOVE wait ≥ 2 min")
+        expect(
+            YandexDiskUploadPolicy.shouldSkipUpload(localSize: 100, remoteSize: 100),
+            "skip when sizes match"
+        )
+        expect(
+            !YandexDiskUploadPolicy.shouldSkipUpload(localSize: 100, remoteSize: 50),
+            "re-upload partial remote"
+        )
+        expect(
+            !YandexDiskUploadPolicy.shouldSkipUpload(localSize: 100, remoteSize: nil),
+            "upload when remote missing"
+        )
         exit(failures == 0 ? 0 : 1)
     }
 }

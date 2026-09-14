@@ -127,9 +127,12 @@ public final class StenoCloudSync: @unchecked Sendable {
                 if stoppedForAuth { break }
                 let url = URL(fileURLWithPath: item.projectPath, isDirectory: true)
                 do {
+                    StenoCloudLog.log("Cloud drain \(destination.rawValue) \(url.lastPathComponent)")
                     try await client.uploadPackage(localProjectURL: url)
                     queue.markSuccess(projectURL: url, destination: destination)
+                    StenoCloudLog.log("Cloud OK \(destination.rawValue) \(url.lastPathComponent)")
                 } catch let error as StenoCloudError {
+                    StenoCloudLog.log("Cloud fail \(destination.rawValue) \(url.lastPathComponent): \(error)")
                     switch error {
                     case .authRequired:
                         stoppedForAuth = true
@@ -141,6 +144,7 @@ public final class StenoCloudSync: @unchecked Sendable {
                         sawDeferred = true
                     }
                 } catch {
+                    StenoCloudLog.log("Cloud fail \(destination.rawValue) \(url.lastPathComponent): \(error)")
                     queue.markFailure(projectURL: url, destination: destination)
                     sawDeferred = true
                 }
@@ -149,9 +153,12 @@ public final class StenoCloudSync: @unchecked Sendable {
 
         if let current, !stoppedForAuth {
             do {
+                StenoCloudLog.log("Cloud upload \(destination.rawValue) \(current.lastPathComponent)")
                 try await client.uploadPackage(localProjectURL: current)
                 queue.markSuccess(projectURL: current, destination: destination)
+                StenoCloudLog.log("Cloud OK \(destination.rawValue) \(current.lastPathComponent)")
             } catch let error as StenoCloudError {
+                StenoCloudLog.log("Cloud fail \(destination.rawValue) \(current.lastPathComponent): \(error)")
                 switch error {
                 case .authRequired:
                     _ = queue.enqueue(projectURL: current, destination: destination)
@@ -164,6 +171,7 @@ public final class StenoCloudSync: @unchecked Sendable {
                     sawDeferred = true
                 }
             } catch {
+                StenoCloudLog.log("Cloud fail \(destination.rawValue) \(current.lastPathComponent): \(error)")
                 _ = queue.enqueue(projectURL: current, destination: destination)
                 queue.markFailure(projectURL: current, destination: destination)
                 sawDeferred = true
