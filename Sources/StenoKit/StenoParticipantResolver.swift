@@ -15,7 +15,7 @@ public struct StenoNameHit: Equatable, Sendable {
 }
 
 public protocol StenoAXNameReading: Sendable {
-    func readNames(windowID: UInt32, pid: pid_t) -> [StenoNameHit]
+    func readNames(windowID: UInt32, pid: pid_t, windowTitle: String) -> [StenoNameHit]
 }
 
 public protocol StenoOCRNameReading: Sendable {
@@ -92,20 +92,22 @@ public enum StenoParticipantResolver {
         namesEnabled: Bool,
         windowID: UInt32?,
         pid: pid_t,
+        windowTitle: String = "",
         ax: StenoAXNameReading,
         ocr: StenoOCRNameReading
     ) -> [StenoParticipant] {
         guard namesEnabled, let windowID else { return [] }
-        let axHits = ax.readNames(windowID: windowID, pid: pid)
+        let axHits = ax.readNames(windowID: windowID, pid: pid, windowTitle: windowTitle)
         let ocrHits = ocr.readNames(windowID: windowID)
         return mergeNames(ax: axHits, ocr: ocrHits)
     }
 
-    static func nameHits(from labels: [String], source: StenoParticipantSource) -> [StenoNameHit] {
+    public static func nameHits(from labels: [String], source: StenoParticipantSource) -> [StenoNameHit] {
         var seen: Set<String> = []
         var hits: [StenoNameHit] = []
         for label in labels {
             let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\u{00a0}", with: " ")
             guard looksLikeName(trimmed) else { continue }
             let key = trimmed.localizedLowercase
             guard seen.insert(key).inserted else { continue }
@@ -114,31 +116,104 @@ public enum StenoParticipantResolver {
         return hits
     }
 
-    static func looksLikeName(_ text: String) -> Bool {
-        guard (2...40).contains(text.count) else { return false }
-        let lower = text.localizedLowercase
-        let blocked = [
-            "участники", "participants", "демонстрация", "screen share",
-            "mute", "unmute", "leave", "chat", "чат", "stop", "стоп",
-            "выйти", "share", "unmute"
+    public static func looksLikeName(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        guard (3...48).contains(trimmed.count) else { return false }
+        if trimmed.rangeOfCharacter(from: .decimalDigits) != nil { return false }
+        let bannedChars = CharacterSet(charactersIn: "—–·•|/\\[](){}<>@#$%^*=+")
+        if trimmed.unicodeScalars.contains(where: { bannedChars.contains($0) }) { return false }
+
+        let words = trimmed.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        // Real call tiles are «Имя Фамилия» (2–4 tokens). Single tokens are almost always chrome.
+        guard (2...4).contains(words.count) else { return false }
+
+        let nameToken = #"^[A-ZА-ЯЁ][A-Za-zА-Яа-яЁё\-']+$"#
+        for word in words {
+            guard word.range(of: nameToken, options: .regularExpression) != nil else { return false }
+            // ALL-CAPS nav labels (CRM, etc.)
+            if word.count > 3, word.uppercased() == word, word.lowercased() != word { return false }
+        }
+
+        let lower = words.map { $0.localizedLowercase }.joined(separator: " ")
+        let blockedTokens: Set<String> = [
+            "меню", "битрикс", "портал", "лента", "почта", "диск", "группы",
+            "сотрудники", "уведомления", "пригласить", "тариф", "помощь", "профиль",
+            "поиск", "настройки", "задачи", "проекты", "каналы", "чаты", "чат",
+            "мессенджер", "messenger", "yandex", "bitrixgpt", "разделу", "перейти",
+            "главное", "совместная", "работа", "обучение", "тестирование",
+            "автоматизация", "контакт", "центр", "показать", "новые", "новая",
+            "вкладка", "вкладки", "история", "загрузки", "поделиться", "напечатать",
+            "перевод", "доступен", "safari", "finder", "яндекс", "телемост",
+            "telemost", "zoom", "telegram", "meet", "google", "apple", "localhost",
+            "superpowers", "brainstorming", "server", "hub", "traffic", "releases",
+            "метрик", "power", "власть", "ночном", "городе", "личный", "обзор",
+            "завершён", "завершен", "отвечает", "ответил", "участники", "participants",
+            "демонстрация", "микрофон", "камера", "запись", "выйти", "leave",
+            "window", "edit", "help", "services", "activity", "monitor",
         ]
-        if blocked.contains(where: { lower.contains($0) }) { return false }
-        return text.rangeOfCharacter(from: .letters) != nil
+        if words.contains(where: { blockedTokens.contains($0.localizedLowercase) }) { return false }
+        if blockedTokens.contains(where: { lower.contains($0) && $0.count > 4 }) {
+            // only apply multi-char contains for phrases that aren't substrings of names
+            let phraseBlocks = [
+                "не отвечает", "звонок заверш", "главное меню", "чат и звонки",
+                "новых сообщ", "в finder", "bitrix24", "яндекс мессенджер",
+                "яндекс телемост", "screen share", "google meet",
+            ]
+            if phraseBlocks.contains(where: { lower.contains($0) }) { return false }
+        }
+
+        return true
     }
 }
 
 public struct StenoLiveAXNameReader: StenoAXNameReading {
     public init() {}
 
-    public func readNames(windowID: UInt32, pid: pid_t) -> [StenoNameHit] {
+    public func readNames(windowID: UInt32, pid: pid_t, windowTitle: String) -> [StenoNameHit] {
         let app = AXUIElementCreateApplication(pid)
         var labels: [String] = []
-        Self.collect(from: app, depth: 0, maxDepth: 8, into: &labels)
+        // Menubar is full of Edit/Window/Finder chrome — walk call windows only.
+        if let windows = copyAttr(app, kAXWindowsAttribute as String) as? [AXUIElement], !windows.isEmpty {
+            let want = normalize(windowTitle)
+            let matched: [AXUIElement]
+            if want.isEmpty {
+                matched = windows
+            } else {
+                let exact = windows.filter { normalize(stringAttr($0, kAXTitleAttribute as String) ?? "") == want }
+                if !exact.isEmpty {
+                    matched = exact
+                } else {
+                    // Title may drift (unread badge); keep windows that share a portal/prefix token.
+                    let token = want.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).prefix(2).joined(separator: " ")
+                    matched = windows.filter {
+                        let t = normalize(stringAttr($0, kAXTitleAttribute as String) ?? "")
+                        return !token.isEmpty && t.contains(token)
+                    }
+                }
+            }
+            for window in (matched.isEmpty ? windows : matched) {
+                collect(from: window, depth: 0, maxDepth: 14, into: &labels)
+            }
+        } else {
+            collect(from: app, depth: 0, maxDepth: 8, into: &labels)
+        }
         return StenoParticipantResolver.nameHits(from: labels, source: .ax)
     }
 
-    private static func collect(from el: AXUIElement, depth: Int, maxDepth: Int, into labels: inout [String]) {
+    private func normalize(_ s: String) -> String {
+        s.lowercased().replacingOccurrences(of: "\u{00a0}", with: " ")
+    }
+
+    private func collect(from el: AXUIElement, depth: Int, maxDepth: Int, into labels: inout [String]) {
         if depth > maxDepth { return }
+        if let role = stringAttr(el, kAXRoleAttribute as String),
+           role == (kAXMenuBarRole as String)
+            || role == (kAXMenuBarItemRole as String)
+            || role == (kAXMenuRole as String)
+            || role == (kAXMenuItemRole as String) {
+            return
+        }
         if let title = stringAttr(el, kAXTitleAttribute as String), !title.isEmpty {
             labels.append(title)
         }
@@ -149,19 +224,19 @@ public struct StenoLiveAXNameReader: StenoAXNameReading {
             labels.append(value)
         }
         guard let kids = copyAttr(el, kAXChildrenAttribute as String) as? [AXUIElement] else { return }
-        for kid in kids.prefix(50) {
+        for kid in kids.prefix(80) {
             collect(from: kid, depth: depth + 1, maxDepth: maxDepth, into: &labels)
         }
     }
 
-    private static func stringAttr(_ el: AXUIElement, _ name: String) -> String? {
+    private func stringAttr(_ el: AXUIElement, _ name: String) -> String? {
         guard let v = copyAttr(el, name) else { return nil }
         if let s = v as? String { return s }
         if let n = v as? NSNumber { return n.stringValue }
         return nil
     }
 
-    private static func copyAttr(_ el: AXUIElement, _ name: String) -> AnyObject? {
+    private func copyAttr(_ el: AXUIElement, _ name: String) -> AnyObject? {
         var value: AnyObject?
         let err = AXUIElementCopyAttributeValue(el, name as CFString, &value)
         return err == .success ? value : nil

@@ -21,6 +21,7 @@ enum StenoCaptureTests {
         expect(capture.contains("static func windowRecord(recordVideo: Bool)"), "no settings default on factory")
         expect(!capture.contains("StenoSettings.recordCallVideo"), "capture ignores settings video key")
         expect(capture.contains("activatesOwnerApp: false"), "does not steal focus")
+        expect(capture.contains("forcesSystemAudio: true"), "Steno always captures call audio")
 
         let session = try! String(
             contentsOf: root.appendingPathComponent("Sources/SnapKadr/StenoSessionController.swift"),

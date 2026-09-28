@@ -330,6 +330,7 @@ final class StenoSessionController: ObservableObject {
                 projectURL: projectURL,
                 windowID: windowID,
                 pid: pid,
+                windowTitle: "",
                 namesEnabled: StenoSettings.namesFromCallWindow,
                 separateSpeakers: StenoSettings.separateSpeakers
             ),

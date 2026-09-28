@@ -8,6 +8,7 @@ public struct StenoPipelineInput: Sendable {
     public var projectURL: URL
     public var windowID: UInt32?
     public var pid: pid_t
+    public var windowTitle: String
     public var namesEnabled: Bool
     public var separateSpeakers: Bool
 
@@ -15,12 +16,14 @@ public struct StenoPipelineInput: Sendable {
         projectURL: URL,
         windowID: UInt32?,
         pid: pid_t,
+        windowTitle: String = "",
         namesEnabled: Bool,
         separateSpeakers: Bool
     ) {
         self.projectURL = projectURL
         self.windowID = windowID
         self.pid = pid
+        self.windowTitle = windowTitle
         self.namesEnabled = namesEnabled
         self.separateSpeakers = separateSpeakers
     }
@@ -73,6 +76,22 @@ public final class StenoPostSessionPipeline: @unchecked Sendable {
             onStage?(stage)
         }
 
+        func persistParticipants() {
+            guard !participants.isEmpty else { return }
+            do {
+                var sidecar = try deps.loadSidecar()
+                sidecar.participants = participants
+                try deps.writeSidecar(sidecar)
+            } catch {
+                // best effort
+            }
+        }
+
+        var windowTitle = input.windowTitle
+        if windowTitle.isEmpty {
+            windowTitle = (try? deps.loadSidecar())?.windowTitle ?? ""
+        }
+
         emit(.ax)
         emit(.ocr)
         if input.namesEnabled {
@@ -80,6 +99,7 @@ public final class StenoPostSessionPipeline: @unchecked Sendable {
                 namesEnabled: true,
                 windowID: input.windowID,
                 pid: input.pid,
+                windowTitle: windowTitle,
                 ax: deps.ax,
                 ocr: deps.ocr
             )
@@ -88,9 +108,12 @@ public final class StenoPostSessionPipeline: @unchecked Sendable {
         emit(.speech)
         do {
             cues = try await deps.speech(input.projectURL)
+            cues = StenoTranscriptCleanup.clean(cues)
         } catch is CancellationError {
+            persistParticipants()
             return .speech
         } catch {
+            persistParticipants()
             return .speech
         }
 

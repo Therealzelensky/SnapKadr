@@ -6,7 +6,7 @@ private func expect(_ c: @autoclosure () -> Bool, _ m: String) {
 }
 
 struct FakeAX: StenoAXNameReading {
-    func readNames(windowID: UInt32, pid: pid_t) -> [StenoNameHit] { [] }
+    func readNames(windowID: UInt32, pid: pid_t, windowTitle: String) -> [StenoNameHit] { [] }
 }
 
 final class CountingOCR: StenoOCRNameReading {

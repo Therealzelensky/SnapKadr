@@ -29,7 +29,7 @@ enum StenoParticipantTests {
 
         struct FakeAX: StenoAXNameReading {
             var hits: [StenoNameHit]
-            func readNames(windowID: UInt32, pid: pid_t) -> [StenoNameHit] { hits }
+            func readNames(windowID: UInt32, pid: pid_t, windowTitle: String) -> [StenoNameHit] { hits }
         }
         final class FakeOCR: StenoOCRNameReading {
             var hits: [StenoNameHit]
@@ -66,6 +66,103 @@ enum StenoParticipantTests {
         )
         expect(noWindow.isEmpty, "missing window → empty (readers not useful)")
         expect(noWindowOCR.callCount == 0, "missing window → no OCR call")
+
+        expect(
+            !StenoParticipantResolver.looksLikeName("Yandex Messenger"),
+            "app title is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Яндекс Мессенджер — 2 новых сообщения"),
+            "messenger window chrome is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Показать «Cursor.app» в Finder"),
+            "finder reveal menu is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Cursor.app"),
+            "app bundle label is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Edit"),
+            "menu Edit is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Системные настройки…, 1 обновление"),
+            "system settings menu is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("crm.mcclinics.ru"),
+            "domain is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("O.T. Genasis-CoCo-kissvk.com.mp3"),
+            "filename is not a participant"
+        )
+        expect(
+            StenoParticipantResolver.looksLikeName("Мальцева Елизавета"),
+            "person full name is a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Аня"),
+            "single token is too ambiguous for participants"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Главное меню"),
+            "bitrix nav is not a participant"
+        )
+        expect(
+            !StenoParticipantResolver.looksLikeName("Дмитрий Зеленский не отвечает"),
+            "call status line is not a participant"
+        )
+        expect(
+            StenoParticipantResolver.nameHits(
+                from: [
+                    "Yandex Messenger",
+                    "Apple",
+                    "Edit",
+                    "Мальцева Елизавета",
+                    "Аня",
+                    "Cursor.app",
+                    "Завершить звонок"
+                ],
+                source: .ax
+            ).map(\.displayName) == ["Мальцева Елизавета"],
+            "menu chrome filtered; full names kept, single token dropped"
+        )
+
+        // Real Bitrix Sync AX dump: people buried under portal chrome.
+        let bitrixDump = [
+            "Перейти к разделу", "Главное меню", "Битрикс 24", "Лента", "CRM",
+            "Совместная работа", "Мессенджер", "BitrixGPT", "Почта",
+            "Задачи и Проекты, 25 новых", "Маруся Ремизова", "[Фото]",
+            "Дарья Чернова", "Звонок завершён (24 сек)", "Дмитрий Зеленский не отвечает",
+            "НЧ", "Надежда Прокурова", "21 авг", "Татьяна Леонова",
+            "Ольга Мошкова", "Полина Булганина", "Даниил Панфилов",
+            "Татьяна Кольчурина", "(25) Сделки", "Новая вкладка",
+            "Traffic · Therealzelensky/SnapKadr", "localhost:52531"
+        ]
+        let people = StenoParticipantResolver.nameHits(from: bitrixDump, source: .ax).map(\.displayName)
+        expect(
+            people == [
+                "Маруся Ремизова", "Дарья Чернова", "Надежда Прокурова",
+                "Татьяна Леонова", "Ольга Мошкова", "Полина Булганина",
+                "Даниил Панфилов", "Татьяна Кольчурина"
+            ],
+            "bitrix dump keeps only person full names"
+        )
+        expect(!people.contains("Главное меню"), "nav chrome not a participant")
+        expect(!people.contains("Дмитрий Зеленский не отвечает"), "status line not a participant")
+
+        let mappedPeople = StenoParticipantResolver.mapVoices(
+            speakers: ["1", "2", "3"],
+            names: StenoParticipantResolver.mergeNames(
+                ax: people.map { StenoNameHit(displayName: $0, source: .ax) },
+                ocr: []
+            )
+        )
+        expect(mappedPeople[0].displayName == "Маруся Ремизова" && mappedPeople[0].speakerId == "1", "voice 1 → first person")
+        expect(mappedPeople[1].displayName == "Дарья Чернова" && mappedPeople[1].speakerId == "2", "voice 2 → second person")
 
         exit(failures == 0 ? 0 : 1)
     }

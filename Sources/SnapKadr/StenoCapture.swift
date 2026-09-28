@@ -9,7 +9,8 @@ enum StenoCapture {
             presentsEditor: false,
             capturesVideo: recordVideo,
             activatesOwnerApp: false,
-            presentsAlerts: false
+            presentsAlerts: false,
+            forcesSystemAudio: true
         )
     }
 }
