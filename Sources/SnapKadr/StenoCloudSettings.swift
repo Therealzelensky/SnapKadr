@@ -4,6 +4,7 @@ public enum StenoCloudDestination: String, Codable, CaseIterable, Sendable {
     case webdav
     case s3
     case yandex
+    case hub
 }
 
 public enum StenoCloudSettings {
@@ -26,6 +27,11 @@ public enum StenoCloudSettings {
         static let yandexPathPrefix = "cloud.yandex.pathPrefix"
         /// Public OAuth client id (not a secret). Overrides Info.plist placeholder for local/beta builds.
         static let yandexOAuthClientID = "cloud.yandex.oauthClientID"
+        static let hubEnabled = "cloud.hub.enabled"
+        static let hubBaseURL = "cloud.hub.baseURL"
+        static let hubSessionCookie = "cloud.hub.sessionCookie"
+        static let hubOnlyWithAutoFocusProject = "cloud.hub.onlyWithAutoFocusProject"
+        static let hubManualProjectId = "cloud.hub.manualProjectId"
     }
 
     public static var autoUploadAfterSession: Bool {
@@ -110,6 +116,39 @@ public enum StenoCloudSettings {
         set { d.set(newValue, forKey: Key.yandexOAuthClientID) }
     }
 
+    public static var hubEnabled: Bool {
+        get { d.object(forKey: Key.hubEnabled) as? Bool ?? false }
+        set { d.set(newValue, forKey: Key.hubEnabled) }
+    }
+
+    public static var hubBaseURL: String {
+        get {
+            let raw = d.string(forKey: Key.hubBaseURL) ?? ""
+            let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? "https://ruserverhub.ru" : trimmed
+        }
+        set { d.set(newValue, forKey: Key.hubBaseURL) }
+    }
+
+    /// Полный Cookie header (например `hub_portal_session=…`), пока нет отдельного OAuth.
+    public static var hubSessionCookie: String {
+        get { d.string(forKey: Key.hubSessionCookie) ?? "" }
+        set { d.set(newValue, forKey: Key.hubSessionCookie) }
+    }
+
+    /// Если true — для Hub нужен проект из AutoFocus (или ручной id ниже).
+    /// По умолчанию false: SnapKadr сам по себе работает; AutoFocus — опциональный источник проекта.
+    public static var hubOnlyWithAutoFocusProject: Bool {
+        get { d.object(forKey: Key.hubOnlyWithAutoFocusProject) as? Bool ?? false }
+        set { d.set(newValue, forKey: Key.hubOnlyWithAutoFocusProject) }
+    }
+
+    /// Ручной ID проекта Hub (`gexa`, `mit`, `lab`…) — когда AutoFocus не установлен.
+    public static var hubManualProjectId: String {
+        get { d.string(forKey: Key.hubManualProjectId) ?? "" }
+        set { d.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: Key.hubManualProjectId) }
+    }
+
     public static func enabledDestinations() -> [StenoCloudDestination] {
         StenoCloudDestination.allCases.filter { isEnabled($0) }
     }
@@ -119,6 +158,7 @@ public enum StenoCloudSettings {
         case .webdav: return webdavEnabled
         case .s3: return s3Enabled
         case .yandex: return yandexEnabled
+        case .hub: return hubEnabled
         }
     }
 }

@@ -110,6 +110,11 @@ public final class StenoCloudSync: @unchecked Sendable {
         guard StenoCloudSettings.isEnabled(destination) else { return }
 
         guard let client = resolveClient(for: destination) else {
+            // Hub без проекта AutoFocus — не ошибка, просто пропуск.
+            if destination == .hub {
+                StenoCloudLog.log("Hub skip: клиент недоступен (нет проекта AutoFocus или выкл.)")
+                return
+            }
             if let current {
                 _ = queue.enqueue(projectURL: current, destination: destination)
                 queue.markFailure(projectURL: current, destination: destination)
@@ -137,7 +142,7 @@ public final class StenoCloudSync: @unchecked Sendable {
                     case .authRequired:
                         stoppedForAuth = true
                         await presentAuth(for: destination)
-                    case .cancelled:
+                    case .cancelled, .hubProjectMissing:
                         break
                     default:
                         queue.markFailure(projectURL: url, destination: destination)
@@ -163,7 +168,7 @@ public final class StenoCloudSync: @unchecked Sendable {
                 case .authRequired:
                     _ = queue.enqueue(projectURL: current, destination: destination)
                     await presentAuth(for: destination)
-                case .cancelled:
+                case .cancelled, .hubProjectMissing:
                     break
                 default:
                     _ = queue.enqueue(projectURL: current, destination: destination)
@@ -209,7 +214,31 @@ public final class StenoCloudSync: @unchecked Sendable {
             return makeS3Client()
         case .yandex:
             return makeYandexClient()
+        case .hub:
+            return makeHubClient()
         }
+    }
+
+    private static func makeHubClient() -> StenoCloudClient? {
+        let fromAF = AutoFocusCallContext.load()?.resolvedHubProjectId
+        let manual = StenoCloudSettings.hubManualProjectId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolved = (fromAF?.isEmpty == false ? fromAF : nil)
+            ?? (manual.isEmpty ? nil : manual)
+
+        if StenoCloudSettings.hubOnlyWithAutoFocusProject {
+            guard let id = fromAF, !id.isEmpty else {
+                StenoCloudLog.log("Hub skip: нужен проект AutoFocus (onlyWithAutoFocusProject=true)")
+                return nil
+            }
+            return HubPortalClient(projectIdOverride: id)
+        }
+
+        // Обычный режим: AutoFocus если есть, иначе ручной id; без обоих — клиент всё равно
+        // создаётся и upload мягко пропустит через hubProjectMissing.
+        if let id = resolved {
+            return HubPortalClient(projectIdOverride: id)
+        }
+        return HubPortalClient()
     }
 
     private static func makeWebDAVClient() -> StenoCloudClient? {

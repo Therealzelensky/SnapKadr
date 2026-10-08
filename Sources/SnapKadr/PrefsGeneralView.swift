@@ -127,6 +127,11 @@ struct StenoCloudPrefsSection: View {
     @State private var yandexPathPrefix = StenoCloudSettings.yandexPathPrefix
     @State private var yandexOAuthClientID = StenoCloudSettings.yandexOAuthClientID
     @State private var yandexOAuthClientSecret = ""
+    @State private var hubEnabled = StenoCloudSettings.hubEnabled
+    @State private var hubBaseURL = StenoCloudSettings.hubBaseURL
+    @State private var hubSessionCookie = StenoCloudSettings.hubSessionCookie
+    @State private var hubOnlyWithProject = StenoCloudSettings.hubOnlyWithAutoFocusProject
+    @State private var hubManualProjectId = StenoCloudSettings.hubManualProjectId
     @State private var queueItems: [StenoCloudQueueItem] = []
     @State private var statusMessage = ""
     @State private var isBusy = false
@@ -145,6 +150,8 @@ struct StenoCloudPrefsSection: View {
                     s3Block
                     Divider().opacity(0.35)
                     yandexBlock
+                    Divider().opacity(0.35)
+                    hubBlock
                     Divider().opacity(0.35)
                     cloudToggle(
                         L10n.tr("Автозагрузка после сессии", "Auto-upload after session"),
@@ -304,6 +311,59 @@ struct StenoCloudPrefsSection: View {
                     Spacer(minLength: 0)
                 }
                 testButton(.yandex)
+            }
+        }
+    }
+
+    private var hubBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            cloudToggle(L10n.tr("Server Hub (папка проекта)", "Server Hub (project folder)"), $hubEnabled) {
+                StenoCloudSettings.hubEnabled = $0
+            }
+            if hubEnabled {
+                cloudField(L10n.tr("URL Hub", "Hub URL"), $hubBaseURL) {
+                    StenoCloudSettings.hubBaseURL = $0
+                }
+                SecureField(
+                    L10n.tr("Cookie сессии (hub_portal_session=…)", "Session cookie (hub_portal_session=…)"),
+                    text: $hubSessionCookie
+                )
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: hubSessionCookie) { _, v in
+                    StenoCloudSettings.hubSessionCookie = v
+                }
+                cloudField(
+                    L10n.tr("ID проекта Hub (без AutoFocus)", "Hub project id (without AutoFocus)"),
+                    $hubManualProjectId
+                ) {
+                    StenoCloudSettings.hubManualProjectId = $0
+                }
+                cloudToggle(
+                    L10n.tr(
+                        "Только проект из AutoFocus (игнор. ручной ID)",
+                        "Only AutoFocus project (ignore manual id)"
+                    ),
+                    $hubOnlyWithProject
+                ) {
+                    StenoCloudSettings.hubOnlyWithAutoFocusProject = $0
+                }
+                Text(L10n.tr(
+                    "SnapKadr работает сам: Яндекс/WebDAV/локально без AutoFocus. Hub — опционально: AutoFocus подставляет проект на созвоне, либо укажите ID вручную (gexa, mit, lab…).",
+                    "SnapKadr works alone: Yandex/WebDAV/local without AutoFocus. Hub is optional: AutoFocus supplies the project on calls, or set an id manually (gexa, mit, lab…)."
+                ))
+                .font(.system(size: 11))
+                .foregroundStyle(SuiteTheme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                if AutoFocusCallContext.isAutoFocusContextAvailable {
+                    Text(L10n.tr("AutoFocus: контекст найден", "AutoFocus: context file found"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(SuiteTheme.textSecondary)
+                } else {
+                    Text(L10n.tr("AutoFocus не обнаружен — используйте ручной ID или отключите Hub", "AutoFocus not found — use manual id or disable Hub"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(SuiteTheme.textTertiary)
+                }
+                testButton(.hub)
             }
         }
     }

@@ -29,6 +29,9 @@ final class StenoSessionController: ObservableObject {
     private var sessionSource: StenoSource?
     private var shareStarted = false
     private var shareFailed = false
+    /// Bitrix draws the shared screen inside the call window, so there is no second window to attach.
+    private var shareEmbedded = false
+    private var sharePollTick = 0
     private var pipelineWindowID: UInt32?
     private var pipelinePID: pid_t = 0
     private var postSessionTask: Task<Void, Never>?
@@ -128,6 +131,8 @@ final class StenoSessionController: ObservableObject {
             sessionSource = call.source
             shareStarted = false
             shareFailed = false
+            shareEmbedded = false
+            sharePollTick = 0
             if let snap = StenoWindowProbe.snapshots().first(where: { $0.windowID == call.windowID }) {
                 sessionPID = snap.ownerPID
                 sessionBundleID = snap.bundleID
@@ -200,8 +205,8 @@ final class StenoSessionController: ObservableObject {
         SuiteNotchHUD.shared.showStenoRecording(
             title: L10n.tr("Идёт конспект", "Noting the call"),
             detail: SuiteNotchHUD.shareStatusLine(
-                active: shareStarted && !shareFailed,
-                failed: shareFailed,
+                active: (shareStarted && !shareFailed) || shareEmbedded,
+                failed: shareFailed && !shareEmbedded,
                 recordShare: StenoSettings.recordShare
             ),
             onStop: { [weak self] in self?.stopFromUser() }
@@ -486,15 +491,30 @@ final class StenoSessionController: ObservableObject {
                 }
             }
         }
+        refreshEmbeddedShare()
         refreshLiveActivity()
+    }
+
+    /// Bitrix keeps the shared picture in the call window that is already recording.
+    private func refreshEmbeddedShare() {
+        guard StenoSettings.recordShare, sessionSource == .bitrixSync, sessionPID != 0 else {
+            shareEmbedded = false
+            return
+        }
+        sharePollTick += 1
+        guard sharePollTick % 2 == 0 else { return }
+        let embedded = StenoBitrixCallState.isSharing(pid: sessionPID, windowTitle: sessionTitle)
+        if embedded != shareEmbedded {
+            shareEmbedded = embedded
+        }
     }
 
     private func refreshLiveActivity() {
         guard isSessionActive, !stopConfirmVisible else { return }
         SuiteNotchHUD.shared.updateStenoRecording(
             detail: SuiteNotchHUD.shareStatusLine(
-                active: shareStarted && !shareFailed,
-                failed: shareFailed,
+                active: (shareStarted && !shareFailed) || shareEmbedded,
+                failed: shareFailed && !shareEmbedded,
                 recordShare: StenoSettings.recordShare
             )
         )
@@ -515,6 +535,8 @@ final class StenoSessionController: ObservableObject {
         sessionSource = nil
         shareStarted = false
         shareFailed = false
+        shareEmbedded = false
+        sharePollTick = 0
         isSessionActive = false
         promptedWindowID = nil
         hangupTicks = 0
