@@ -19,7 +19,10 @@ public final class StenoCloudHUDPresenter: StenoCloudPresenting {
     }
 
     public func presentAuthRequiredToast(for destination: StenoCloudDestination) {
-        _ = destination
+        if destination == .hub {
+            HubPortalLogin.shared.present()
+            return
+        }
         hud.showCloudAuthRequired()
     }
 }

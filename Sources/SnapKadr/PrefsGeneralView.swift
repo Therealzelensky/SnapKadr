@@ -325,13 +325,17 @@ struct StenoCloudPrefsSection: View {
                     StenoCloudSettings.hubBaseURL = $0
                 }
                 SecureField(
-                    L10n.tr("Cookie сессии (hub_portal_session=…)", "Session cookie (hub_portal_session=…)"),
+                    L10n.tr("Cookie сессии (HubPortal=…)", "Session cookie (HubPortal=…)"),
                     text: $hubSessionCookie
                 )
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: hubSessionCookie) { _, v in
                     StenoCloudSettings.hubSessionCookie = v
                 }
+                Button(L10n.tr("Войти в Hub", "Sign in to Hub")) {
+                    HubPortalLogin.shared.present()
+                }
+                .controlSize(.small)
                 cloudField(
                     L10n.tr("ID проекта Hub (без AutoFocus)", "Hub project id (without AutoFocus)"),
                     $hubManualProjectId

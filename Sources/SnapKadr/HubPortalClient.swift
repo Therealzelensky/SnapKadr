@@ -9,9 +9,18 @@ public final class HubPortalClient: StenoCloudClient {
     private var cancelled = false
     private let projectIdOverride: String?
 
-    public init(projectIdOverride: String? = nil, session: URLSession = .shared) {
+    /// Ответ приходит только после того, как портал дочитал всё тело.
+    /// Для видео созвона это минуты, дефолтные 60 с URLSession обрывают загрузку.
+    private static let uploadSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 60 * 60
+        config.timeoutIntervalForResource = 3 * 60 * 60
+        return URLSession(configuration: config)
+    }()
+
+    public init(projectIdOverride: String? = nil, session: URLSession? = nil) {
         self.projectIdOverride = projectIdOverride
-        self.session = session
+        self.session = session ?? Self.uploadSession
     }
 
     public func cancel() {
@@ -40,7 +49,7 @@ public final class HubPortalClient: StenoCloudClient {
         guard StenoCloudSettings.hubEnabled else { throw StenoCloudError.destinationDisabled }
         cancelled = false
 
-        let projectId = try resolveProjectId()
+        let projectId = try resolveProjectId(in: localProjectURL)
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: localProjectURL.path, isDirectory: &isDir),
               isDir.boolValue
@@ -53,35 +62,56 @@ public final class HubPortalClient: StenoCloudClient {
 
         StenoCloudLog.log("Hub upload → project=\(projectId) files=\(files.count) from \(localProjectURL.lastPathComponent)")
 
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var body = Data()
-        func append(_ s: String) { body.append(Data(s.utf8)) }
-
-        append("--\(boundary)\r\n")
-        append("Content-Disposition: form-data; name=\"id\"\r\n\r\n")
-        append("\(projectId)\r\n")
-
+        // По одному файлу: портал читает тело целиком, пачка из видео и микрофона
+        // не укладывается в лимит, а общий таймаут рвёт весь пакет.
         for file in files {
             if cancelled { throw StenoCloudError.cancelled }
-            let data = try Data(contentsOf: file.url)
-            let name = file.uploadName
-            let mime = file.mime
-            append("--\(boundary)\r\n")
-            append("Content-Disposition: form-data; name=\"files\"; filename=\"\(name)\"\r\n")
-            append("Content-Type: \(mime)\r\n\r\n")
-            body.append(data)
-            append("\r\n")
+            let size = (try? file.url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            if size > 512 * 1024 * 1024 {
+                throw StenoCloudError.network("файл \(file.uploadName) больше 512 МБ")
+            }
+            StenoCloudLog.log("Hub file \(file.uploadName) \(size) bytes")
+            try await post(file, projectId: projectId)
         }
-        append("--\(boundary)--\r\n")
+        StenoCloudLog.log("Hub upload OK project=\(projectId)")
+    }
+
+    private func post(_ file: UploadFile, projectId: String) async throws {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("hub-upload-\(UUID().uuidString).body")
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let headerText = "--\(boundary)\r\n"
+            + "Content-Disposition: form-data; name=\"id\"\r\n\r\n"
+            + "\(projectId)\r\n"
+            + "--\(boundary)\r\n"
+            + "Content-Disposition: form-data; name=\"files\"; filename=\"\(file.uploadName)\"\r\n"
+            + "Content-Type: \(file.mime)\r\n\r\n"
+        let header = Data(headerText.utf8)
+        let footer = Data("\r\n--\(boundary)--\r\n".utf8)
+        FileManager.default.createFile(atPath: temp.path, contents: nil)
+        let out = try FileHandle(forWritingTo: temp)
+        try out.write(contentsOf: header)
+        let input = try FileHandle(forReadingFrom: file.url)
+        while true {
+            if cancelled { throw StenoCloudError.cancelled }
+            let chunk = try input.read(upToCount: 1024 * 1024) ?? Data()
+            if chunk.isEmpty { break }
+            try out.write(contentsOf: chunk)
+        }
+        try input.close()
+        try out.write(contentsOf: footer)
+        try out.close()
 
         let base = try baseURL()
         var req = URLRequest(url: base.appendingPathComponent("portal-auth/api/external-projects/files/upload"))
         req.httpMethod = "POST"
+        req.timeoutInterval = 60 * 60
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        req.httpBody = body
         try applyAuth(to: &req)
 
-        let (respData, response) = try await session.data(for: req)
+        let (respData, response) = try await session.upload(for: req, fromFile: temp)
         guard let http = response as? HTTPURLResponse else {
             throw StenoCloudError.network("no response")
         }
@@ -92,7 +122,6 @@ public final class HubPortalClient: StenoCloudClient {
             let msg = String(data: respData, encoding: .utf8) ?? ""
             throw StenoCloudError.server(status: http.statusCode, message: String(msg.prefix(240)))
         }
-        StenoCloudLog.log("Hub upload OK project=\(projectId)")
     }
 
     // MARK: - Internals
@@ -103,20 +132,37 @@ public final class HubPortalClient: StenoCloudClient {
         var mime: String
     }
 
-    private func resolveProjectId() throws -> String {
+    private func resolveProjectId(in package: URL) throws -> String {
         if let projectIdOverride, !projectIdOverride.isEmpty {
             return projectIdOverride
         }
-        // 1) Живой контекст AutoFocus (если приложение установлено и идёт созвон с проектом)
+        // 1) Id, записанный в пакет пока звонок ещё шёл.
+        if let id = Self.packageHubProjectId(package) {
+            return id
+        }
+        // 2) Живой контекст, если выгрузка успела до конца созвона.
         if let ctx = AutoFocusCallContext.load(), let id = ctx.resolvedHubProjectId, !id.isEmpty {
             return id
         }
-        // 2) Ручной ID в настройках SnapKadr — работа без AutoFocus
+        if StenoCloudSettings.hubOnlyWithAutoFocusProject {
+            throw StenoCloudError.hubProjectMissing
+        }
+        // 3) Ручной ID — работа без AutoFocus.
         let manual = StenoCloudSettings.hubManualProjectId.trimmingCharacters(in: .whitespacesAndNewlines)
         if !manual.isEmpty {
             return manual
         }
         throw StenoCloudError.hubProjectMissing
+    }
+
+    private static func packageHubProjectId(_ package: URL) -> String? {
+        let url = package.appendingPathComponent("steno.json")
+        guard let data = try? Data(contentsOf: url),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let raw = obj["hubProjectId"] as? String
+        else { return nil }
+        let id = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return id.isEmpty ? nil : id
     }
 
     private func baseURL() throws -> URL {

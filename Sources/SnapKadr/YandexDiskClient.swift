@@ -73,14 +73,21 @@ public final class YandexDiskClient: StenoCloudClient {
     private let session: URLSession
     private var cancelled = false
 
+    private static let uploadSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 60 * 60
+        config.timeoutIntervalForResource = 3 * 60 * 60
+        return URLSession(configuration: config)
+    }()
+
     public init(
         pathPrefix: String = StenoCloudSettings.yandexPathPrefix,
         oauth: YandexOAuthSession = YandexOAuthSession(),
-        session: URLSession = .shared
+        session: URLSession? = nil
     ) {
         self.pathPrefix = pathPrefix
         self.oauth = oauth
-        self.session = session
+        self.session = session ?? Self.uploadSession
     }
 
     public func testConnection() async throws {
@@ -247,6 +254,7 @@ public final class YandexDiskClient: StenoCloudClient {
         // Stream from disk — packages often include 40–300 MB media.
         var put = URLRequest(url: uploadURL)
         put.httpMethod = "PUT"
+        put.timeoutInterval = 60 * 60
         put.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         let (_, putResp) = try await session.upload(for: put, fromFile: local)
         try throwIfNeeded(putResp)

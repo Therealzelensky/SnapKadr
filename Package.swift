@@ -41,7 +41,8 @@ let package = Package(
                 .linkedFramework("Carbon"),
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("AuthenticationServices"),
-                .linkedFramework("Security")
+                .linkedFramework("Security"),
+                .linkedFramework("WebKit")
             ]
         )
     ]

@@ -20,6 +20,7 @@ public final class StenoDetector: ObservableObject {
 
     private let probe: () -> [StenoWindowSnapshot]
     private var snooze = StenoSnoozeState()
+    private let mediaHold = CallMediaHold()
     private var timer: Timer?
     private var workspaceObservers: [NSObjectProtocol] = []
 
@@ -71,10 +72,14 @@ public final class StenoDetector: ObservableObject {
         let present = Set(snaps.map(\.windowID))
         snooze.reap(presentIDs: present)
         let enabled = StenoSettings.enabledSources
-        let found = snaps.first { snap in
-            !snooze.isSnoozed(snap.windowID) && StenoMatcher.match(snap, enabled: enabled) != nil
+        var foundCall: (snap: StenoWindowSnapshot, source: StenoSource)?
+        for snap in snaps where !snooze.isSnoozed(snap.windowID) {
+            if let source = StenoMatcher.match(snap, enabled: enabled, media: { self.mediaReady($0, $1) }) {
+                foundCall = (snap, source)
+                break
+            }
         }
-        if let found, let source = StenoMatcher.match(found, enabled: enabled) {
+        if let found = foundCall?.snap, let source = foundCall?.source {
             let next = StenoDetectedCall(source: source, windowID: found.windowID, title: found.title)
             if activeCall != next {
                 activeCall = next
@@ -82,6 +87,13 @@ public final class StenoDetector: ObservableObject {
         } else if activeCall != nil {
             activeCall = nil
         }
+    }
+
+    /// Интерфейс уже похож на звонок. Медиа-UDP должен продержаться две секунды.
+    private func mediaReady(_ snap: StenoWindowSnapshot, _ source: StenoSource) -> Bool {
+        guard snap.ownerPID > 0 else { return false }
+        let hit = CallSocketProbe.hasMedia(pid: snap.ownerPID, service: CallService(steno: source))
+        return mediaHold.confirm(key: "\(source.rawValue)#\(snap.ownerPID)", hit: hit)
     }
 
     deinit {

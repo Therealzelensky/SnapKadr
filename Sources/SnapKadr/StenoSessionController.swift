@@ -35,6 +35,8 @@ final class StenoSessionController: ObservableObject {
     private var pipelineWindowID: UInt32?
     private var pipelinePID: pid_t = 0
     private var postSessionTask: Task<Void, Never>?
+    /// Проект Hub, уже записанный в steno.json этой сессии.
+    private var latchedHubProjectId: String?
 
     private init() {
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
@@ -144,7 +146,13 @@ final class StenoSessionController: ObservableObject {
             hangupTicks = 0
             startHangupWatch()
             presentRecordingHUD()
-            let sidecar = StenoSidecar(source: call.source.rawValue, windowTitle: call.title, createdAt: Date())
+            let sidecar = StenoSidecar(
+                source: call.source.rawValue,
+                windowTitle: call.title,
+                createdAt: Date(),
+                hubProjectId: AutoFocusCallContext.load()?.resolvedHubProjectId
+            )
+            latchedHubProjectId = sidecar.hubProjectId
             do {
                 try StenoSidecarIO.write(sidecar, inProject: url)
             } catch {
@@ -415,6 +423,7 @@ final class StenoSessionController: ObservableObject {
         guard isSessionActive, !endingSession else { return }
         let capturing = KadrEngine.shared.isRecording
         if capturing { sawCapture = true }
+        latchHubProject()
         if sawCapture, !capturing {
             clearSession()
             return
@@ -544,5 +553,24 @@ final class StenoSessionController: ObservableObject {
         endingSession = false
         stopConfirmVisible = false
         hangupArmedAt = nil
+        latchedHubProjectId = nil
+    }
+
+    /// Пока идёт запись, AutoFocus может назначить проект позже старта.
+    /// Сохраняем id в пакет: после звонка контекст уже пустой.
+    private func latchHubProject() {
+        guard let project = sessionProjectURL else { return }
+        guard let ctx = AutoFocusCallContext.load(), ctx.active,
+              let id = ctx.resolvedHubProjectId, !id.isEmpty else { return }
+        if latchedHubProjectId == id { return }
+        do {
+            let file = StenoSidecarIO.jsonURL(inProject: project)
+            var sidecar = try StenoSidecarIO.decode(Data(contentsOf: file))
+            sidecar.hubProjectId = id
+            try StenoSidecarIO.write(sidecar, inProject: project)
+            latchedHubProjectId = id
+        } catch {
+            NSLog("Steno hub project latch failed: \(error.localizedDescription)")
+        }
     }
 }

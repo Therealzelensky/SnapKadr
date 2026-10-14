@@ -38,7 +38,12 @@ enum StenoSidecarTests {
             expect(round.participants.count == 1, "participants round-trip count")
             expect(round.participants[0].displayName == "Аня", "participant name")
             expect(round.participants[0].source == .merged, "participant source")
+            expect(round.hubProjectId == nil, "hub project defaults empty")
             expect(round.participants[0].speakerId == "1", "participant speakerId")
+            sidecar.hubProjectId = "lab"
+            let withHub = try StenoSidecarIO.encode(sidecar)
+            let hubRound = try StenoSidecarIO.decode(withHub)
+            expect(hubRound.hubProjectId == "lab", "hub project round-trip")
 
             let legacy = #"{"source":"zoom","windowTitle":"X","createdAt":"2023-11-14T22:13:20Z"}"#.data(using: .utf8)!
             let legacySidecar = try StenoSidecarIO.decode(legacy)
