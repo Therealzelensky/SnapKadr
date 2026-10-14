@@ -14,10 +14,36 @@ public enum StenoBitrixCallState {
         "идет звонок",
     ]
 
+    /// Visible only while a screen is on the call stage. The toolbar button «Экран» is always there.
+    private static let sharingNeedles = [
+        "закрепить",
+        "открепить",
+        "остановить демонстрацию",
+        "вы демонстрируете",
+        "демонстрирует экран",
+        "демонстрация экрана",
+        "показывает экран",
+        "stop sharing",
+        "you are sharing",
+        "is sharing",
+        "sharing screen",
+    ]
+
     public static func isInCall(axLabels: [String]) -> Bool {
         let hay = axLabels.joined(separator: " ").lowercased()
             .replacingOccurrences(of: "\u{00a0}", with: " ")
         return inCallNeedles.contains(where: { hay.contains($0) })
+    }
+
+    /// Screen share drawn inside the call window (no second OS window).
+    public static func isSharing(axLabels: [String]) -> Bool {
+        let hay = axLabels.joined(separator: " ").lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        return sharingNeedles.contains { hay.contains($0) }
+    }
+
+    public static func isSharing(pid: pid_t, windowTitle: String) -> Bool {
+        isSharing(axLabels: collectLabels(pid: pid, windowTitle: windowTitle))
     }
 
     public static func isInCall(pid: pid_t, windowTitle: String) -> Bool {

@@ -6,6 +6,7 @@ public enum StenoCloudError: Error, Equatable {
     case notAPackage
     case authRequired
     case missingYandexClientID
+    case hubProjectMissing
     case network(String)
     case server(status: Int, message: String)
     case cancelled
@@ -27,6 +28,10 @@ extension StenoCloudError: LocalizedError {
             return ru
                 ? "Укажите OAuth Client ID приложения Яндекса (поле ниже). Redirect URI: snapkadr://yandex-oauth"
                 : "Enter a Yandex OAuth Client ID below. Redirect URI: snapkadr://yandex-oauth"
+        case .hubProjectMissing:
+            return ru
+                ? "Нет проекта Hub: выберите компанию в AutoFocus на созвоне"
+                : "No Hub project: pick a company in AutoFocus during the call"
         case .network(let message):
             return message
         case .server(let status, let message):

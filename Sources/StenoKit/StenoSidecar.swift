@@ -45,21 +45,26 @@ public struct StenoSidecar: Codable, Equatable, Sendable {
     public var windowTitle: String
     public var createdAt: Date
     public var participants: [StenoParticipant]
+    /// Проект Hub, к которому относился звонок. Пишется во время записи:
+    /// к моменту выгрузки AutoFocus уже снимает активный контекст.
+    public var hubProjectId: String?
 
     enum CodingKeys: String, CodingKey {
-        case source, windowTitle, createdAt, participants
+        case source, windowTitle, createdAt, participants, hubProjectId
     }
 
     public init(
         source: String,
         windowTitle: String,
         createdAt: Date,
-        participants: [StenoParticipant] = []
+        participants: [StenoParticipant] = [],
+        hubProjectId: String? = nil
     ) {
         self.source = source
         self.windowTitle = windowTitle
         self.createdAt = createdAt
         self.participants = participants
+        self.hubProjectId = hubProjectId
     }
 
     public init(from decoder: Decoder) throws {
@@ -68,6 +73,7 @@ public struct StenoSidecar: Codable, Equatable, Sendable {
         windowTitle = try container.decode(String.self, forKey: .windowTitle)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         participants = try container.decodeIfPresent([StenoParticipant].self, forKey: .participants) ?? []
+        hubProjectId = try container.decodeIfPresent(String.self, forKey: .hubProjectId)
     }
 }
 

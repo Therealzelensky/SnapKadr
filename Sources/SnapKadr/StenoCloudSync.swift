@@ -35,6 +35,24 @@ public final class StenoCloudSync: @unchecked Sendable {
         gate.end()
     }
 
+    /// Повтор одной очереди после входа (Hub cookie и т.п.).
+    public func retryDestination(_ destination: StenoCloudDestination, attempt: Int = 0) async {
+        guard StenoCloudSettings.isEnabled(destination) else { return }
+        if !gate.begin() {
+            guard attempt < 8 else { return }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await retryDestination(destination, attempt: attempt + 1)
+            return
+        }
+        defer { gate.end() }
+
+        for item in queue.items() where item.destination == destination {
+            let url = URL(fileURLWithPath: item.projectPath, isDirectory: true)
+            queue.resetBackoff(projectURL: url, destination: destination)
+        }
+        await processDestination(destination, current: nil, drainFirst: true)
+    }
+
     /// «Загрузить сейчас» — reset backoff and attempt all pending pairs.
     public func flushQueue() async {
         guard gate.begin() else { return }
@@ -110,6 +128,11 @@ public final class StenoCloudSync: @unchecked Sendable {
         guard StenoCloudSettings.isEnabled(destination) else { return }
 
         guard let client = resolveClient(for: destination) else {
+            // Hub без проекта AutoFocus — не ошибка, просто пропуск.
+            if destination == .hub {
+                StenoCloudLog.log("Hub skip: клиент недоступен (нет проекта AutoFocus или выкл.)")
+                return
+            }
             if let current {
                 _ = queue.enqueue(projectURL: current, destination: destination)
                 queue.markFailure(projectURL: current, destination: destination)
@@ -136,8 +159,9 @@ public final class StenoCloudSync: @unchecked Sendable {
                     switch error {
                     case .authRequired:
                         stoppedForAuth = true
+                        queue.markFailure(projectURL: url, destination: destination)
                         await presentAuth(for: destination)
-                    case .cancelled:
+                    case .cancelled, .hubProjectMissing:
                         break
                     default:
                         queue.markFailure(projectURL: url, destination: destination)
@@ -162,8 +186,9 @@ public final class StenoCloudSync: @unchecked Sendable {
                 switch error {
                 case .authRequired:
                     _ = queue.enqueue(projectURL: current, destination: destination)
+                    queue.markFailure(projectURL: current, destination: destination)
                     await presentAuth(for: destination)
-                case .cancelled:
+                case .cancelled, .hubProjectMissing:
                     break
                 default:
                     _ = queue.enqueue(projectURL: current, destination: destination)
@@ -209,7 +234,15 @@ public final class StenoCloudSync: @unchecked Sendable {
             return makeS3Client()
         case .yandex:
             return makeYandexClient()
+        case .hub:
+            return makeHubClient()
         }
+    }
+
+    private static func makeHubClient() -> StenoCloudClient? {
+        // Id проекта берётся из пакета в момент выгрузки: живой контекст AutoFocus
+        // к этому времени уже сброшен.
+        return HubPortalClient()
     }
 
     private static func makeWebDAVClient() -> StenoCloudClient? {

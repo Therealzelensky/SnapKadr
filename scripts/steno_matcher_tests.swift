@@ -51,15 +51,29 @@ enum StenoMatcherTests {
             "ax lobby labels are not in-call"
         )
         expect(
+            !StenoTelemostCallState.isInCall(axLabels: [
+                "Демонстрация", "Участники", "Чат", "Выйти из встречи", "Яндекс Телемост"
+            ], participantCount: 1, videoTrackCount: 1),
+            "solo conference toolbar is not a call"
+        )
+        expect(
             StenoTelemostCallState.isInCall(axLabels: [
-                "Демонстрация", "Участники", "Чат", "Яндекс Телемост"
-            ]),
-            "ax in-call chrome"
+                "Демонстрация", "Участники", "Выйти из встречи"
+            ], participantCount: 2, videoTrackCount: 1),
+            "second participant starts telemost call"
+        )
+        expect(
+            StenoTelemostCallState.isInCall(axLabels: ["Выйти из встречи"], videoTrackCount: 2),
+            "remote video track starts telemost call"
+        )
+        expect(
+            !StenoTelemostCallState.isInCall(axLabels: ["Выйти из встречи"], videoTrackCount: 1),
+            "local preview alone is not a call"
         )
         expect(
             !StenoTelemostCallState.isInCall(axLabels: [
                 "Новая видеовстреча", "Демонстрация"
-            ]),
+            ], participantCount: 2),
             "lobby wins over mixed labels"
         )
 
@@ -197,6 +211,26 @@ enum StenoMatcherTests {
             ownerName: "Yandex"
         )
         expect(StenoMatcher.match(tmYandex, enabled: all) == .telemost, "telemost in Yandex Browser")
+        let tmLive = StenoWindowSnapshot(
+            windowID: 35,
+            bundleID: "com.apple.Safari",
+            title: "Идёт звонок · Яндекс Телемост",
+            ownerName: "Safari"
+        )
+        expect(
+            StenoMatcher.match(tmLive, enabled: all, media: { _, _ in false }) == .telemost,
+            "browser telemost in progress without udp"
+        )
+        let tmLobby = StenoWindowSnapshot(
+            windowID: 36,
+            bundleID: "com.apple.Safari",
+            title: "Яндекс Телемост",
+            ownerName: "Safari"
+        )
+        expect(
+            StenoMatcher.match(tmLobby, enabled: all, media: { _, _ in false }) == nil,
+            "browser telemost lobby without udp is not a call"
+        )
 
         let b24WebApp = StenoWindowSnapshot(
             windowID: 23,
@@ -257,10 +291,16 @@ enum StenoMatcherTests {
             "ym ax end-call chrome"
         )
         expect(
+            !StenoYandexMessengerCallState.isInCall(axLabels: [
+                "Демонстрация", "Участники", "Чат"
+            ], participantCount: 1, videoTrackCount: 1),
+            "ym conference toolbar alone is not a call"
+        )
+        expect(
             StenoYandexMessengerCallState.isInCall(axLabels: [
                 "Демонстрация", "Участники", "Чат"
-            ]),
-            "ym ax telemost-in-messenger chrome"
+            ], participantCount: 2),
+            "ym embedded telemost with a second participant"
         )
         expect(
             !StenoYandexMessengerCallState.isInCall(axLabels: [
@@ -281,10 +321,17 @@ enum StenoMatcherTests {
             "ym ax open-call-screen banner"
         )
         expect(
-            StenoYandexMessengerCallState.isInCall(axLabels: [
+            !StenoYandexMessengerCallState.isInCall(axLabels: [
                 "Звонок в Яндекс Телемосте", "Яндекс Мессенджер"
             ]),
-            "ym ax nested telemost webarea"
+            "ym telemost banner without a second participant"
+        )
+        expect(
+            StenoYandexMessengerCallState.isInCall(
+                axLabels: ["Звонок в Яндекс Телемосте", "Яндекс Мессенджер"],
+                participantCount: 2
+            ),
+            "ym telemost banner with a second participant"
         )
 
         let ymBrowserCall = StenoWindowSnapshot(
@@ -309,6 +356,18 @@ enum StenoMatcherTests {
         )
         expect(StenoMatcher.match(ymBrowserURL, enabled: all) == .yandexMessenger, "ym yandex browser group call")
         expect(StenoMatcher.match(ymChat, enabled: [.zoom]) == nil, "ym disabled")
+        expect(
+            StenoMatcher.match(zoom, enabled: all, media: { _, _ in false }) == nil,
+            "zoom title without media udp is not a call"
+        )
+        expect(
+            StenoMatcher.match(meet, enabled: all, media: { _, _ in false }) == nil,
+            "meet title without media udp is not a call"
+        )
+        expect(
+            StenoMatcher.match(zoom, enabled: all, media: { _, _ in true }) == .zoom,
+            "zoom title with media udp"
+        )
 
         exit(failures == 0 ? 0 : 1)
     }
