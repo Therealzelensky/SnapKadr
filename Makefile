@@ -1,4 +1,4 @@
-.PHONY: app app-beta run run-beta clean keys test acceptance ship-beta
+.PHONY: app app-beta run run-beta clean keys test acceptance ship ship-beta
 
 app:
 	chmod +x scripts/build_app.sh
@@ -25,6 +25,10 @@ test: acceptance
 acceptance:
 	chmod +x scripts/acceptance_tests.sh
 	./scripts/acceptance_tests.sh
+
+ship:
+	chmod +x scripts/ship_release.sh scripts/publish_release.sh scripts/make_dmg.sh scripts/build_app.sh scripts/ensure_sparkle_keys.sh
+	./scripts/ship_release.sh
 
 ship-beta:
 	chmod +x scripts/ship_beta.sh scripts/publish_beta_release.sh scripts/make_dmg.sh scripts/build_beta_app.sh scripts/build_app.sh scripts/ensure_sparkle_keys.sh

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Build a simple drag-to-Applications DMG for SnapKadrBeta.
+# Build a simple drag-to-Applications DMG. Name follows the .app.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="${1:-$ROOT/dist/SnapKadrBeta.app}"
-DMG="$ROOT/dist/SnapKadrBeta.dmg"
-VOL="SnapKadrBeta"
+APP="${1:-$ROOT/dist/SnapKadr.app}"
+NAME="$(basename "$APP" .app)"
+DMG="$ROOT/dist/${NAME}.dmg"
+VOL="$NAME"
 
 test -d "$APP" || { echo "error: missing app: $APP" >&2; exit 1; }
 
