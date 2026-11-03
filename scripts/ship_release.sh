@@ -111,6 +111,27 @@ ENCLOSURE_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${T
 DMG_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${TAG}/SnapKadr.dmg"
 TAG_URL="https://github.com/Therealzelensky/SnapKadr/releases/tag/${TAG}"
 
+python3 - <<PY
+from pathlib import Path
+import re
+p = Path("docs/index.html")
+text = p.read_text()
+text2, n = re.subn(
+    r"https://github.com/Therealzelensky/SnapKadr/releases/download/v0\\.1\\.\\d+(?:-beta)?/SnapKadr(?:Beta)?\\.dmg",
+    "${DMG_URL}",
+    text,
+)
+text2, n2 = re.subn(
+    r'download="SnapKadr(?:Beta)?\\.dmg"',
+    'download="SnapKadr.dmg"',
+    text2,
+)
+if "SnapKadr.dmg" not in text2:
+    raise SystemExit("landing has no SnapKadr.dmg CTA")
+p.write_text(text2)
+print(f"updated {n} CTA link(s) → ${DMG_URL}; download attrs={n2}")
+PY
+
 PUBDATE=$(date -u '+%a, %d %b %Y %H:%M:%S +0000')
 cat > docs/appcast.xml <<XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -139,7 +160,7 @@ XML
 chmod +x "$ROOT/docs/check-landings.sh"
 ./docs/check-landings.sh
 
-git add docs/appcast.xml
+git add docs/appcast.xml docs/index.html docs/download.js
 if git diff --cached --quiet; then
   die "nothing staged after appcast update"
 fi

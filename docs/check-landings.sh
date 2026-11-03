@@ -23,9 +23,13 @@ grep -q 'page-snap' "$ROOT/snap/index.html" || { echo "snap page missing class";
 grep -q 'page-kadr' "$ROOT/kadr/index.html" || { echo "kadr page missing class"; fail=1; }
 grep -q 'releases/download/' "$ROOT/index.html" || { echo "missing direct download CTA"; fail=1; }
 grep -q 'releases/tag/' "$ROOT/index.html" && { echo "CTA still points to release HTML page"; fail=1; }
-grep -q 'SnapKadrBeta.dmg' "$ROOT/index.html" || { echo "missing SnapKadrBeta.dmg in CTA"; fail=1; }
-grep -q 'SnapKadrBeta.zip' "$ROOT/index.html" && { echo "CTA still points at zip (should be dmg)"; fail=1; }
-grep -q 'data-download="beta"' "$ROOT/index.html" || { echo "missing data-download hooks"; fail=1; }
+grep -q 'SnapKadr.dmg' "$ROOT/index.html" || { echo "missing SnapKadr.dmg in CTA"; fail=1; }
+grep -q 'SnapKadrBeta' "$ROOT/index.html" && { echo "landing still names SnapKadrBeta"; fail=1; }
+grep -q 'SnapKadr.zip' "$ROOT/index.html" && { echo "CTA still points at zip (should be dmg)"; fail=1; }
+grep -q 'data-download="release"' "$ROOT/index.html" || { echo "missing data-download hooks"; fail=1; }
+if grep -E 'бет|Бета|BETA' "$ROOT/index.html" >/dev/null; then
+  echo "landing still talks about beta"; fail=1
+fi
 grep -q 'class="grid"' "$ROOT/index.html" && { echo "old hub grid still present"; fail=1; }
 [[ -s "$ROOT/appcast-beta.xml" ]] || { echo "appcast-beta empty"; fail=1; }
 grep -q 'SnapKadrBeta.zip' "$ROOT/appcast-beta.xml" || { echo "appcast must enclose SnapKadrBeta.zip"; fail=1; }
@@ -53,7 +57,7 @@ grep -q 'wave-label' "$ROOT/index.html" || { echo "missing wave labels"; fail=1;
 grep -q 'data-reveal' "$ROOT/index.html" || { echo "missing data-reveal"; fail=1; }
 grep -q 'data-parallax' "$ROOT/index.html" || { echo "missing data-parallax"; fail=1; }
 grep -q 'install-steps' "$ROOT/index.html" || { echo "missing install steps"; fail=1; }
-grep -q 'SnapKadrBeta' "$ROOT/index.html" || { echo "missing SnapKadrBeta in install guide"; fail=1; }
+grep -q 'SnapKadr.dmg' "$ROOT/index.html" || { echo "missing SnapKadr.dmg in install guide"; fail=1; }
 grep -q 'assets/shots/' "$ROOT/index.html" || { echo "missing real feature shots"; fail=1; }
 grep -q 'shot-slot' "$ROOT/index.html" && { echo "shot-slot placeholders still present"; fail=1; }
 need "$ROOT/assets/shots/02-multi-window-html.png"
@@ -73,8 +77,9 @@ grep -q 'js-motion' "$ROOT/styles.css" || { echo "missing js-motion CSS gate"; f
 grep -q 'reveal-up' "$ROOT/styles.css" || { echo "missing reveal-up keyframes"; fail=1; }
 grep -q 'initParallax' "$ROOT/motion.js" || { echo "missing parallax in motion.js"; fail=1; }
 grep -q 'js-motion' "$ROOT/motion.js" || { echo "missing js-motion class toggle"; fail=1; }
-grep -q 'appcast-beta.xml' "$ROOT/download.js" || { echo "download.js must read appcast"; fail=1; }
-grep -q 'SnapKadrBeta.dmg' "$ROOT/download.js" || { echo "download.js must set dmg CTA"; fail=1; }
+grep -q 'appcast.xml' "$ROOT/download.js" || { echo "download.js must read appcast"; fail=1; }
+grep -q 'SnapKadr.dmg' "$ROOT/download.js" || { echo "download.js must set dmg CTA"; fail=1; }
+grep -q 'appcast-beta.xml' "$ROOT/download.js" && { echo "download.js still reads the beta feed"; fail=1; }
 grep -q 'reachGoal' "$ROOT/download.js" || { echo "download.js must fire Metrika download goal"; fail=1; }
 grep -q 'download_beta' "$ROOT/download.js" || { echo "download.js must use download_beta goal id"; fail=1; }
 

@@ -140,27 +140,7 @@ ENCLOSURE_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${T
 DMG_URL="https://github.com/Therealzelensky/SnapKadr/releases/download/${TAG}/SnapKadrBeta.dmg"
 TAG_URL="https://github.com/Therealzelensky/SnapKadr/releases/tag/${TAG}"
 
-# --- update landing CTAs (direct dmg, not release HTML page / zip)
-python3 - <<PY
-from pathlib import Path
-import re
-p = Path("docs/index.html")
-text = p.read_text()
-text2, n = re.subn(
-    r"https://github.com/Therealzelensky/SnapKadr/releases/download/(?:v0\.1\.0-beta\.?\d+|v0\.1\.\d+-beta)/SnapKadrBeta\.(?:zip|dmg)",
-    "${DMG_URL}",
-    text,
-)
-if n == 0:
-    raise SystemExit("no beta CTA URLs replaced in docs/index.html")
-text2, n2 = re.subn(
-    r'download="SnapKadrBeta\.(?:zip|dmg)"',
-    'download="SnapKadrBeta.dmg"',
-    text2,
-)
-p.write_text(text2)
-print(f"updated {n} CTA link(s) → ${DMG_URL}; download attrs={n2}")
-PY
+# Public landing stays on the release DMG. Beta ships do not rewrite it.
 
 # --- appcast
 PUBDATE=$(date -u '+%a, %d %b %Y %H:%M:%S +0000')

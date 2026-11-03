@@ -651,7 +651,7 @@ def scene_suite(path: Path, active="Общие"):
             yy += 56
     elif active == "Версия":
         d.text((x0 + 32, y0 + 40), "Щёлк.Кадр", fill=FG, font=F28)
-        d.text((x0 + 32, y0 + 90), "Бета 0.1.0", fill=MUTED, font=F16)
+        d.text((x0 + 32, y0 + 90), "Версия 0.1.30", fill=MUTED, font=F16)
         rrect(d, (x0 + 32, y0 + 150, x0 + 280, y0 + 200), MAGENTA, 12)
         d.text((x0 + 60, y0 + 164), "Проверить обновления", fill=FG, font=F14)
         d.text((x0 + 32, y0 + 240), "Обновления устанавливаются сами", fill=MUTED, font=F14)

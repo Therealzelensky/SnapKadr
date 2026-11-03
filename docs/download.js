@@ -4,14 +4,14 @@
 
   function applyDmg(dmgUrl) {
     if (!dmgUrl) return;
-    document.querySelectorAll('a[data-download="beta"]').forEach(function (a) {
+    document.querySelectorAll('a[data-download="release"]').forEach(function (a) {
       a.setAttribute("href", dmgUrl);
-      a.setAttribute("download", "SnapKadrBeta.dmg");
+      a.setAttribute("download", "SnapKadr.dmg");
     });
   }
 
   function trackDownloadClicks() {
-    document.querySelectorAll('a[data-download="beta"]').forEach(function (a) {
+    document.querySelectorAll('a[data-download="release"]').forEach(function (a) {
       if (a.dataset.metrikaBound) return;
       a.dataset.metrikaBound = "1";
       a.addEventListener("click", function () {
@@ -24,14 +24,14 @@
 
   trackDownloadClicks();
 
-  // Fallback already in HTML; refresh from live appcast on same origin.
-  // Appcast encloses zip for Sparkle; CTA uses sibling dmg on the same release.
-  fetch("appcast-beta.xml", { cache: "no-store" })
+  // Fallback already in HTML; refresh from the release appcast on the same origin.
+  // Appcast encloses zip for Sparkle; the button uses the sibling dmg.
+  fetch("appcast.xml", { cache: "no-store" })
     .then(function (r) { return r.ok ? r.text() : Promise.reject(); })
     .then(function (xml) {
-      var m = xml.match(/url="([^"]+SnapKadrBeta\.zip)"/);
+      var m = xml.match(/url="([^"]+SnapKadr\.zip)"/);
       if (!m) return;
-      applyDmg(m[1].replace(/SnapKadrBeta\.zip$/, "SnapKadrBeta.dmg"));
+      applyDmg(m[1].replace(/SnapKadr\.zip$/, "SnapKadr.dmg"));
     })
     .catch(function () {});
 })();
