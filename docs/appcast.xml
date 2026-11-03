@@ -5,5 +5,17 @@
     <link>https://therealzelensky.github.io/SnapKadr/</link>
     <description>Щёлк.Кадр updates</description>
     <language>ru</language>
+    <item>
+      <title>0.1.30</title>
+      <pubDate>Tue, 03 Nov 2026 16:49:57 +0000</pubDate>
+      <sparkle:version>202611031948</sparkle:version>
+      <sparkle:shortVersionString>0.1.30</sparkle:shortVersionString>
+      <description><![CDATA[<p>Snap.Kadr v0.1.30</p>]]></description>
+      <enclosure
+        url="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.30/SnapKadr.zip"
+        sparkle:edSignature="+AdtkfLahCXwqzf4V5CqsI2vJbPLwZuZro8CD+g0DomETrXRMOIH+xMl6r0OTAoLwevQABzsV74zDkSEE6g6Cg=="
+        length="7796672"
+        type="application/octet-stream" />
+    </item>
   </channel>
 </rss>
