@@ -10,9 +10,18 @@ final class HubPortalLogin: NSObject {
     private var window: NSWindow?
     private var webView: WKWebView?
     private var didCapture = false
+    private var didDismiss = false
+
+    /// Окно входа нельзя уничтожать на такте run loop. `WKWebView` при
+    /// `stopLoading` / снятии с окна / `dealloc` освобождает объекты, которые
+    /// текущий autorelease pool ещё отдаёт в `objc_release` — SIGSEGV.
+    /// Держим спрятанное окно до выхода процесса.
+    private static var parkedWebViews: [WKWebView] = []
+    private static var parkedWindows: [NSWindow] = []
 
     func present() {
         if let window, window.isVisible { return }
+        didDismiss = false
 
         let config = WKWebViewConfiguration()
         let web = WKWebView(frame: NSRect(x: 0, y: 0, width: 440, height: 560), configuration: config)
@@ -27,6 +36,7 @@ final class HubPortalLogin: NSObject {
         win.title = L10n.tr("Вход в Server Hub", "Sign in to Server Hub")
         win.contentView = web
         win.delegate = self
+        win.isReleasedWhenClosed = false
         win.center()
         win.level = .floating
 
@@ -55,15 +65,35 @@ final class HubPortalLogin: NSObject {
         didCapture = true
         StenoCloudSettings.hubSessionCookie = "HubPortal=\(cookie.value)"
         StenoCloudLog.log("Hub session saved, retry upload")
-        // close/release WKWebView on the next turn. Doing it inside the cookie
-        // callback crashes in objc_release (windowWillClose).
+        // getAllCookies ещё держит объекты WebKit в пуле этого такта.
+        DispatchQueue.main.async {
+            self.parkLoginInterface()
+            Task { await StenoCloudSync.shared.retryDestination(.hub) }
+        }
+    }
+
+    /// Спрятать окно, не уничтожая его. `close()`, `stopLoading` и снятие
+    /// WKWebView с иерархии на такте run loop уже давали SIGSEGV в objc_release.
+    private func parkLoginInterface() {
+        guard !didDismiss else { return }
+        didDismiss = true
+
+        let web = webView
         let win = window
-        window?.delegate = nil
+        web?.navigationDelegate = nil
+        win?.delegate = nil
+
+        if let web {
+            Self.parkedWebViews.append(web)
+        }
+        if let win {
+            Self.parkedWindows.append(win)
+        }
+        webView = nil
+        window = nil
+
         DispatchQueue.main.async {
             win?.orderOut(nil)
-            win?.close()
-            self.teardown()
-            Task { await StenoCloudSync.shared.retryDestination(.hub) }
         }
     }
 
@@ -76,14 +106,6 @@ final class HubPortalLogin: NSObject {
     private func domain(_ cookieDomain: String, matches host: String) -> Bool {
         let domain = cookieDomain.trimmingCharacters(in: CharacterSet(charactersIn: "."))
         return host == domain || host.hasSuffix("." + domain) || domain.hasSuffix(host)
-    }
-
-    private func teardown() {
-        if let webView {
-            webView.configuration.websiteDataStore.httpCookieStore.remove(self)
-        }
-        webView = nil
-        window = nil
     }
 }
 
@@ -108,9 +130,10 @@ extension HubPortalLogin: WKNavigationDelegate {
 }
 
 extension HubPortalLogin: NSWindowDelegate {
-    nonisolated func windowWillClose(_ notification: Notification) {
+    nonisolated func windowShouldClose(_ sender: NSWindow) -> Bool {
         DispatchQueue.main.async {
-            HubPortalLogin.shared.teardown()
+            HubPortalLogin.shared.parkLoginInterface()
         }
+        return false
     }
 }
