@@ -13,6 +13,40 @@ final class SuiteNotchHUD {
     private let recordingActions = StenoRecordingActions()
     private var recordingDetailLabel: NSTextField?
 
+    /// Экран окна звонка. Курсор часто на другом мониторе, и плашка уезжает туда.
+    static func screenUnderPointer() -> NSScreen? {
+        if let call = screenContainingCallWindow() { return call }
+        let mouse = NSEvent.mouseLocation
+        if let hit = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) {
+            return hit
+        }
+        return NSScreen.main
+    }
+
+    private static func screenContainingCallWindow() -> NSScreen? {
+        guard let info = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+        let top = NSScreen.screens.map(\.frame.maxY).max() ?? 0
+        for entry in info {
+            let owner = (entry[kCGWindowOwnerName as String] as? String ?? "").lowercased()
+            let call = owner.contains("messenger") || owner.contains("мессендж")
+                || owner.contains("telemost") || owner.contains("телемост")
+                || owner.contains("zoom")
+            guard call, let box = entry[kCGWindowBounds as String] as? [String: CGFloat] else { continue }
+            let width = box["Width"] ?? 0
+            let height = box["Height"] ?? 0
+            guard width > 200, height > 200 else { continue }
+            let x = (box["X"] ?? 0) + width / 2
+            let y = top - (box["Y"] ?? 0) - height / 2
+            let point = NSPoint(x: x, y: y)
+            if let screen = NSScreen.screens.first(where: { $0.frame.contains(point) }) {
+                return screen
+            }
+        }
+        return nil
+    }
+
     static func shareStatusLine(active: Bool, failed: Bool, recordShare: Bool) -> String {
         guard recordShare else { return "" }
         if failed { return L10n.tr("Шару не записали", "Share not recorded") }
@@ -44,7 +78,7 @@ final class SuiteNotchHUD {
             row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
         ])
         shell.contentView = host
-        shell.present(size: NSSize(width: 220, height: 42), on: NSScreen.main)
+        shell.present(size: NSSize(width: 220, height: 42), on: SuiteNotchHUD.screenUnderPointer())
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { [weak self] in
             self?.shell.dismiss()
         }
@@ -120,7 +154,7 @@ final class SuiteNotchHUD {
         ])
 
         promptShell.contentView = host
-        promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
+        promptShell.present(size: NSSize(width: 420, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func showStenoVideoPrompt(
@@ -193,7 +227,7 @@ final class SuiteNotchHUD {
         ])
 
         promptShell.contentView = host
-        promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
+        promptShell.present(size: NSSize(width: 420, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func dismissStenoPrompt(completion: (() -> Void)? = nil) {
@@ -252,7 +286,7 @@ final class SuiteNotchHUD {
         ])
 
         recordingShell.contentView = host
-        recordingShell.present(size: NSSize(width: 360, height: 56), on: NSScreen.main)
+        recordingShell.present(size: NSSize(width: 360, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func showStenoStopConfirm(
@@ -333,7 +367,7 @@ final class SuiteNotchHUD {
         ])
 
         recordingShell.contentView = host
-        recordingShell.present(size: NSSize(width: 440, height: 56), on: NSScreen.main)
+        recordingShell.present(size: NSSize(width: 440, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func updateStenoRecording(detail: String) {
@@ -379,7 +413,7 @@ final class SuiteNotchHUD {
         ])
 
         progressShell.contentView = host
-        progressShell.present(size: NSSize(width: 360, height: 56), on: NSScreen.main)
+        progressShell.present(size: NSSize(width: 360, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func dismissStenoPostSessionProgress(completion: (() -> Void)? = nil) {
@@ -428,7 +462,7 @@ final class SuiteNotchHUD {
             row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
         ])
         promptShell.contentView = host
-        promptShell.present(size: NSSize(width: 420, height: 56), on: NSScreen.main)
+        promptShell.present(size: NSSize(width: 420, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func showStenoSaved(onOpen: @escaping () -> Void) {
@@ -475,7 +509,7 @@ final class SuiteNotchHUD {
             row.centerYAnchor.constraint(equalTo: host.centerYAnchor)
         ])
         promptShell.contentView = host
-        promptShell.present(size: NSSize(width: 320, height: 56), on: NSScreen.main)
+        promptShell.present(size: NSSize(width: 320, height: 56), on: SuiteNotchHUD.screenUnderPointer())
     }
 
     func showCloudUploadDeferred() {

@@ -22,7 +22,25 @@ public enum StenoLiveCall {
         if lobbyNeedles.contains(where: { hay.contains($0) }) { return false }
         if let participantCount, participantCount >= 2 { return true }
         if videoTrackCount >= 2 { return true }
-        return connectedNeedles.contains { hay.contains($0) }
+        if connectedNeedles.contains(where: { hay.contains($0) }) { return true }
+        return labels.contains { bannerCall($0) }
+    }
+
+    /// Живой созвон. Голое «12 участников» — размер группового чата, не звонок.
+    private static func bannerCall(_ raw: String) -> Bool {
+        let label = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        guard !label.isEmpty, label.count <= 80 else { return false }
+        if label == "звонок в яндекс телемосте" || label == "звонок в телемосте" { return true }
+        if label == "на встрече" || label == "вернуться к звонку" { return true }
+        if label == "идёт групповой звонок" || label == "идет групповой звонок" { return true }
+        guard label.count <= 40 else { return false }
+        return label.range(
+            of: #"\d{1,2}:\d{2}\s*[·•]\s*\d{1,3}\s*участник"#,
+            options: .regularExpression
+        ) != nil
     }
 
     /// Любое окно процесса. Текст лобби в одном окне не отменяет живой звонок в другом.
