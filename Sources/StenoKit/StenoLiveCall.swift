@@ -59,7 +59,8 @@ public enum StenoLiveCall {
                 maxDepth: 20,
                 labels: &labels,
                 participantCount: &participantCount,
-                tracks: &tracks
+                tracks: &tracks,
+                ancestors: []
             )
             if isConnected(
                 labels: labels,
@@ -79,7 +80,8 @@ public enum StenoLiveCall {
         maxDepth: Int,
         labels: inout [String],
         participantCount: inout Int?,
-        tracks: inout Set<String>
+        tracks: inout Set<String>,
+        ancestors: [String]
     ) {
         if depth > maxDepth { return }
         if let role = stringAttr(el, kAXRoleAttribute as String),
@@ -97,15 +99,13 @@ public enum StenoLiveCall {
                 participantCount = max(participantCount ?? n, n)
             }
         }
-        if let title = stringAttr(el, kAXTitleAttribute as String), !title.isEmpty {
-            labels.append(title)
-        }
-        if let desc = stringAttr(el, kAXDescriptionAttribute as String), !desc.isEmpty {
-            labels.append(desc)
-        }
-        if let value = stringAttr(el, kAXValueAttribute as String), !value.isEmpty, value.count < 80 {
-            labels.append(value)
-        }
+        let title = stringAttr(el, kAXTitleAttribute as String) ?? ""
+        let desc = stringAttr(el, kAXDescriptionAttribute as String) ?? ""
+        let value = stringAttr(el, kAXValueAttribute as String) ?? ""
+        if !title.isEmpty { appendCallLabel(title, ancestors: ancestors, labels: &labels) }
+        if !desc.isEmpty { appendCallLabel(desc, ancestors: ancestors, labels: &labels) }
+        if !value.isEmpty, value.count < 80 { appendCallLabel(value, ancestors: ancestors, labels: &labels) }
+        let childAncestors = ancestors + [title, desc, value].filter { !$0.isEmpty }
         guard let kids = copyAttr(el, kAXChildrenAttribute as String) as? [AXUIElement] else { return }
         for kid in kids.prefix(120) {
             collect(
@@ -114,9 +114,30 @@ public enum StenoLiveCall {
                 maxDepth: maxDepth,
                 labels: &labels,
                 participantCount: &participantCount,
-                tracks: &tracks
+                tracks: &tracks,
+                ancestors: childAncestors
             )
         }
+    }
+
+    /// «На встрече» в шапке чата — статус («На встрече• был 2 минуты назад»), не баннер созвона.
+    private static func appendCallLabel(_ raw: String, ancestors: [String], labels: inout [String]) {
+        let label = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        if label == "на встрече", ancestors.contains(where: isPresenceStatus) {
+            return
+        }
+        labels.append(raw)
+    }
+
+    private static func isPresenceStatus(_ raw: String) -> Bool {
+        let label = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        return label.range(of: #"на встрече\s*[•·∙]"#, options: .regularExpression) != nil
     }
 
     /// Один локальный превью и его дочерние виджеты — это один трек.
