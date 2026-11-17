@@ -6,15 +6,15 @@
     <description>Щёлк.Кадр updates</description>
     <language>ru</language>
     <item>
-      <title>0.1.32</title>
-      <pubDate>Thu, 05 Nov 2026 10:07:57 +0000</pubDate>
-      <sparkle:version>202611051307</sparkle:version>
-      <sparkle:shortVersionString>0.1.32</sparkle:shortVersionString>
-      <description><![CDATA[<p>Snap.Kadr v0.1.32</p>]]></description>
+      <title>0.1.33</title>
+      <pubDate>Tue, 17 Nov 2026 17:21:47 +0000</pubDate>
+      <sparkle:version>202611172021</sparkle:version>
+      <sparkle:shortVersionString>0.1.33</sparkle:shortVersionString>
+      <description><![CDATA[<p>Snap.Kadr v0.1.33</p>]]></description>
       <enclosure
-        url="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.32/SnapKadr.zip"
-        sparkle:edSignature="W2dslTEJfzyaWZvndbWMIriVJ28Yt3ws9dj5RfWlA0Swb1hG4wWCiH55M8rpDWt8QrpIuKJmN+BevYK/Tkr4DA=="
-        length="7796893"
+        url="https://github.com/Therealzelensky/SnapKadr/releases/download/v0.1.33/SnapKadr.zip"
+        sparkle:edSignature="mAJ+HzESvsgHM7W+q/k4RBVG4venzBm2YT5mwixvmBPh0Fib12EvDeumIlxRNMt6IDCBCaBeG7Gm9m6I4yLeDw=="
+        length="7798707"
         type="application/octet-stream" />
     </item>
   </channel>
