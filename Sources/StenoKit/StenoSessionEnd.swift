@@ -123,17 +123,20 @@ public enum StenoSessionEnd {
     }
 
     private static func looksLikeBitrixTab(_ s: String) -> Bool {
-        s.contains("чат и звонки")
+        if s.contains("яндекс мессенджер") || s.contains("yandex messenger") { return false }
+        return s.contains("чат и звонки")
             || s.contains("chat and calls")
             || s.contains("видеозвонок")
             || s.contains("video call")
             || s.contains("bitrix24")
             || s.contains("битрикс24")
+            || s.contains("мессенджер")
+            || s.contains("messenger")
     }
 
     private static func bitrixPortal(_ s: String) -> String {
         var t = s
-        for cut in ["чат и звонки", "chat and calls", "видеозвонок", "video call", "bitrix24", "битрикс24"] {
+        for cut in ["чат и звонки", "chat and calls", "видеозвонок", "video call", "bitrix24", "битрикс24", "мессенджер", "messenger"] {
             if let r = t.range(of: cut) {
                 t = String(t[..<r.lowerBound])
             }

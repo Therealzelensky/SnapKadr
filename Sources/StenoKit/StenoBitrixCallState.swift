@@ -1,14 +1,16 @@
 import ApplicationServices
 import Foundation
 
-/// Bitrix24 Sync often keeps the tab title «Чат и звонки» during a live call.
-/// In-call chrome (return-to-call / follow-up) lives in the page AX tree.
+/// Bitrix24 Sync keeps the IM tab title during a live call.
+/// Older portals say «Чат и звонки»; the current messenger section is «Мессенджер».
+/// In-call chrome (return-to-call / end-call options) lives in the page AX tree.
 public enum StenoBitrixCallState {
     private static let inCallNeedles = [
         "вернуться в звонок",
         "return to call",
         "завершить звонок",
         "end call",
+        "параметры завершения звонка",
         "bitrixgpt follow-up",
         "идёт звонок",
         "идет звонок",
@@ -30,9 +32,23 @@ public enum StenoBitrixCallState {
     ]
 
     public static func isInCall(axLabels: [String]) -> Bool {
-        let hay = axLabels.joined(separator: " ").lowercased()
-            .replacingOccurrences(of: "\u{00a0}", with: " ")
+        let hay = normalizedHay(axLabels)
         return inCallNeedles.contains(where: { hay.contains($0) })
+    }
+
+    /// Messenger-section tabs («Портал — (N) Мессенджер») have no Bitrix in the window title.
+    /// A live call still needs both in-call chrome and a Bitrix marker from the page.
+    public static func confirmsLiveCall(axLabels: [String]) -> Bool {
+        isInCall(axLabels: axLabels) && hasPortalMarker(axLabels: axLabels)
+    }
+
+    public static func confirmsLiveCall(pid: pid_t, windowTitle: String) -> Bool {
+        confirmsLiveCall(axLabels: collectLabels(pid: pid, windowTitle: windowTitle))
+    }
+
+    public static func hasPortalMarker(axLabels: [String]) -> Bool {
+        let hay = normalizedHay(axLabels)
+        return hay.contains("bitrix") || hay.contains("битрикс")
     }
 
     /// Screen share drawn inside the call window (no second OS window).
@@ -81,22 +97,30 @@ public enum StenoBitrixCallState {
     }
 
     private static func looksLikeBitrixTab(_ s: String) -> Bool {
-        s.contains("чат и звонки")
+        if s.contains("яндекс мессенджер") || s.contains("yandex messenger") { return false }
+        return s.contains("чат и звонки")
             || s.contains("chat and calls")
             || s.contains("видеозвонок")
             || s.contains("video call")
             || s.contains("bitrix24")
             || s.contains("битрикс24")
+            || s.contains("мессенджер")
+            || s.contains("messenger")
     }
 
     private static func bitrixPortal(_ s: String) -> String {
         var t = s
-        for cut in ["чат и звонки", "chat and calls", "видеозвонок", "video call", "bitrix24", "битрикс24"] {
+        for cut in ["чат и звонки", "chat and calls", "видеозвонок", "video call", "bitrix24", "битрикс24", "мессенджер", "messenger"] {
             if let r = t.range(of: cut) {
                 t = String(t[..<r.lowerBound])
             }
         }
         return t.split { !$0.isLetter && !$0.isNumber }.first.map(String.init) ?? ""
+    }
+
+    private static func normalizedHay(_ labels: [String]) -> String {
+        labels.joined(separator: " ").lowercased()
+            .replacingOccurrences(of: "\u{00a0}", with: " ")
     }
 
     private static func normalize(_ s: String) -> String {

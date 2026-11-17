@@ -10,6 +10,7 @@ enum SuitePanelAction {
     case kadrDisplay
     case openProject
     case openRecent(URL)
+    case stenoStart
     case preferences
     case quit
 }
@@ -197,6 +198,13 @@ struct SuiteControlPanelView: View {
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(SuiteTheme.record)
+                    } else if stenoDetector.activeCall != nil {
+                        Button(L10n.tr("Записать", "Record")) {
+                            onAction(.stenoStart)
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(SuiteTheme.accent)
                     } else if steno.lastProjectURL != nil {
                         Button(L10n.tr("В Finder", "In Finder")) {
                             StenoSessionController.shared.openLastProject()
@@ -233,7 +241,7 @@ struct SuiteControlPanelView: View {
             return L10n.tr("Стоп в челке или здесь", "Stop in the notch or here")
         }
         if stenoDetector.activeCall != nil {
-            return L10n.tr("Подтвердите в челке", "Confirm in the notch")
+            return L10n.tr("Начать запись звонка", "Start call recording")
         }
         if steno.lastProjectURL != nil {
             return L10n.tr("Последний конспект", "Last notes")

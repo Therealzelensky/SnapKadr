@@ -44,13 +44,20 @@ public enum StenoMatcher {
             if liveTitle && containsAny(haystack, ["телемост", "telemost"]) { return true }
             return containsAny(haystack, source.titleNeedles) && media(snap, source)
         case .bitrixSync:
-            let looksLikeBitrix = bundle.lowercased().contains("bitrix")
-                || haystack.contains("bitrix24")
+            let bundleBitrix = bundle.lowercased().contains("bitrix")
+            let classicTitle = haystack.contains("bitrix24")
                 || haystack.contains("битрикс24")
                 || haystack.contains("чат и звонки")
                 || haystack.contains("chat and calls")
-            guard looksLikeBitrix else { return false }
-            if containsAny(haystack, source.titleNeedles) { return true }
+            // Current portal IM is «Портал — (N) Мессенджер», with no Bitrix in the window title.
+            let messengerTab = !bundleBitrix && !classicTitle
+                && StenoSource.isBrowser(bundle)
+                && isBitrixMessengerSection(haystack)
+            guard bundleBitrix || classicTitle || messengerTab else { return false }
+            if (bundleBitrix || classicTitle) && containsAny(haystack, source.titleNeedles) { return true }
+            if messengerTab {
+                return StenoBitrixCallState.confirmsLiveCall(pid: snap.ownerPID, windowTitle: snap.title)
+            }
             // Live Sync keeps the IM tab title; in-call chrome is in AX of that window.
             return StenoBitrixCallState.isInCall(pid: snap.ownerPID, windowTitle: snap.title)
         case .yandexMessenger:
@@ -62,6 +69,12 @@ public enum StenoMatcher {
             guard messengerContext(haystack) else { return false }
             return containsAny(haystack, source.titleNeedles)
         }
+    }
+
+    /// Browser IM section of a Bitrix portal. Not Yandex Messenger.
+    private static func isBitrixMessengerSection(_ haystack: String) -> Bool {
+        if haystack.contains("яндекс") || haystack.contains("yandex") { return false }
+        return haystack.contains("мессенджер") || haystack.contains("messenger")
     }
 
     private static func messengerContext(_ haystack: String) -> Bool {

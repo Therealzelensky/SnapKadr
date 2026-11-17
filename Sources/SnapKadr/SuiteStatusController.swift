@@ -201,6 +201,7 @@ final class SuiteStatusController: NSObject {
             case .kadrDisplay: KadrEngine.shared.recordDisplay()
             case .openProject: KadrEngine.shared.openProject()
             case .openRecent(let url): KadrEngine.shared.openProject(at: url)
+            case .stenoStart: StenoSessionController.shared.startFromMenu()
             case .preferences: self.onPreferences()
             case .quit: self.onQuit()
             }

@@ -105,6 +105,13 @@ final class StenoSessionController: ObservableObject {
         promptedWindowID = nil
     }
 
+    /// Меню бара: тот же шаг, что подтверждение в челке — спросить про видео окна и начать.
+    func startFromMenu() {
+        guard !isSessionActive, let call = detector.activeCall else { return }
+        promptedWindowID = call.windowID
+        offerVideoStep(call)
+    }
+
     private func offerVideoStep(_ call: StenoDetectedCall) {
         pendingCall = call
         let title = call.title.isEmpty ? sourceLabel(call.source) : call.title

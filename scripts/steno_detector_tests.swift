@@ -234,6 +234,22 @@ enum StenoDetectorTests {
             ),
             "another portal chat tab is not this call"
         )
+        expect(
+            StenoSessionEnd.isSameCallIdentity(
+                sessionTitle: "ГорСтрой — (13) Мессенджер",
+                otherTitle: "ГорСтрой — (14) Мессенджер",
+                source: .bitrixSync
+            ),
+            "unread badge change is the same bitrix messenger tab"
+        )
+        expect(
+            !StenoSessionEnd.isSameCallIdentity(
+                sessionTitle: "ГорСтрой — (13) Мессенджер",
+                otherTitle: "Яндекс Мессенджер",
+                source: .bitrixSync
+            ),
+            "yandex messenger is not this bitrix tab"
+        )
 
         exit(failures == 0 ? 0 : 1)
     }

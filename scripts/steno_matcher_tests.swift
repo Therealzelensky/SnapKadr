@@ -97,6 +97,44 @@ enum StenoMatcherTests {
         expect(StenoMatcher.match(safariSync, enabled: all) == nil, "bitrix chat tab is not a live call")
         expect(StenoMatcher.match(safariSync, enabled: [.zoom]) == nil, "bitrix safari disabled")
 
+        let gorMessenger = StenoWindowSnapshot(
+            windowID: 37,
+            bundleID: "com.apple.Safari",
+            title: "ГорСтрой — (13) Мессенджер",
+            ownerName: "Safari",
+            ownerPID: 0
+        )
+        expect(StenoMatcher.match(gorMessenger, enabled: all) == nil, "bitrix messenger tab without ax is not a live call")
+        expect(
+            StenoBitrixCallState.confirmsLiveCall(axLabels: [
+                "ВЕРНУТЬСЯ В ЗВОНОК",
+                "Параметры завершения звонка",
+                "Групповой звонок: Демо Трекер и 1С",
+                "Битрикс 24",
+                "ГорСтрой — (13) Мессенджер"
+            ]),
+            "bitrix messenger tab ax is a live call"
+        )
+        expect(
+            StenoBitrixCallState.isInCall(axLabels: [
+                "Параметры завершения звонка", "Участники: 3", "Битрикс 24"
+            ]),
+            "bitrix end-call options are in-call chrome"
+        )
+        expect(
+            !StenoBitrixCallState.confirmsLiveCall(axLabels: [
+                "ВЕРНУТЬСЯ В ЗВОНОК", "Мессенджер"
+            ]),
+            "return-to-call without a bitrix marker is not bitrix"
+        )
+        expect(
+            StenoBitrixCallState.pickWindowIndex(
+                want: "ГорСтрой — (13) Мессенджер",
+                axTitles: ["Гекса — (16) Чат и звонки", "ГорСтрой — (14) Мессенджер"]
+            ) == 1,
+            "bitrix ax pins the messenger section of the same portal"
+        )
+
         expect(
             StenoBitrixCallState.isInCall(axLabels: [
                 "ВЕРНУТЬСЯ В ЗВОНОК", "BitrixGPT Follow-Up", "Ортобум — (23) Чат и звонки"
