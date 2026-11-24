@@ -72,12 +72,26 @@ struct SuiteControlPanelView: View {
         HStack(spacing: 10) {
             Image(systemName: "camera.aperture")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(SuiteTheme.accent)
+                .foregroundStyle(SuiteTheme.textPrimary)
                 .frame(width: 26, height: 26)
             VStack(alignment: .leading, spacing: 2) {
-                Text(AppBranding.displayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(SuiteTheme.textPrimary)
+                HStack(spacing: 6) {
+                    Text(AppBranding.displayName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(SuiteTheme.textPrimary)
+                    if AppBranding.isBeta {
+                        Text("BETA")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(SuiteTheme.textSecondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(
+                                Capsule()
+                                    .fill(Color.white.opacity(0.10))
+                                    .overlay(Capsule().strokeBorder(SuiteTheme.borderSpecular, lineWidth: 0.5))
+                            )
+                    }
+                }
                 Text(L10n.tr("Щёлк + Кадр", "Snap + Kadr"))
                     .font(.system(size: 11))
                     .foregroundStyle(SuiteTheme.textTertiary)
@@ -179,7 +193,7 @@ struct SuiteControlPanelView: View {
                 HStack(alignment: .center, spacing: 10) {
                     Image(systemName: steno.isSessionActive ? "record.circle" : "waveform")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(steno.isSessionActive ? SuiteTheme.record : SuiteTheme.accent)
+                        .foregroundStyle(steno.isSessionActive ? SuiteTheme.record : SuiteTheme.textPrimary)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(stenoStatusTitle)
                             .font(.system(size: 13, weight: .medium))
@@ -204,14 +218,14 @@ struct SuiteControlPanelView: View {
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(SuiteTheme.accent)
+                        .foregroundStyle(SuiteTheme.textPrimary)
                     } else if steno.lastProjectURL != nil {
                         Button(L10n.tr("В Finder", "In Finder")) {
                             StenoSessionController.shared.openLastProject()
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(SuiteTheme.accent)
+                        .foregroundStyle(SuiteTheme.textSecondary)
                     }
                 }
                 .padding(.horizontal, 12)

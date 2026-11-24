@@ -1,30 +1,37 @@
 import SwiftUI
 import AppKit
 
-/// Visual tokens matched to Kadr control panel (dark HIG suite chrome).
+/// Visual tokens matched to Kadr control panel (Liquid Glass & Apple HIG chrome).
 enum SuiteTheme {
-    static let background = Color(nsColor: NSColor(calibratedRed: 0.043, green: 0.051, blue: 0.063, alpha: 1))
-    static let surface = Color(hex: 0x141820)
-    static let surfaceElevated = Color.white.opacity(0.06)
-    static let border = Color.white.opacity(0.08)
-    static let accent = Color(hex: 0xC026D3)
-    static let snapAccent = Color(hex: 0x38BDF8)
+    static let background = Color.black.opacity(0.20)
+    static let surface = Color.white.opacity(0.05)
+    static let surfaceElevated = Color.white.opacity(0.08)
+    static let surfaceActive = Color.white.opacity(0.14)
+    static let border = Color.white.opacity(0.10)
+    static let borderSpecular = LinearGradient(
+        colors: [Color.white.opacity(0.20), Color.white.opacity(0.05)],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    static let accent = Color.white
+    static let snapAccent = Color.white
     static let record = Color(hex: 0xEF4444)
     static let textPrimary = Color.white
-    static let textSecondary = Color.white.opacity(0.55)
-    static let textTertiary = Color.white.opacity(0.35)
+    static let textSecondary = Color.white.opacity(0.75)
+    static let textTertiary = Color.white.opacity(0.40)
 
+    static let radiusPill: CGFloat = 999
     static let radiusControl: CGFloat = 10
     static let radiusCard: CGFloat = 14
-    static let radiusPanel: CGFloat = 16
+    static let radiusPanel: CGFloat = 18
 
     static let spaceS: CGFloat = 8
     static let spaceM: CGFloat = 12
     static let spaceL: CGFloat = 16
     static let spaceXL: CGFloat = 24
 
-    static let springSoft = Animation.spring(response: 0.38, dampingFraction: 0.86)
-    static let pressDuration: Double = 0.12
+    static let springSoft = Animation.spring(response: 0.30, dampingFraction: 0.82)
+    static let pressDuration: Double = 0.10
 }
 
 extension Color {
@@ -87,7 +94,7 @@ struct SuiteCard<Content: View>: View {
                     .fill(SuiteTheme.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: SuiteTheme.radiusCard, style: .continuous)
-                            .strokeBorder(SuiteTheme.border, lineWidth: 1)
+                            .strokeBorder(SuiteTheme.borderSpecular, lineWidth: 1)
                     )
             )
     }
@@ -113,7 +120,7 @@ struct SuiteIconButton: View {
                 .background(
                     Circle()
                         .fill(filled ? fillColor : Color.clear)
-                        .overlay(Circle().strokeBorder(SuiteTheme.border, lineWidth: filled ? 0 : 1))
+                        .overlay(Circle().strokeBorder(SuiteTheme.borderSpecular, lineWidth: 1))
                 )
         }
         .buttonStyle(.plain)
@@ -130,7 +137,7 @@ struct SuiteIconButton: View {
 struct SuiteTileButton: View {
     let title: String
     let icon: String
-    var accent: Color = SuiteTheme.accent
+    var accent: Color = SuiteTheme.textPrimary
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -149,10 +156,14 @@ struct SuiteTileButton: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: SuiteTheme.radiusControl, style: .continuous)
                     .fill(SuiteTheme.surfaceElevated)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: SuiteTheme.radiusControl, style: .continuous)
+                            .strokeBorder(SuiteTheme.borderSpecular, lineWidth: 1)
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -170,7 +181,7 @@ struct SuiteRowButton: View {
     let title: String
     var icon: String? = nil
     var subtitle: String? = nil
-    var accent: Color = SuiteTheme.record
+    var accent: Color = SuiteTheme.textPrimary
     let action: () -> Void
 
     var body: some View {
@@ -203,7 +214,7 @@ struct SuiteRowButton: View {
                     .fill(SuiteTheme.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: SuiteTheme.radiusCard, style: .continuous)
-                            .strokeBorder(SuiteTheme.border, lineWidth: 1)
+                            .strokeBorder(SuiteTheme.borderSpecular, lineWidth: 1)
                     )
             )
             .contentShape(Rectangle())

@@ -67,11 +67,15 @@ struct PrefsShellView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .fill(model.selectedTab == tab ? SuiteTheme.surfaceElevated : Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(model.selectedTab == tab ? Color.white.opacity(0.12) : Color.clear, lineWidth: 1)
+                            )
                     )
                     .overlay(alignment: .leading) {
                         if model.selectedTab == tab {
                             Capsule()
-                                .fill(SuiteTheme.accent)
+                                .fill(SuiteTheme.textPrimary)
                                 .frame(width: 3)
                                 .padding(.vertical, 6)
                         }

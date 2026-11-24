@@ -136,11 +136,16 @@ final class SuiteStatusController: NSObject {
         panel.becomesKeyOnlyIfNeeded = true
         panel.sharingType = .none
 
-        let chrome = NSView(frame: NSRect(x: 0, y: 0, width: panelWidth, height: 420))
-        chrome.wantsLayer = true
-        chrome.layer?.cornerRadius = SuiteTheme.radiusPanel
-        chrome.layer?.masksToBounds = true
-        chrome.layer?.backgroundColor = NSColor(calibratedRed: 0.043, green: 0.051, blue: 0.063, alpha: 1).cgColor
+        let effect = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: panelWidth, height: 420))
+        effect.material = .hudWindow
+        effect.blendingMode = .behindWindow
+        effect.state = .active
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = SuiteTheme.radiusPanel
+        effect.layer?.masksToBounds = true
+        effect.layer?.borderWidth = 1
+        effect.layer?.borderColor = NSColor.white.withAlphaComponent(0.14).cgColor
+        let chrome = effect
 
         hosting.translatesAutoresizingMaskIntoConstraints = false
         chrome.addSubview(hosting)
